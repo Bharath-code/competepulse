@@ -1,0 +1,43 @@
+{
+  "display_information": {
+    "name": "CompetePulse",
+    "description": "Slack-native competitive change agent — cited weekday digests and HITL battlecards.",
+    "background_color": "#0F172A"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "CompetePulse",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/compete",
+        "description": "Manage competitor watches and CompetePulse digests",
+        "usage_hint": "watch add|list|remove",
+        "url": "https://YOUR_WORKER_HOST/slack/commands",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "commands",
+        "chat:write",
+        "channels:history",
+        "groups:history",
+        "im:history",
+        "app_mentions:read"
+      ]
+    }
+  },
+  "settings": {
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://YOUR_WORKER_HOST/slack/interactions"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}

@@ -1,5 +1,8 @@
-# Wrangler local secrets (E0-2).
+# Wrangler local secrets (E0-2 / E1-2).
 # Copy to packages/worker/.dev.vars — that file is gitignored.
 # Leave FIRECRAWL_API_KEY empty (or omit it) to use mock crawl fixtures.
+# Slack signing is skipped when SLACK_SIGNING_SECRET is unset (local tests).
 
 FIRECRAWL_API_KEY=
+SLACK_SIGNING_SECRET=
+SLACK_BOT_TOKEN=

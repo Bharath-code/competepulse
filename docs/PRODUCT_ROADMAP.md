@@ -2,7 +2,7 @@
 
 **Product:** Slack-native competitive change agent  
 **PRD:** [PRD.md](./PRD.md)  
-**Status:** Phase 1 — MVP (project setup in progress)  
+**Status:** Phase 1 — MVP (Eve agent + Slack surface)  
 **Last updated:** 2026-08-06
 
 ---
@@ -38,7 +38,7 @@
 
 **Goal:** Automated Slack digests; 5 paid pilots; eval precision ≥85%.
 
-**Status:** 3/N tasks complete (E0 done)
+**Status:** 8/N tasks complete (E0 + E1 done)
 
 ### Epic E0: Project Setup
 
@@ -48,11 +48,11 @@
 
 ### Epic E1: Eve Agent + Slack
 
-- [ ] **E1-1** `instructions.md` + skills (`material_change`, `saas_pricing_schema`, `digest_voice`)
-- [ ] **E1-2** Slack channel install on test workspace
-- [ ] **E1-3** `/compete watch add|list|remove` → D1
-- [ ] **E1-4** Weekday digest schedule (idempotent)
-- [ ] **E1-5** HITL approve/reject battlecard snippet
+- [x] **E1-1** `instructions.md` + skills (`material_change`, `saas_pricing_schema`, `digest_voice`)
+- [x] **E1-2** Slack channel install on test workspace
+- [x] **E1-3** `/compete watch add|list|remove` → D1
+- [x] **E1-4** Weekday digest schedule (idempotent)
+- [x] **E1-5** HITL approve/reject battlecard snippet
 
 ### Epic E2: Crawl Pipeline
 

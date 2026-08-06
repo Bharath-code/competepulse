@@ -1,4 +1,4 @@
-import type { StoredChange, Watch, WatchInput } from "./types.js";
+import type { BattlecardDraft, StoredChange, Watch, WatchInput } from "./types.js";
 
 /**
  * Transport the Eve agent tools use to talk to the CompetePulse Worker API.
@@ -7,10 +7,16 @@ import type { StoredChange, Watch, WatchInput } from "./types.js";
  */
 export interface CompetePulseClient {
   addWatch(input: WatchInput): Promise<Watch>;
-  listWatches(): Promise<Watch[]>;
-  removeWatch(id: string): Promise<boolean>;
+  listWatches(workspaceId?: string): Promise<Watch[]>;
+  removeWatch(id: string, workspaceId?: string): Promise<boolean>;
   crawl(watchId: string): Promise<StoredChange>;
   getChanges(watchId: string): Promise<StoredChange[]>;
+  createBattlecard?(draft: BattlecardDraft): Promise<BattlecardDraft>;
+  decideBattlecard?(
+    id: string,
+    decision: "approved" | "rejected",
+    actor: string,
+  ): Promise<BattlecardDraft>;
 }
 
 /** HTTP implementation targeting a running Worker (e.g. `wrangler dev`). */
@@ -36,13 +42,15 @@ export class HttpClient implements CompetePulseClient {
     return watch;
   }
 
-  async listWatches(): Promise<Watch[]> {
-    const { watches } = await this.json<{ watches: Watch[] }>("/watches");
+  async listWatches(workspaceId?: string): Promise<Watch[]> {
+    const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : "";
+    const { watches } = await this.json<{ watches: Watch[] }>(`/watches${qs}`);
     return watches;
   }
 
-  async removeWatch(id: string): Promise<boolean> {
-    const { removed } = await this.json<{ removed: boolean }>(`/watches/${id}`, {
+  async removeWatch(id: string, workspaceId?: string): Promise<boolean> {
+    const qs = workspaceId ? `?workspaceId=${encodeURIComponent(workspaceId)}` : "";
+    const { removed } = await this.json<{ removed: boolean }>(`/watches/${id}${qs}`, {
       method: "DELETE",
     });
     return removed;
@@ -59,5 +67,28 @@ export class HttpClient implements CompetePulseClient {
   async getChanges(watchId: string): Promise<StoredChange[]> {
     const { changes } = await this.json<{ changes: StoredChange[] }>(`/watches/${watchId}/changes`);
     return changes;
+  }
+
+  async createBattlecard(draft: BattlecardDraft): Promise<BattlecardDraft> {
+    const { battlecard } = await this.json<{ battlecard: BattlecardDraft }>("/battlecards", {
+      method: "POST",
+      body: JSON.stringify(draft),
+    });
+    return battlecard;
+  }
+
+  async decideBattlecard(
+    id: string,
+    decision: "approved" | "rejected",
+    actor: string,
+  ): Promise<BattlecardDraft> {
+    const { battlecard } = await this.json<{ battlecard: BattlecardDraft }>(
+      `/battlecards/${id}/decision`,
+      {
+        method: "POST",
+        body: JSON.stringify({ decision, actor }),
+      },
+    );
+    return battlecard;
   }
 }

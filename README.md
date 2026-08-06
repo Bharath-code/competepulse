@@ -9,17 +9,17 @@ Slack-native competitive change agent — CI without a CI team.
 
 ## Status
 
-Phase 1 — project setup (roadmap **E0-1…E0-3**). Discovery docs remain in `docs/`.
+Phase 1 — MVP epics **E0** (setup) and **E1** (Eve agent + Slack). Discovery docs remain in `docs/`.
 
 ## Monorepo layout
 
 pnpm workspace (`packages/*`):
 
-| Package                | Description                                                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `@competepulse/core`   | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                                            |
-| `@competepulse/worker` | Cloudflare Worker (Hono) crawl/diff API: watchlist CRUD, `/crawl`, `/diff`, `/health`. Runs locally with Wrangler.              |
-| `@competepulse/agent`  | Eve agent tools (`watch_add`, `crawl_now`, `get_changes`, `draft_battlecard`), digest formatter, skills, and `instructions.md`. |
+| Package                | Description                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `@competepulse/core`   | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
+| `@competepulse/worker` | Cloudflare Worker (Hono): watchlist CRUD, crawl/diff, Slack `/compete`, weekday digests, HITL battlecards.  |
+| `@competepulse/agent`  | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
 
 ## Requirements
 
@@ -31,12 +31,14 @@ pnpm workspace (`packages/*`):
 ```bash
 corepack enable
 pnpm install
-pnpm --filter @competepulse/core build   # build shared package
-pnpm dev                                  # run the worker on http://localhost:8787
+pnpm --filter @competepulse/core build
+pnpm --filter @competepulse/agent build
+pnpm dev                                  # worker on http://localhost:8787
 ```
 
 No secrets are required for local development: when `FIRECRAWL_API_KEY` is
-unset, the crawl pipeline uses deterministic mock fixtures.
+unset, the crawl pipeline uses deterministic mock fixtures. Slack signature
+checks are skipped when `SLACK_SIGNING_SECRET` is unset.
 
 ### Secrets hygiene (E0-2)
 
@@ -48,6 +50,21 @@ unset, the crawl pipeline uses deterministic mock fixtures.
 Never commit `.env`, `.env.*` (except `.env.example`), or `.dev.vars`.
 `.vercel/` and `.netlify/` are gitignored. CI runs `pnpm secrets:check` to
 reject tracked secret files and common leak patterns.
+
+## Slack install (E1-2)
+
+1. Create a Slack app from [`packages/agent/slack-app-manifest.json`](packages/agent/slack-app-manifest.json).
+2. Replace `YOUR_WORKER_HOST` with your Worker URL (or a tunnel to `localhost:8787`).
+3. Install the app to a test workspace and invite the bot to `#competitive`.
+4. Set `SLACK_SIGNING_SECRET` / `SLACK_BOT_TOKEN` in `.dev.vars` (or CF secrets).
+
+Slash commands:
+
+```text
+/compete watch add <url> [label]
+/compete watch list
+/compete watch remove <id>
+```
 
 ## Common commands
 
@@ -63,12 +80,12 @@ reject tracked secret files and common leak patterns.
 | `pnpm secrets:check` | Fail if tracked env/secret files or leak patterns |
 | `pnpm dev`           | Start the Worker locally (`wrangler dev`)         |
 
-## Try the crawl pipeline
+## Try the crawl + Slack surface
 
 With the worker running (`pnpm dev`):
 
 ```bash
-# add a watch
+# add a watch (HTTP)
 curl -s -XPOST localhost:8787/watches \
   -H 'content-type: application/json' \
   -d '{"competitor":"Acme","url":"https://acme.example/pricing","label":"pricing"}'
@@ -76,4 +93,17 @@ curl -s -XPOST localhost:8787/watches \
 # baseline crawl (materiality: none), then a changed crawl (materiality: high)
 curl -s -XPOST localhost:8787/watches/<id>/crawl -d '{"fixture":"acme_v1"}'
 curl -s -XPOST localhost:8787/watches/<id>/crawl -d '{"fixture":"acme_v2"}'
+
+# simulate /compete watch list
+curl -s -XPOST localhost:8787/slack/commands \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -d 'team_id=T_LOCAL&channel_id=C1&user_id=U1&command=/compete&text=watch+list'
+
+# run weekday digest (idempotent per workspace/day)
+curl -s -XPOST localhost:8787/digests/run \
+  -H 'content-type: application/json' \
+  -d '{"now":"2026-08-06T13:00:00Z"}'
 ```
+
+D1 schema lives in `packages/worker/migrations/0001_init.sql`. Local tests use
+the in-memory store that mirrors that schema.

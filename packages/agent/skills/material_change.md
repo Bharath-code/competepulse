@@ -10,3 +10,10 @@ Decide whether a detected change is worth surfacing. Bias toward silence.
 
 The classifier lives in `@competepulse/core` (`diffPricing`). If unsure between
 Low and None, choose None — a missed footer tweak is cheaper than crying wolf.
+
+When composing Slack digests:
+
+1. Drop every `none` finding.
+2. Lead with `high`, then `low`.
+3. If the filtered set is empty, emit the single-line "All quiet" message from
+   `digest_voice` — do not invent filler.

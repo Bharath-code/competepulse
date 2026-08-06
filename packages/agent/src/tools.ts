@@ -11,14 +11,18 @@ export function watchAdd(client: CompetePulseClient, input: WatchInput): Promise
   return client.addWatch(input);
 }
 
-/** `watch_list` — list current watches. */
-export function watchList(client: CompetePulseClient): Promise<Watch[]> {
-  return client.listWatches();
+/** `watch_list` — list current watches (optionally scoped to a workspace). */
+export function watchList(client: CompetePulseClient, workspaceId?: string): Promise<Watch[]> {
+  return client.listWatches(workspaceId);
 }
 
 /** `watch_remove` — remove a watch by id. */
-export function watchRemove(client: CompetePulseClient, id: string): Promise<boolean> {
-  return client.removeWatch(id);
+export function watchRemove(
+  client: CompetePulseClient,
+  id: string,
+  workspaceId?: string,
+): Promise<boolean> {
+  return client.removeWatch(id, workspaceId);
 }
 
 /** `crawl_now` — enqueue an immediate crawl and return the change event. */
@@ -36,7 +40,11 @@ export function getChanges(client: CompetePulseClient, watchId: string): Promise
  * Principle 4 the draft is never auto-published; it stays `status: "draft"`
  * until a human approves (HITL).
  */
-export function draftBattlecard(change: StoredChange): BattlecardDraft {
+export function draftBattlecard(
+  change: StoredChange,
+  workspaceId: string,
+  id: string = crypto.randomUUID(),
+): BattlecardDraft {
   const cites = change.citations.map((c) => `- ${c}`).join("\n");
   const body = [
     `*Competitive update* (${change.materiality.toUpperCase()})`,
@@ -46,5 +54,69 @@ export function draftBattlecard(change: StoredChange): BattlecardDraft {
     "Sources:",
     cites,
   ].join("\n");
-  return { status: "draft", changeId: change.id, body };
+  return {
+    id,
+    workspaceId,
+    status: "draft",
+    changeId: change.id,
+    body,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * HITL approve — only transitions `draft` → `approved`. Already decided
+ * drafts are left unchanged (idempotent park/resume).
+ */
+export function approveBattlecard(draft: BattlecardDraft, approvedBy: string): BattlecardDraft {
+  if (draft.status !== "draft") return draft;
+  return {
+    ...draft,
+    status: "approved",
+    approvedBy,
+    approvedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * HITL reject — only transitions `draft` → `rejected`.
+ */
+export function rejectBattlecard(draft: BattlecardDraft, rejectedBy: string): BattlecardDraft {
+  if (draft.status !== "draft") return draft;
+  return {
+    ...draft,
+    status: "rejected",
+    approvedBy: rejectedBy,
+    approvedAt: new Date().toISOString(),
+  };
+}
+
+/** Slack Block Kit actions for a parked battlecard draft (PRD E1-5). */
+export function battlecardActionBlocks(draft: BattlecardDraft): unknown[] {
+  return [
+    {
+      type: "section",
+      text: { type: "mrkdwn", text: draft.body },
+    },
+    {
+      type: "actions",
+      block_id: `battlecard:${draft.id}`,
+      elements: [
+        {
+          type: "button",
+          action_id: "battlecard_approve",
+          text: { type: "plain_text", text: "Approve" },
+          style: "primary",
+          value: draft.id,
+        },
+        {
+          type: "button",
+          action_id: "battlecard_reject",
+          text: { type: "plain_text", text: "Reject" },
+          style: "danger",
+          value: draft.id,
+        },
+      ],
+    },
+  ];
 }

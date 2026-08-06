@@ -4,8 +4,23 @@
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    // FIRECRAWL_API_KEY is intentionally unset for local dev so the crawl
-    // pipeline falls back to deterministic mock fixtures. Set it via
-    // `.dev.vars` or a dashboard secret to use the live Firecrawl API.
+    // FIRECRAWL_API_KEY / Slack secrets are intentionally unset for local
+    // dev. Set them via `.dev.vars` or dashboard secrets for live integrations.
+  },
+  // D1 binding for production watchlists (schema: migrations/0001_init.sql).
+  // Local/tests use the in-memory MemoryStore; create the DB with:
+  //   wrangler d1 create competepulse
+  // then set database_id below.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "competepulse",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Weekday digest schedule — Mon–Fri 13:00 UTC (E1-4)
+  "triggers": {
+    "crons": ["0 13 * * 1-5"],
   },
 }

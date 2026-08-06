@@ -57,6 +57,9 @@ importers:
 
   packages/worker:
     dependencies:
+      '@competepulse/agent':
+        specifier: workspace:*
+        version: link:../agent
       '@competepulse/core':
         specifier: workspace:*
         version: link:../core
