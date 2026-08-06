@@ -11,8 +11,23 @@ import {
   type CompetePulseClient,
   type QaClientResult,
 } from "@competepulse/agent";
-import { diffPricing, planLimits, type PlanId, type WatchLabel } from "@competepulse/core";
+import {
+  diffPricing,
+  isPaidPlan,
+  planLimits,
+  type PaidPlanId,
+  type PlanId,
+  type WatchLabel,
+} from "@competepulse/core";
 import { Hono } from "hono";
+import {
+  applyDodoWebhookEvent,
+  buildMockSubscriptionWebhook,
+  createCheckoutSession,
+  dodoConfigFromEnv,
+  verifyDodoWebhook,
+  type DodoWebhookEvent,
+} from "./billing/dodo.js";
 import { processCrawlJob } from "./crawl.js";
 import { dashboardHtml } from "./dashboard.js";
 import { runAllWorkspaceDigests, runWorkspaceDigest } from "./digest.js";
@@ -38,6 +53,12 @@ export interface Env {
   SLACK_BOT_TOKEN?: string;
   SNAPSHOTS?: R2Binding;
   CRAWL_QUEUE?: { send(body: unknown): Promise<void> };
+  DODO_PAYMENTS_API_KEY?: string;
+  DODO_PAYMENTS_WEBHOOK_KEY?: string;
+  DODO_PAYMENTS_ENVIRONMENT?: string;
+  DODO_PRODUCT_STARTER?: string;
+  DODO_PRODUCT_PRO?: string;
+  DODO_PAYMENTS_RETURN_URL?: string;
 }
 
 const WATCH_LABELS: WatchLabel[] = ["pricing", "changelog", "docs", "careers", "other"];
@@ -436,10 +457,158 @@ export function createApp() {
   });
 
   app.get("/meta/plans", (c) =>
-    c.json({ plans: ["trial", "starter", "pro"].map((p) => planLimits(p as PlanId)) }),
+    c.json({
+      plans: ["trial", "starter", "pro"].map((p) => planLimits(p as PlanId)),
+      billingProvider: "dodopayments",
+    }),
   );
 
+  // --- Billing (E4-1 Dodo Payments) ---
+
+  app.post("/billing/checkout", async (c) => {
+    const body = await c.req.json().catch(() => null);
+    if (!body || typeof body.workspaceId !== "string") {
+      return c.json({ error: "workspaceId is required" }, 400);
+    }
+    if (typeof body.plan !== "string" || !isPaidPlan(body.plan)) {
+      return c.json({ error: "plan must be 'starter' or 'pro'" }, 400);
+    }
+    const workspace = store.getWorkspace(body.workspaceId);
+    if (!workspace) return c.json({ error: "workspace not found" }, 404);
+
+    const plan = body.plan as PaidPlanId;
+    const config = dodoConfigFromEnv(c.env);
+    const origin = new URL(c.req.url).origin;
+
+    try {
+      const session = await createCheckoutSession(config, {
+        workspaceId: workspace.id,
+        plan,
+        email: typeof body.email === "string" ? body.email : (workspace.billingEmail ?? undefined),
+        name: typeof body.name === "string" ? body.name : undefined,
+        origin,
+      });
+      return c.json({
+        sessionId: session.sessionId,
+        checkoutUrl: session.checkoutUrl,
+        mock: session.mock,
+        plan: session.plan,
+        workspaceId: session.workspaceId,
+      });
+    } catch (err) {
+      return c.json({ error: err instanceof Error ? err.message : String(err) }, 502);
+    }
+  });
+
+  app.get("/billing/mock-complete", async (c) => {
+    // Local/dev path when DODO_PAYMENTS_API_KEY is unset.
+    const workspaceId = c.req.query("workspace_id");
+    const planRaw = c.req.query("plan");
+    if (!workspaceId || !planRaw || !isPaidPlan(planRaw)) {
+      return c.json({ error: "workspace_id and plan=starter|pro are required" }, 400);
+    }
+    const workspace = store.getWorkspace(workspaceId);
+    if (!workspace) return c.json({ error: "workspace not found" }, 404);
+
+    const event = buildMockSubscriptionWebhook({
+      workspaceId,
+      plan: planRaw,
+      email: c.req.query("email") ?? undefined,
+    });
+    const applied = applyBillingEvent(dodoConfigFromEnv(c.env), event);
+    if (c.req.header("accept")?.includes("text/html")) {
+      return c.html(
+        `<!doctype html><html><body style="font-family:sans-serif;padding:2rem">
+          <h1>CompetePulse</h1>
+          <p>Mock checkout complete — workspace now on <strong>${applied.plan}</strong>.</p>
+          <p><a href="/dashboard">Back to dashboard</a></p>
+        </body></html>`,
+      );
+    }
+    return c.json({ ok: true, workspace: store.getWorkspace(workspaceId), event: applied });
+  });
+
+  app.post("/billing/webhooks/dodo", async (c) => {
+    const rawBody = await c.req.text();
+    const config = dodoConfigFromEnv(c.env);
+    const verified = await verifyDodoWebhook(
+      rawBody,
+      {
+        id: c.req.header("webhook-id") ?? null,
+        timestamp: c.req.header("webhook-timestamp") ?? null,
+        signature: c.req.header("webhook-signature") ?? null,
+      },
+      config.webhookKey,
+    );
+    if (!verified.ok) {
+      return c.json({ error: verified.error }, 401);
+    }
+
+    const webhookId = c.req.header("webhook-id");
+    if (webhookId && !store.claimWebhook(webhookId)) {
+      return c.json({ received: true, duplicate: true });
+    }
+
+    let event: DodoWebhookEvent;
+    try {
+      event = JSON.parse(rawBody) as DodoWebhookEvent;
+    } catch {
+      return c.json({ error: "invalid JSON" }, 400);
+    }
+
+    const applied = applyBillingEvent(config, event);
+    return c.json({ received: true, ...applied });
+  });
+
+  app.get("/billing/status/:workspaceId", (c) => {
+    const workspace = store.getWorkspace(c.req.param("workspaceId"));
+    if (!workspace) return c.json({ error: "workspace not found" }, 404);
+    return c.json({
+      workspaceId: workspace.id,
+      plan: workspace.plan,
+      limits: planLimits(workspace.plan),
+      subscriptionStatus: workspace.subscriptionStatus,
+      dodoCustomerId: workspace.dodoCustomerId,
+      dodoSubscriptionId: workspace.dodoSubscriptionId,
+      billingEmail: workspace.billingEmail,
+      provider: "dodopayments",
+    });
+  });
+
   return app;
+}
+
+function applyBillingEvent(config: ReturnType<typeof dodoConfigFromEnv>, event: DodoWebhookEvent) {
+  const applied = applyDodoWebhookEvent(config, event);
+
+  const workspace =
+    (applied.workspaceId ? store.getWorkspace(applied.workspaceId) : undefined) ??
+    (applied.subscriptionId
+      ? store.getWorkspaceBySubscriptionId(applied.subscriptionId)
+      : undefined);
+
+  if (!workspace && !applied.handled) {
+    return applied;
+  }
+
+  if (!workspace && applied.workspaceId) {
+    // Unknown workspace id — ignore quietly so Dodo retries don't loop forever.
+    return { ...applied, workspaceId: applied.workspaceId };
+  }
+
+  if (workspace && applied.handled) {
+    const patch: Parameters<typeof store.updateWorkspace>[1] = {
+      subscriptionStatus: applied.status,
+    };
+    if (applied.plan) patch.plan = applied.plan;
+    if (applied.subscriptionId) patch.dodoSubscriptionId = applied.subscriptionId;
+    if (applied.customerId) patch.dodoCustomerId = applied.customerId;
+    if (applied.email) patch.billingEmail = applied.email;
+    store.updateWorkspace(workspace.id, patch);
+    return { ...applied, workspaceId: workspace.id };
+  }
+
+  return applied;
 }
 
 /**

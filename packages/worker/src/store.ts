@@ -7,6 +7,7 @@ import {
   type UsageMetric,
   type WatchLabel,
 } from "@competepulse/core";
+import type { SubscriptionStatus } from "./billing/dodo.js";
 
 export type QuietMode = "all_quiet" | "skip";
 
@@ -18,6 +19,12 @@ export interface Workspace {
   digestCron: string;
   /** E3-2: all_quiet posts a single quiet line; skip omits delivery when nothing material. */
   quietMode: QuietMode;
+  /** Dodo Payments customer id (E4-1). */
+  dodoCustomerId: string | null;
+  /** Dodo subscription id (E4-1). */
+  dodoSubscriptionId: string | null;
+  subscriptionStatus: SubscriptionStatus;
+  billingEmail: string | null;
   createdAt: string;
 }
 
@@ -134,6 +141,7 @@ export class MemoryStore {
   private digests = new Map<string, DigestDelivery>();
   private crawlRuns = new Map<string, CrawlRun>();
   private usage: UsageEntry[] = [];
+  private processedWebhooks = new Set<string>();
 
   reset(): void {
     this.workspaces.clear();
@@ -146,6 +154,7 @@ export class MemoryStore {
     this.digests.clear();
     this.crawlRuns.clear();
     this.usage = [];
+    this.processedWebhooks.clear();
   }
 
   ensureWorkspace(slackTeamId: string, plan: PlanId = "starter"): Workspace {
@@ -161,6 +170,10 @@ export class MemoryStore {
       digestChannelId: null,
       digestCron: "0 13 * * 1-5",
       quietMode: "all_quiet",
+      dodoCustomerId: null,
+      dodoSubscriptionId: null,
+      subscriptionStatus: "none",
+      billingEmail: null,
       createdAt: new Date().toISOString(),
     };
     this.workspaces.set(workspace.id, workspace);
@@ -178,13 +191,35 @@ export class MemoryStore {
 
   updateWorkspace(
     id: string,
-    patch: Partial<Pick<Workspace, "plan" | "digestChannelId" | "quietMode">>,
+    patch: Partial<
+      Pick<
+        Workspace,
+        | "plan"
+        | "digestChannelId"
+        | "quietMode"
+        | "dodoCustomerId"
+        | "dodoSubscriptionId"
+        | "subscriptionStatus"
+        | "billingEmail"
+      >
+    >,
   ): Workspace | undefined {
     const ws = this.workspaces.get(id);
     if (!ws) return undefined;
     const updated = { ...ws, ...patch };
     this.workspaces.set(id, updated);
     return updated;
+  }
+
+  getWorkspaceBySubscriptionId(subscriptionId: string): Workspace | undefined {
+    return [...this.workspaces.values()].find((w) => w.dodoSubscriptionId === subscriptionId);
+  }
+
+  /** Returns true if this webhook-id was already processed (idempotency). */
+  claimWebhook(webhookId: string): boolean {
+    if (this.processedWebhooks.has(webhookId)) return false;
+    this.processedWebhooks.add(webhookId);
+    return true;
   }
 
   setDigestChannel(workspaceId: string, channelId: string): Workspace | undefined {
@@ -200,6 +235,10 @@ export class MemoryStore {
       digestChannelId: null,
       digestCron: "0 13 * * 1-5",
       quietMode: "all_quiet",
+      dodoCustomerId: null,
+      dodoSubscriptionId: null,
+      subscriptionStatus: "none",
+      billingEmail: null,
       createdAt: new Date().toISOString(),
     });
     this.workspacesByTeam.set(workspaceId, workspaceId);

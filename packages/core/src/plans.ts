@@ -1,9 +1,12 @@
 /**
- * Plan caps (PRD §18). Stripe checkout is deferred; caps are still enforced
- * in code so crawl/watch overage cannot happen before billing is wired (E2-6).
+ * Plan caps (PRD §18) + commercial prices for Dodo Payments (E4-1 / E2-6).
+ * Caps are enforced in code; paid plans are activated via Dodo webhooks.
  */
 
 export type PlanId = "trial" | "starter" | "pro";
+
+/** Paid plans that can be purchased via Dodo checkout. */
+export type PaidPlanId = "starter" | "pro";
 
 export interface PlanLimits {
   id: PlanId;
@@ -16,6 +19,8 @@ export interface PlanLimits {
   crawlCostCents: number;
   /** Estimated cents charged per Browser Run fallback. */
   browserCostCents: number;
+  /** List price in USD cents (null for trial). */
+  priceMonthlyCents: number | null;
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
@@ -27,6 +32,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     crawlDailyCap: 50,
     crawlCostCents: 2,
     browserCostCents: 8,
+    priceMonthlyCents: null,
   },
   starter: {
     id: "starter",
@@ -36,6 +42,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     crawlDailyCap: 50,
     crawlCostCents: 2,
     browserCostCents: 8,
+    priceMonthlyCents: 14_900,
   },
   pro: {
     id: "pro",
@@ -45,11 +52,16 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     crawlDailyCap: 250,
     crawlCostCents: 2,
     browserCostCents: 8,
+    priceMonthlyCents: 39_900,
   },
 };
 
 export function planLimits(plan: PlanId = "starter"): PlanLimits {
   return PLAN_LIMITS[plan] ?? PLAN_LIMITS.starter;
+}
+
+export function isPaidPlan(plan: string): plan is PaidPlanId {
+  return plan === "starter" || plan === "pro";
 }
 
 export const UPGRADE_MESSAGE =
