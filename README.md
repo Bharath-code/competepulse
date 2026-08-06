@@ -9,7 +9,7 @@ Slack-native competitive change agent — CI without a CI team.
 
 ## Status
 
-Phase 1 — MVP epics **E0** (setup) and **E1** (Eve agent + Slack). Discovery docs remain in `docs/`.
+Phase 1 eng complete for **E0–E5** except **E4-1 Stripe** (payments deferred). Caps are enforced in code without checkout. Thin dashboard at `/dashboard`. Discovery / Phase 0 GTM items remain open in `docs/`.
 
 ## Monorepo layout
 
@@ -85,6 +85,9 @@ Slash commands:
 With the worker running (`pnpm dev`):
 
 ```bash
+# open the thin dashboard (E4-2 / E4-3)
+open http://localhost:8787/dashboard
+
 # add a watch (HTTP)
 curl -s -XPOST localhost:8787/watches \
   -H 'content-type: application/json' \
@@ -94,16 +97,28 @@ curl -s -XPOST localhost:8787/watches \
 curl -s -XPOST localhost:8787/watches/<id>/crawl -d '{"fixture":"acme_v1"}'
 curl -s -XPOST localhost:8787/watches/<id>/crawl -d '{"fixture":"acme_v2"}'
 
+# thin scrape → Browser Run fallback (E2-5)
+curl -s -XPOST localhost:8787/watches/<id>/crawl -d '{"fixture":"thin_page"}'
+
+# grounded Q&A (E3-3)
+curl -s -XPOST localhost:8787/qa \
+  -H 'content-type: application/json' \
+  -d '{"workspaceId":"<ws>","question":"Did Acme change price?"}'
+
 # simulate /compete watch list
 curl -s -XPOST localhost:8787/slack/commands \
   -H 'content-type: application/x-www-form-urlencoded' \
   -d 'team_id=T_LOCAL&channel_id=C1&user_id=U1&command=/compete&text=watch+list'
 
-# run weekday digest (idempotent per workspace/day)
+# run weekday digest (idempotent per workspace/day; Block Kit + quiet mode)
 curl -s -XPOST localhost:8787/digests/run \
   -H 'content-type: application/json' \
   -d '{"now":"2026-08-06T13:00:00Z"}'
+
+# founder cost meter (E5-3)
+curl -s localhost:8787/workspaces/<ws>/usage
 ```
 
-D1 schema lives in `packages/worker/migrations/0001_init.sql`. Local tests use
-the in-memory store that mirrors that schema.
+D1 schema lives in `packages/worker/migrations/` (`0001_init.sql` + `0002_phase1.sql`).
+Local tests use the in-memory store that mirrors that schema; R2/Queues bindings
+are declared in `packages/worker/wrangler.jsonc`.

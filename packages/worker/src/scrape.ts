@@ -1,16 +1,28 @@
-import type { PricingSnapshot } from "@competepulse/core";
+import {
+  CHANGELOG_EXTRACT_SCHEMA,
+  PRICING_EXTRACT_SCHEMA,
+  THIN_SCRAPE_CHAR_THRESHOLD,
+  type ChangelogSnapshot,
+  type ExtractSnapshot,
+  type PricingSnapshot,
+  type WatchLabel,
+} from "@competepulse/core";
+import { browserRunFallback } from "./browser.js";
+
+export type ScrapeProvider = "mock" | "firecrawl" | "browser";
 
 export interface ScrapeResult {
   url: string;
-  extracted: PricingSnapshot;
-  provider: "mock" | "firecrawl";
+  markdown: string;
+  extracted: ExtractSnapshot;
+  provider: ScrapeProvider;
+  thin: boolean;
 }
 
 /**
  * Deterministic mock fixtures used when no Firecrawl API key is configured.
  * `acme_v1` is a baseline pricing page; `acme_v2` simulates a material change
- * (Pro price hike + SSO added), which lets the crawl→diff pipeline be
- * demonstrated end-to-end locally without any secrets.
+ * (Pro price hike + SSO added). `thin_page` forces the Browser Run path (E2-5).
  */
 export const FIXTURES: Record<string, PricingSnapshot> = {
   acme_v1: {
@@ -35,29 +47,38 @@ export const FIXTURES: Record<string, PricingSnapshot> = {
   },
 };
 
-const PRICING_EXTRACT_SCHEMA = {
-  type: "object",
-  properties: {
-    currency: { type: "string" },
-    plans: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          name: { type: "string" },
-          price_monthly: { type: ["number", "null"] },
-          price_annual: { type: ["number", "null"] },
-          unit: { type: ["string", "null"] },
-        },
-      },
-    },
-    features_called_out: { type: "array", items: { type: "string" } },
-    free_trial_days: { type: ["number", "null"] },
-    notes: { type: "array", items: { type: "string" } },
+export const CHANGELOG_FIXTURES: Record<string, ChangelogSnapshot> = {
+  changelog_v1: {
+    entries: [{ date: "2026-07-01", title: "Launch analytics", summary: null, tags: ["feature"] }],
+    notes: [],
   },
-} as const;
+  changelog_v2: {
+    entries: [
+      { date: "2026-07-01", title: "Launch analytics", summary: null, tags: ["feature"] },
+      {
+        date: "2026-08-01",
+        title: "SSO for all plans",
+        summary: "Enterprise SSO",
+        tags: ["security"],
+      },
+    ],
+    notes: [],
+  },
+};
 
-async function firecrawlScrape(url: string, apiKey: string): Promise<ScrapeResult> {
+function extractSchemaFor(label: WatchLabel) {
+  return label === "changelog" ? CHANGELOG_EXTRACT_SCHEMA : PRICING_EXTRACT_SCHEMA;
+}
+
+function mockMarkdown(url: string, extracted: ExtractSnapshot): string {
+  return [`# ${url}`, "", "```json", JSON.stringify(extracted, null, 2), "```"].join("\n");
+}
+
+async function firecrawlScrape(
+  url: string,
+  apiKey: string,
+  label: WatchLabel,
+): Promise<ScrapeResult> {
   const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
     method: "POST",
     headers: {
@@ -66,35 +87,70 @@ async function firecrawlScrape(url: string, apiKey: string): Promise<ScrapeResul
     },
     body: JSON.stringify({
       url,
-      formats: ["json"],
-      jsonOptions: { schema: PRICING_EXTRACT_SCHEMA },
+      formats: ["markdown", "json"],
+      jsonOptions: { schema: extractSchemaFor(label) },
     }),
   });
   if (!res.ok) {
     throw new Error(`Firecrawl scrape failed: ${res.status} ${await res.text()}`);
   }
-  const body = (await res.json()) as { data?: { json?: PricingSnapshot } };
+  const body = (await res.json()) as {
+    data?: { json?: ExtractSnapshot; markdown?: string };
+  };
   const extracted = body.data?.json;
+  const markdown = body.data?.markdown ?? "";
   if (!extracted) {
     throw new Error("Firecrawl returned no structured extraction.");
   }
-  return { url, extracted, provider: "firecrawl" };
+  const thin = markdown.trim().length < THIN_SCRAPE_CHAR_THRESHOLD;
+  return { url, markdown, extracted, provider: "firecrawl", thin };
 }
 
 export interface ScrapeOptions {
   apiKey?: string;
   fixture?: string;
+  label?: WatchLabel;
+  /** Force Browser Run even when markdown is thick (tests). */
+  forceBrowser?: boolean;
 }
 
 /**
- * Scrape + structured-extract a URL. Uses the live Firecrawl API when
- * `apiKey` is provided, otherwise returns a deterministic mock fixture.
+ * Scrape + structured-extract a URL (E2-2). Uses Firecrawl when `apiKey` is
+ * set; otherwise returns deterministic fixtures. Thin scrapes fall back to
+ * Browser Run (E2-5).
  */
 export async function scrape(url: string, opts: ScrapeOptions = {}): Promise<ScrapeResult> {
+  const label = opts.label ?? "pricing";
+
+  let result: ScrapeResult;
   if (opts.apiKey) {
-    return firecrawlScrape(url, opts.apiKey);
+    result = await firecrawlScrape(url, opts.apiKey, label);
+  } else if (opts.fixture === "thin_page") {
+    result = {
+      url,
+      markdown: "ok",
+      extracted: FIXTURES.acme_v1,
+      provider: "mock",
+      thin: true,
+    };
+  } else if (label === "changelog") {
+    const key = opts.fixture ?? "changelog_v1";
+    const extracted = CHANGELOG_FIXTURES[key] ?? CHANGELOG_FIXTURES.changelog_v1;
+    const markdown = mockMarkdown(url, extracted);
+    result = { url, markdown, extracted, provider: "mock", thin: false };
+  } else {
+    const fixtureKey = opts.fixture ?? "acme_v1";
+    const extracted = FIXTURES[fixtureKey] ?? FIXTURES.acme_v1;
+    const markdown = mockMarkdown(url, extracted);
+    result = { url, markdown, extracted, provider: "mock", thin: false };
   }
-  const fixtureKey = opts.fixture ?? "acme_v1";
-  const extracted = FIXTURES[fixtureKey] ?? FIXTURES.acme_v1;
-  return { url, extracted, provider: "mock" };
+
+  if (result.thin || opts.forceBrowser) {
+    return browserRunFallback({
+      url,
+      label,
+      fixture: opts.fixture === "thin_page" ? "acme_v1" : opts.fixture,
+    });
+  }
+  return result;
 }

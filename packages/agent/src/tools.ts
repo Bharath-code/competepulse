@@ -66,7 +66,8 @@ export function draftBattlecard(
 
 /**
  * HITL approve — only transitions `draft` → `approved`. Already decided
- * drafts are left unchanged (idempotent park/resume).
+ * drafts are left unchanged (idempotent park/resume). Approval does **not**
+ * post to the channel; call {@link publishBattlecard} after approve (E3-4).
  */
 export function approveBattlecard(draft: BattlecardDraft, approvedBy: string): BattlecardDraft {
   if (draft.status !== "draft") return draft;
@@ -76,6 +77,18 @@ export function approveBattlecard(draft: BattlecardDraft, approvedBy: string): B
     approvedBy,
     approvedAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Publish an approved battlecard (pin/post). Drafts and rejected cards cannot
+ * be published — HITL gate is mandatory (E3-4).
+ */
+export function publishBattlecard(draft: BattlecardDraft): BattlecardDraft {
+  if (draft.status !== "approved") {
+    throw new Error("Cannot publish battlecard without HITL approval.");
+  }
+  if (draft.publishedAt) return draft;
+  return { ...draft, publishedAt: new Date().toISOString() };
 }
 
 /**

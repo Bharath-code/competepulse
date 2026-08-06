@@ -1,16 +1,17 @@
-import type { DigestDelivery, MemoryStore, StoredChange } from "./store.js";
+import { formatDigestBlocks, type QuietMode } from "@competepulse/agent";
+import type { DigestDelivery, MemoryStore } from "./store.js";
 
 export interface DigestRunResult {
   delivered: boolean;
   skipped: boolean;
   deliveryDate: string;
   body: string;
+  blocks?: unknown[];
   delivery?: DigestDelivery;
 }
 
 /**
- * Idempotent weekday digest for one workspace (PRD E1-4).
- * Kept in the worker so the cron trigger does not need a separate process.
+ * Idempotent weekday digest for one workspace (PRD E1-4 / E3-1 / E3-2).
  */
 export function runWorkspaceDigest(
   data: MemoryStore,
@@ -35,25 +36,47 @@ export function runWorkspaceDigest(
       skipped: true,
       deliveryDate,
       body: existing.body,
+      blocks: existing.blocksJson ? (JSON.parse(existing.blocksJson) as unknown[]) : undefined,
       delivery: existing,
     };
   }
 
+  const workspace = data.getWorkspace(workspaceId);
+  const quietMode: QuietMode = workspace?.quietMode ?? "all_quiet";
   const watches = data.listWatches(workspaceId);
-  const sections: string[] = [];
-  for (const watch of watches) {
-    const changes = data.listChanges(watch.id);
-    const todays = changes.filter((c) => c.createdAt.slice(0, 10) === deliveryDate);
-    sections.push(formatDigest(watch.competitor, todays));
+
+  if (watches.length === 0) {
+    const body = "*CompetePulse digest*: No watches configured.";
+    const delivery = data.saveDigestDelivery({ workspaceId, deliveryDate, body });
+    return { delivered: true, skipped: false, deliveryDate, body, delivery };
   }
 
-  const body =
-    sections.length === 0
-      ? "*CompetePulse digest*: No watches configured."
-      : [`*CompetePulse digest* — ${deliveryDate}`, "", ...sections].join("\n");
+  const sections = watches.map((watch) => {
+    const changes = data.listChanges(watch.id);
+    const todays = changes.filter((c) => c.createdAt.slice(0, 10) === deliveryDate);
+    return { competitor: watch.competitor, changes: todays };
+  });
 
-  const delivery = data.saveDigestDelivery({ workspaceId, deliveryDate, body });
-  return { delivered: true, skipped: false, deliveryDate, body, delivery };
+  const formatted = formatDigestBlocks(sections, { date: deliveryDate, quietMode });
+  if (formatted.allQuiet && quietMode === "skip") {
+    return { delivered: false, skipped: true, deliveryDate, body: "", blocks: [] };
+  }
+
+  const delivery = data.saveDigestDelivery({
+    workspaceId,
+    deliveryDate,
+    body: formatted.text,
+    blocksJson: JSON.stringify(formatted.blocks),
+  });
+
+  return {
+    delivered: true,
+    skipped: false,
+    deliveryDate,
+    body: formatted.text,
+    blocks: formatted.blocks,
+    delivery,
+  };
 }
 
 export function runAllWorkspaceDigests(
@@ -70,19 +93,4 @@ export function utcDateKey(date: Date): string {
 export function isWeekendUtc(date: Date): boolean {
   const day = date.getUTCDay();
   return day === 0 || day === 6;
-}
-
-function formatDigest(competitor: string, changes: StoredChange[]): string {
-  const material = changes.filter((c) => c.materiality !== "none");
-  if (material.length === 0) {
-    return `*${competitor}*: All quiet - no material changes.`;
-  }
-  const rank = (label: string) => (label === "high" ? 2 : label === "low" ? 1 : 0);
-  const lines = material
-    .sort((a, b) => rank(b.materiality) - rank(a.materiality))
-    .map(
-      (c) =>
-        `${c.materiality === "high" ? "[HIGH]" : "[LOW]"} ${c.summary} (${c.citations[0] ?? ""})`,
-    );
-  return [`*${competitor}* - ${material.length} material change(s):`, ...lines].join("\n");
 }

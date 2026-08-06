@@ -29,6 +29,7 @@ export interface BattlecardDraft {
   status: BattlecardStatus;
   approvedBy?: string;
   approvedAt?: string;
+  publishedAt?: string;
   createdAt: string;
 }
 
