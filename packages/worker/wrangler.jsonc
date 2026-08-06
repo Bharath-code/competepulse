@@ -1,0 +1,11 @@
+{
+  "name": "competepulse-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // FIRECRAWL_API_KEY is intentionally unset for local dev so the crawl
+    // pipeline falls back to deterministic mock fixtures. Set it via
+    // `.dev.vars` or a dashboard secret to use the live Firecrawl API.
+  },
+}
