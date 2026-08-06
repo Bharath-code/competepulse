@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@competepulse/agent": "workspace:*",
     "@competepulse/core": "workspace:*",
     "hono": "^4.13.0"
   },

@@ -19,3 +19,6 @@ Guidance:
 - One entry per plan tier; use `null` for "contact us" / unlisted prices.
 - `features_called_out` = features the page markets as plan differentiators.
 - Put ambiguity or caveats in `notes`, never invented prices.
+- Prefer this schema when labeling a watch `pricing`. Other labels
+  (`changelog`, `docs`, `careers`) may return thinner extracts until their
+  schemas ship.
