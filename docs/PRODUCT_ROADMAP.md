@@ -2,7 +2,7 @@
 
 **Product:** Slack-native competitive change agent  
 **PRD:** [PRD.md](./PRD.md)  
-**Status:** Phase 0 — Discovery  
+**Status:** Phase 1 — MVP (project setup in progress)  
 **Last updated:** 2026-08-06
 
 ---
@@ -38,13 +38,13 @@
 
 **Goal:** Automated Slack digests; 5 paid pilots; eval precision ≥85%.
 
-**Status:** 0/N tasks complete
+**Status:** 3/N tasks complete (E0 done)
 
 ### Epic E0: Project Setup
 
-- [ ] **E0-1** Scaffold `competepulse/` (Eve agent + Cloudflare worker)
-- [ ] **E0-2** Env templates + secrets hygiene
-- [ ] **E0-3** CI: lint, unit tests, eval dry-run
+- [x] **E0-1** Scaffold `competepulse/` (Eve agent + Cloudflare worker)
+- [x] **E0-2** Env templates + secrets hygiene
+- [x] **E0-3** CI: lint, unit tests, eval dry-run
 
 ### Epic E1: Eve Agent + Slack
 

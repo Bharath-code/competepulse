@@ -9,7 +9,7 @@ Slack-native competitive change agent — CI without a CI team.
 
 ## Status
 
-Phase 1 — MVP scaffold (roadmap E0-1). Discovery docs remain in `docs/`.
+Phase 1 — project setup (roadmap **E0-1…E0-3**). Discovery docs remain in `docs/`.
 
 ## Monorepo layout
 
@@ -36,21 +36,32 @@ pnpm dev                                  # run the worker on http://localhost:8
 ```
 
 No secrets are required for local development: when `FIRECRAWL_API_KEY` is
-unset, the crawl pipeline uses deterministic mock fixtures. Copy `.env.example`
-to `.env` (or set `.dev.vars` for Wrangler) to use live integrations.
+unset, the crawl pipeline uses deterministic mock fixtures.
+
+### Secrets hygiene (E0-2)
+
+| File                                | Purpose                                                    |
+| ----------------------------------- | ---------------------------------------------------------- |
+| `.env.example`                      | Root template for app/integration env vars (copy → `.env`) |
+| `packages/worker/.dev.vars.example` | Wrangler local secrets template (copy → `.dev.vars`)       |
+
+Never commit `.env`, `.env.*` (except `.env.example`), or `.dev.vars`.
+`.vercel/` and `.netlify/` are gitignored. CI runs `pnpm secrets:check` to
+reject tracked secret files and common leak patterns.
 
 ## Common commands
 
-| Command          | What it does                                      |
-| ---------------- | ------------------------------------------------- |
-| `pnpm install`   | Install workspace dependencies                    |
-| `pnpm build`     | Build all packages                                |
-| `pnpm typecheck` | Type-check all packages                           |
-| `pnpm test`      | Run all unit tests (Vitest)                       |
-| `pnpm lint`      | Lint with ESLint                                  |
-| `pnpm format`    | Check formatting with Prettier                    |
-| `pnpm eval`      | Run the materiality eval dry-run + precision gate |
-| `pnpm dev`       | Start the Worker locally (`wrangler dev`)         |
+| Command              | What it does                                      |
+| -------------------- | ------------------------------------------------- |
+| `pnpm install`       | Install workspace dependencies                    |
+| `pnpm build`         | Build all packages                                |
+| `pnpm typecheck`     | Type-check all packages                           |
+| `pnpm test`          | Run all unit tests (Vitest)                       |
+| `pnpm lint`          | Lint with ESLint                                  |
+| `pnpm format`        | Check formatting with Prettier                    |
+| `pnpm eval`          | Run the materiality eval dry-run + precision gate |
+| `pnpm secrets:check` | Fail if tracked env/secret files or leak patterns |
+| `pnpm dev`           | Start the Worker locally (`wrangler dev`)         |
 
 ## Try the crawl pipeline
 
