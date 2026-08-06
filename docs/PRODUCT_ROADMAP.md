@@ -2,7 +2,7 @@
 
 **Product:** Slack-native competitive change agent  
 **PRD:** [PRD.md](./PRD.md)  
-**Status:** Phase 1 — MVP eng complete (Stripe deferred)  
+**Status:** Phase 1 — MVP eng complete (billing via Dodo Payments)  
 **Last updated:** 2026-08-06
 
 ---
@@ -38,7 +38,7 @@
 
 **Goal:** Automated Slack digests; 5 paid pilots; eval precision ≥85%.
 
-**Status:** Eng epics E0–E5 done except **E4-1 Stripe** (payments deferred)
+**Status:** Eng epics E0–E5 done (E4-1 via Dodo Payments)
 
 ### Epic E0: Project Setup
 
@@ -72,7 +72,7 @@
 
 ### Epic E4: Billing + Dashboard
 
-- [ ] **E4-1** Stripe Starter $149 / Pro $399 + webhooks *(deferred — choose payments later)*
+- [x] **E4-1** Dodo Payments Starter $149 / Pro $399 + webhooks *(Stripe skipped — India MoR)*
 - [x] **E4-2** Dashboard watchlist UI
 - [x] **E4-3** Change history + snapshot links
 
@@ -83,7 +83,7 @@
 - [x] **E5-3** Per-workspace cost meter
 
 **Phase 1 exit criteria:**
-- [ ] 5 paying or paid pilots *(blocked on E4-1 / GTM)*
+- [ ] 5 paying or paid pilots *(GTM / design partners)*
 - [x] Digests fully automated for partners *(eng path: cron + queue + formatter)*
 - [x] Eval materiality precision ≥85%
 - [ ] Estimated gross margin ≥70% at plan caps *(needs live crawl spend after pilots)*

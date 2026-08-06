@@ -1,6 +1,6 @@
 /**
  * Thin founder/PMM dashboard HTML (E4-2 / E4-3). Served from the Worker so we
- * avoid a separate frontend package for Phase 1. Stripe checkout is deferred.
+ * avoid a separate frontend package for Phase 1. Billing via Dodo Payments (E4-1).
  */
 
 export function dashboardHtml(): string {
@@ -121,7 +121,7 @@ export function dashboardHtml(): string {
 <body>
   <header>
     <h1>CompetePulse</h1>
-    <p>Watchlist + change history. Payments deferred — caps still enforced server-side.</p>
+    <p>Watchlist + change history. Billing via Dodo Payments — caps enforced server-side.</p>
   </header>
   <main>
     <section>
@@ -131,7 +131,10 @@ export function dashboardHtml(): string {
           <select id="workspace"></select>
         </label>
         <button id="refresh" class="secondary" type="button">Refresh</button>
+        <button id="upgrade-starter" class="secondary" type="button">Starter $149</button>
+        <button id="upgrade-pro" type="button">Upgrade Pro $399</button>
       </div>
+      <p class="meter muted" id="billing">—</p>
       <table>
         <thead>
           <tr><th>Competitor</th><th>Label</th><th>URL</th><th>Last crawl</th></tr>
@@ -239,6 +242,32 @@ export function dashboardHtml(): string {
       $("usage").textContent = \`Total $\${dollars}\` + (parts.length ? " · " + parts.join(" · ") : "");
     }
 
+    async function loadBilling() {
+      const wsId = $("workspace").value;
+      if (!wsId) return;
+      const data = await api("/billing/status/" + encodeURIComponent(wsId));
+      $("billing").textContent =
+        \`Billing: \${data.plan} · status \${data.subscriptionStatus}\` +
+        (data.dodoSubscriptionId ? \` · sub \${data.dodoSubscriptionId}\` : " · not subscribed") +
+        " · Dodo";
+    }
+
+    async function checkout(plan) {
+      const wsId = $("workspace").value;
+      if (!wsId) return;
+      const res = await fetch("/billing/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ workspaceId: wsId, plan }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        $("billing").textContent = data.error || "checkout failed";
+        return;
+      }
+      window.location.href = data.checkoutUrl;
+    }
+
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, (c) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -248,11 +277,14 @@ export function dashboardHtml(): string {
 
     async function refresh() {
       await loadWorkspaces();
-      await Promise.all([loadWatchlist(), loadChanges(), loadUsage()]);
+      await Promise.all([loadWatchlist(), loadChanges(), loadUsage(), loadBilling()]);
     }
 
     $("refresh").onclick = refresh;
-    $("workspace").onchange = () => Promise.all([loadWatchlist(), loadChanges(), loadUsage()]);
+    $("upgrade-starter").onclick = () => checkout("starter");
+    $("upgrade-pro").onclick = () => checkout("pro");
+    $("workspace").onchange = () =>
+      Promise.all([loadWatchlist(), loadChanges(), loadUsage(), loadBilling()]);
     refresh().catch((err) => { $("usage").textContent = String(err); });
   </script>
 </body>
