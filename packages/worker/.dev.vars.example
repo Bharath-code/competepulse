@@ -1,0 +1,5 @@
+# Wrangler local secrets (E0-2).
+# Copy to packages/worker/.dev.vars — that file is gitignored.
+# Leave FIRECRAWL_API_KEY empty (or omit it) to use mock crawl fixtures.
+
+FIRECRAWL_API_KEY=

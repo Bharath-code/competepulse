@@ -16,7 +16,8 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "dev": "pnpm --filter @competepulse/worker dev",
-    "eval": "pnpm --filter @competepulse/core eval"
+    "eval": "pnpm --filter @competepulse/core eval",
+    "secrets:check": "node scripts/secrets-check.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
