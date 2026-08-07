@@ -7,7 +7,7 @@
     // FIRECRAWL_API_KEY / Slack secrets are intentionally unset for local
     // dev. Set them via `.dev.vars` or dashboard secrets for live integrations.
   },
-  // D1 binding for production watchlists (schema: migrations/0001_init.sql).
+  // D1 binding for production watchlists (schema: migrations/).
   // Local/tests use the in-memory MemoryStore; create the DB with:
   //   wrangler d1 create competepulse
   // then set database_id below.
@@ -19,6 +19,25 @@
       "migrations_dir": "migrations",
     },
   ],
+  // R2 immutable snapshots (E2-3)
+  "r2_buckets": [
+    {
+      "binding": "SNAPSHOTS",
+      "bucket_name": "competepulse-snapshots",
+      "preview_bucket_name": "competepulse-snapshots-preview",
+    },
+  ],
+  // Crawl fan-out + retries (E2-1)
+  "queues": {
+    "producers": [{ "binding": "CRAWL_QUEUE", "queue": "competepulse-crawl" }],
+    "consumers": [
+      {
+        "queue": "competepulse-crawl",
+        "max_batch_size": 10,
+        "max_retries": 5,
+      },
+    ],
+  },
   // Weekday digest schedule — Mon–Fri 13:00 UTC (E1-4)
   "triggers": {
     "crons": ["0 13 * * 1-5"],

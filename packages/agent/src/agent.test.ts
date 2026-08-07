@@ -3,10 +3,13 @@ import type { CompetePulseClient } from "./client.js";
 import { formatDigest } from "./digest.js";
 import { runWeekdayDigest, type DigestScheduleStore } from "./schedule.js";
 import { parseCompeteCommand, runCompeteCommand } from "./slash.js";
+import { formatDigestBlocks } from "./digest.js";
+import { answerFromSnapshots } from "./qa.js";
 import {
   approveBattlecard,
   battlecardActionBlocks,
   draftBattlecard,
+  publishBattlecard,
   rejectBattlecard,
   watchAdd,
   watchList,
@@ -101,6 +104,13 @@ describe("agent tools", () => {
     expect(blocks).toHaveLength(2);
     expect(blocks[1]).toMatchObject({ type: "actions", block_id: "battlecard:bc1" });
   });
+
+  it("refuses to publish without HITL approval", () => {
+    const draft = draftBattlecard(makeChange("w1", "high"), "ws1", "bc1");
+    expect(() => publishBattlecard(draft)).toThrow(/HITL/);
+    const approved = approveBattlecard(draft, "U1");
+    expect(publishBattlecard(approved).publishedAt).toBeTruthy();
+  });
 });
 
 describe("digest formatting", () => {
@@ -113,6 +123,41 @@ describe("digest formatting", () => {
     expect(digest).toContain("[HIGH]");
     expect(digest).toContain("material change");
     expect(digest).toContain("https://acme.example/pricing");
+    expect(digest).toContain("Why it matters");
+  });
+
+  it("builds Slack Block Kit digest sections", () => {
+    const formatted = formatDigestBlocks(
+      [{ competitor: "Acme", changes: [makeChange("w1", "high")] }],
+      { date: "2026-08-06" },
+    );
+    expect(formatted.allQuiet).toBe(false);
+    expect(formatted.blocks.some((b) => (b as { type: string }).type === "header")).toBe(true);
+    expect(JSON.stringify(formatted.blocks)).toContain("Cite:");
+  });
+
+  it("skip quiet mode returns empty when all quiet", () => {
+    const formatted = formatDigestBlocks(
+      [{ competitor: "Acme", changes: [makeChange("w1", "none")] }],
+      { quietMode: "skip" },
+    );
+    expect(formatted.allQuiet).toBe(true);
+    expect(formatted.text).toBe("");
+  });
+});
+
+describe("thread Q&A", () => {
+  it("answers from changes with citations and refuses ungrounded asks", () => {
+    const change = makeChange("w1", "high");
+    change.findings = [
+      { kind: "price", materiality: "high", summary: "Pro monthly price changed" },
+    ];
+    const ok = answerFromSnapshots("Did price change?", { changes: [change] });
+    expect(ok.grounded).toBe(true);
+    expect(ok.citations).toContain("https://acme.example/pricing");
+
+    const refused = answerFromSnapshots("What is their secret roadmap?", { changes: [change] });
+    expect(refused.refused).toBe(true);
   });
 });
 

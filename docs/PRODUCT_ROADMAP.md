@@ -2,7 +2,7 @@
 
 **Product:** Slack-native competitive change agent  
 **PRD:** [PRD.md](./PRD.md)  
-**Status:** Phase 1 — MVP (Eve agent + Slack surface)  
+**Status:** Phase 1 — MVP eng complete (Stripe deferred)  
 **Last updated:** 2026-08-06
 
 ---
@@ -11,7 +11,7 @@
 
 **Goal:** 3 design partners; prove digests are loved before full automation.
 
-**Status:** 0/8 tasks complete | **Current Phase:** Phase 0
+**Status:** 0/8 tasks complete | **Current Phase:** Phase 0 (GTM / discovery still open)
 
 ### Week 1–2: Learn & Outreach
 
@@ -38,7 +38,7 @@
 
 **Goal:** Automated Slack digests; 5 paid pilots; eval precision ≥85%.
 
-**Status:** 8/N tasks complete (E0 + E1 done)
+**Status:** Eng epics E0–E5 done except **E4-1 Stripe** (payments deferred)
 
 ### Epic E0: Project Setup
 
@@ -56,37 +56,37 @@
 
 ### Epic E2: Crawl Pipeline
 
-- [ ] **E2-1** Cloudflare Queue consumer + retries
-- [ ] **E2-2** Firecrawl scrape + pricing/changelog schemas
-- [ ] **E2-3** R2 snapshot versions + content hash
-- [ ] **E2-4** Diff + materiality classifier
-- [ ] **E2-5** Browser Run fallback on thin scrape
-- [ ] **E2-6** Plan caps enforced in code
+- [x] **E2-1** Cloudflare Queue consumer + retries
+- [x] **E2-2** Firecrawl scrape + pricing/changelog schemas
+- [x] **E2-3** R2 snapshot versions + content hash
+- [x] **E2-4** Diff + materiality classifier
+- [x] **E2-5** Browser Run fallback on thin scrape
+- [x] **E2-6** Plan caps enforced in code
 
 ### Epic E3: Digest + Q&A
 
-- [ ] **E3-1** Slack digest formatter (cited blocks)
-- [ ] **E3-2** Quiet / all-quiet mode
-- [ ] **E3-3** Thread Q&A grounded in snapshots
-- [ ] **E3-4** `draft_battlecard` tool (HITL required to publish)
+- [x] **E3-1** Slack digest formatter (cited blocks)
+- [x] **E3-2** Quiet / all-quiet mode
+- [x] **E3-3** Thread Q&A grounded in snapshots
+- [x] **E3-4** `draft_battlecard` tool (HITL required to publish)
 
 ### Epic E4: Billing + Dashboard
 
-- [ ] **E4-1** Stripe Starter $149 / Pro $399 + webhooks
-- [ ] **E4-2** Dashboard watchlist UI
-- [ ] **E4-3** Change history + snapshot links
+- [ ] **E4-1** Stripe Starter $149 / Pro $399 + webhooks *(deferred — choose payments later)*
+- [x] **E4-2** Dashboard watchlist UI
+- [x] **E4-3** Change history + snapshot links
 
 ### Epic E5: Quality Gates
 
-- [ ] **E5-1** Eval fixture set (20 pages)
-- [ ] **E5-2** Precision ≥85% gate in CI
-- [ ] **E5-3** Per-workspace cost meter
+- [x] **E5-1** Eval fixture set (20 pages)
+- [x] **E5-2** Precision ≥85% gate in CI
+- [x] **E5-3** Per-workspace cost meter
 
 **Phase 1 exit criteria:**
-- [ ] 5 paying or paid pilots
-- [ ] Digests fully automated for partners
-- [ ] Eval materiality precision ≥85%
-- [ ] Estimated gross margin ≥70% at plan caps
+- [ ] 5 paying or paid pilots *(blocked on E4-1 / GTM)*
+- [x] Digests fully automated for partners *(eng path: cron + queue + formatter)*
+- [x] Eval materiality precision ≥85%
+- [ ] Estimated gross margin ≥70% at plan caps *(needs live crawl spend after pilots)*
 
 ---
 

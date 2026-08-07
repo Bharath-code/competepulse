@@ -5,12 +5,20 @@ import type { BattlecardDraft, StoredChange, Watch, WatchInput } from "./types.j
  * Kept as an interface so tools can be unit-tested against a fake and wired to
  * the real HTTP worker in production.
  */
+export interface QaClientResult {
+  answer: string;
+  citations: string[];
+  grounded: boolean;
+  refused: boolean;
+}
+
 export interface CompetePulseClient {
   addWatch(input: WatchInput): Promise<Watch>;
   listWatches(workspaceId?: string): Promise<Watch[]>;
   removeWatch(id: string, workspaceId?: string): Promise<boolean>;
   crawl(watchId: string): Promise<StoredChange>;
   getChanges(watchId: string): Promise<StoredChange[]>;
+  ask?(question: string, workspaceId: string): Promise<QaClientResult>;
   createBattlecard?(draft: BattlecardDraft): Promise<BattlecardDraft>;
   decideBattlecard?(
     id: string,
@@ -67,6 +75,13 @@ export class HttpClient implements CompetePulseClient {
   async getChanges(watchId: string): Promise<StoredChange[]> {
     const { changes } = await this.json<{ changes: StoredChange[] }>(`/watches/${watchId}/changes`);
     return changes;
+  }
+
+  async ask(question: string, workspaceId: string): Promise<QaClientResult> {
+    return this.json<QaClientResult>("/qa", {
+      method: "POST",
+      body: JSON.stringify({ question, workspaceId }),
+    });
   }
 
   async createBattlecard(draft: BattlecardDraft): Promise<BattlecardDraft> {

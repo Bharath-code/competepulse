@@ -9,27 +9,36 @@ export type CompeteCommand =
   | { kind: "watch_add"; url: string; competitor?: string; label: WatchLabel }
   | { kind: "watch_list" }
   | { kind: "watch_remove"; id: string }
+  | { kind: "ask"; question: string }
   | { kind: "help" }
   | { kind: "error"; message: string };
 
 /**
- * Parse `/compete …` slash-command text (PRD E1-3).
+ * Parse `/compete …` slash-command text (PRD E1-3 / E3-3).
  *
  * Accepted forms:
  * - `watch add <url> [label]`
  * - `watch add <competitor> <url> [label]`
  * - `watch list`
  * - `watch remove <id>`
+ * - `ask <question>`
  */
 export function parseCompeteCommand(text: string): CompeteCommand {
   const tokens = text.trim().split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return { kind: "help" };
 
   const [head, sub, ...rest] = tokens;
+
+  if (head === "ask") {
+    const question = text.replace(/^\s*ask\s+/i, "").trim();
+    if (!question) return { kind: "error", message: "Usage: `/compete ask <question>`" };
+    return { kind: "ask", question };
+  }
+
   if (head !== "watch") {
     return {
       kind: "error",
-      message: "Unknown command. Try `/compete watch add|list|remove`.",
+      message: "Unknown command. Try `/compete watch add|list|remove` or `/compete ask …`.",
     };
   }
 
@@ -75,6 +84,7 @@ export function helpText(): string {
     "`/compete watch add <url> [label]` — start watching a competitor URL",
     "`/compete watch list` — list watches for this workspace",
     "`/compete watch remove <id>` — stop watching",
+    "`/compete ask <question>` — Q&A grounded in snapshots/changes",
   ].join("\n");
 }
 
@@ -89,6 +99,11 @@ export async function runCompeteCommand(
       return helpText();
     case "error":
       return command.message;
+    case "ask":
+      if (!client.ask) {
+        return "Q&A is not available on this client.";
+      }
+      return (await client.ask(command.question, workspaceId)).answer;
     case "watch_list": {
       const watches = await watchList(client, workspaceId);
       if (watches.length === 0) return "No watches yet. Add one with `/compete watch add <url>`.";

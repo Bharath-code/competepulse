@@ -24,6 +24,30 @@ export interface PricingSnapshot {
   notes: string[];
 }
 
+/** Structured extraction of a changelog / release notes page (E2-2). */
+export interface ChangelogEntry {
+  date: string | null;
+  title: string;
+  summary: string | null;
+  tags: string[];
+}
+
+export interface ChangelogSnapshot {
+  entries: ChangelogEntry[];
+  notes: string[];
+}
+
+/** Union of extract payloads we persist on snapshots. */
+export type ExtractSnapshot = PricingSnapshot | ChangelogSnapshot;
+
+export function isPricingSnapshot(value: ExtractSnapshot): value is PricingSnapshot {
+  return "plans" in value && Array.isArray(value.plans);
+}
+
+export function isChangelogSnapshot(value: ExtractSnapshot): value is ChangelogSnapshot {
+  return "entries" in value && Array.isArray(value.entries);
+}
+
 export type ChangeKind =
   "price" | "plan_added" | "plan_removed" | "feature_added" | "feature_removed" | "trial";
 
@@ -40,4 +64,8 @@ export interface ChangeEvent {
   summary: string;
   findings: ChangeFinding[];
   citations: string[];
+  fromSnapshotId?: string;
+  toSnapshotId?: string;
 }
+
+export type UsageMetric = "crawl" | "browser" | "llm_tokens";
