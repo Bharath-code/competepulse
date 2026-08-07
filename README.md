@@ -9,7 +9,7 @@ Slack-native competitive change agent — CI without a CI team.
 
 ## Status
 
-Phase 1 eng complete for **E0–E5** except **E4-1 Stripe** (payments deferred). Caps are enforced in code without checkout. Thin dashboard at `/dashboard`. Discovery / Phase 0 GTM items remain open in `docs/`.
+Phase 1 eng complete for **E0–E5**, including **E4-1 Dodo Payments** (Starter $149 / Pro $399). Thin dashboard at `/dashboard` with upgrade buttons. Discovery / Phase 0 GTM items remain open in `docs/`.
 
 ## Monorepo layout
 
@@ -18,7 +18,7 @@ pnpm workspace (`packages/*`):
 | Package                | Description                                                                                                 |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `@competepulse/core`   | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
-| `@competepulse/worker` | Cloudflare Worker (Hono): watchlist CRUD, crawl/diff, Slack `/compete`, weekday digests, HITL battlecards.  |
+| `@competepulse/worker` | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing. |
 | `@competepulse/agent`  | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
 
 ## Requirements
@@ -38,7 +38,8 @@ pnpm dev                                  # worker on http://localhost:8787
 
 No secrets are required for local development: when `FIRECRAWL_API_KEY` is
 unset, the crawl pipeline uses deterministic mock fixtures. Slack signature
-checks are skipped when `SLACK_SIGNING_SECRET` is unset.
+checks are skipped when `SLACK_SIGNING_SECRET` is unset. Dodo checkout uses a
+local mock activator when `DODO_PAYMENTS_API_KEY` is unset.
 
 ### Secrets hygiene (E0-2)
 
@@ -50,6 +51,30 @@ checks are skipped when `SLACK_SIGNING_SECRET` is unset.
 Never commit `.env`, `.env.*` (except `.env.example`), or `.dev.vars`.
 `.vercel/` and `.netlify/` are gitignored. CI runs `pnpm secrets:check` to
 reject tracked secret files and common leak patterns.
+
+## Billing — Dodo Payments (E4-1)
+
+CompetePulse uses [Dodo Payments](https://dodopayments.com) (Merchant of Record)
+for India + international subscriptions instead of Stripe.
+
+1. Create **Starter** ($149/mo) and **Pro** ($399/mo) subscription products in the Dodo dashboard.
+2. Set `DODO_PAYMENTS_API_KEY`, `DODO_PRODUCT_STARTER`, `DODO_PRODUCT_PRO` in `.dev.vars` / CF secrets.
+3. Add a webhook endpoint → `https://<worker>/billing/webhooks/dodo` for:
+   `subscription.active`, `subscription.renewed`, `subscription.plan_changed`,
+   `subscription.on_hold`, `subscription.paused`, `subscription.cancelled`,
+   `subscription.expired`, `subscription.failed`.
+4. Set `DODO_PAYMENTS_WEBHOOK_KEY` from the endpoint Overview tab.
+
+Local without keys:
+
+```bash
+# create a workspace, then mock-checkout to Pro
+curl -s -XPOST localhost:8787/workspaces -H 'content-type: application/json' \
+  -d '{"slackTeamId":"T_LOCAL","plan":"trial"}'
+curl -s -XPOST localhost:8787/billing/checkout -H 'content-type: application/json' \
+  -d '{"workspaceId":"<id>","plan":"pro"}'
+# open the returned checkoutUrl (or GET it) to activate the plan
+```
 
 ## Slack install (E1-2)
 
@@ -119,6 +144,7 @@ curl -s -XPOST localhost:8787/digests/run \
 curl -s localhost:8787/workspaces/<ws>/usage
 ```
 
-D1 schema lives in `packages/worker/migrations/` (`0001_init.sql` + `0002_phase1.sql`).
-Local tests use the in-memory store that mirrors that schema; R2/Queues bindings
-are declared in `packages/worker/wrangler.jsonc`.
+D1 schema lives in `packages/worker/migrations/` (`0001_init.sql`,
+`0002_phase1.sql`, `0003_billing.sql`). Local tests use the in-memory store that
+mirrors that schema; R2/Queues bindings are declared in
+`packages/worker/wrangler.jsonc`.
