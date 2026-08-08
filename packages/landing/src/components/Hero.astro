@@ -11,9 +11,9 @@ import BookingCta from "./BookingCta.astro";
     </p>
 
     <h1 class="hero__heading" id="hero-heading">
-      {hero.headline.lead}
+      <span class="hero__lead">{hero.headline.lead}</span>
       <em>{hero.headline.emphasis}</em>
-      {hero.headline.trail}
+      <span class="hero__trail">{hero.headline.trail}</span>
     </h1>
 
     <p class="hero__subhead">{hero.subhead}</p>
@@ -25,7 +25,10 @@ import BookingCta from "./BookingCta.astro";
         <strong>{concierge.badge}</strong> for 3 design partners — no install, no card.
       </p>
     </div>
+  </div>
 
+  <!-- Wider than the copy column so the three points stay on one line. -->
+  <div class="container">
     <ul class="hero__proof">
       {
         hero.proofPoints.map((point) => (
@@ -84,6 +87,17 @@ import BookingCta from "./BookingCta.astro";
     margin-block-start: var(--space-md);
     font-size: var(--step-4);
     letter-spacing: -0.035em;
+    text-wrap: pretty;
+  }
+
+  /* Force the break after the setup line; let the payoff wrap on its own. */
+  .hero__lead {
+    display: block;
+  }
+
+  /* Never orphan the em dash at the end of a line. */
+  .hero__trail {
+    white-space: nowrap;
   }
 
   .hero__heading em {

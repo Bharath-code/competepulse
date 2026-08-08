@@ -8,8 +8,14 @@
  *
  * The static link inside the panel is the source of truth: it works with
  * JavaScript disabled, and it stays on screen until Calendly confirms it has
- * rendered. If the script is blocked, times out, or errors, the visitor is left
- * with a working booking link instead of an empty box.
+ * rendered. Failure is split in two on purpose:
+ *
+ * - `error`       the bundle never loaded, so there is no widget to show. Hide
+ *                 the empty box and leave the booking link.
+ * - `unconfirmed` the bundle loaded and the widget was mounted, but Calendly
+ *                 never posted its "I painted" message. Show the widget *and*
+ *                 keep the link, because hiding a working calendar would be far
+ *                 worse than showing one redundant link.
  */
 
 const WIDGET_JS = "https://assets.calendly.com/assets/external/widget.js";
@@ -17,7 +23,7 @@ const WIDGET_CSS = "https://assets.calendly.com/assets/external/widget.css";
 const RENDER_TIMEOUT_MS = 8000;
 const PRELOAD_MARGIN = "500px";
 
-type EmbedState = "idle" | "loading" | "ready" | "failed";
+type EmbedState = "idle" | "loading" | "ready" | "unconfirmed" | "error";
 
 interface CalendlyGlobal {
   initInlineWidget(options: { url: string; parentElement: HTMLElement }): void;
@@ -89,7 +95,7 @@ function setUp(panel: HTMLElement): void {
     window.addEventListener("message", onCalendlyMessage);
     renderTimer = window.setTimeout(() => {
       window.removeEventListener("message", onCalendlyMessage);
-      if (panel.dataset.calendlyState !== "ready") setState("failed");
+      if (panel.dataset.calendlyState === "loading") setState("unconfirmed");
     }, RENDER_TIMEOUT_MS);
 
     void Promise.all([loadOnce("link", WIDGET_CSS), loadOnce("script", WIDGET_JS)])
@@ -101,7 +107,8 @@ function setUp(panel: HTMLElement): void {
       .catch(() => {
         window.clearTimeout(renderTimer);
         window.removeEventListener("message", onCalendlyMessage);
-        setState("failed");
+        target.replaceChildren();
+        setState("error");
       });
   };
 

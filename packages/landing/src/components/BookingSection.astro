@@ -133,9 +133,12 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
   }
 
   /* --- embed lifecycle -------------------------------------------------
-   * idle/loading -> skeleton + working link stay visible
-   * ready        -> Calendly iframe replaces the link
-   * failed       -> link only, no empty box
+   * idle         -> booking link only
+   * loading      -> skeleton, link still available
+   * ready        -> Calendly confirmed it painted; the link steps aside
+   * unconfirmed  -> widget mounted but unconfirmed; show both, rather than risk
+   *                 hiding a calendar that is probably working
+   * error        -> bundle never loaded; link only, no empty box
    */
   .booking__widget {
     display: none;
@@ -152,7 +155,8 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
     animation: skeleton 1.5s ease-in-out infinite;
   }
 
-  [data-calendly-state="ready"] .booking__widget {
+  [data-calendly-state="ready"] .booking__widget,
+  [data-calendly-state="unconfirmed"] .booking__widget {
     display: block;
     min-height: 44rem;
   }

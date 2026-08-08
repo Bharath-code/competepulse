@@ -45,7 +45,8 @@ export const digestPreview = {
     channel: "#competitive",
     appName: "CompetePulse",
     timestamp: "8:30 AM",
-    header: "CompetePulse digest — 2026-08-06",
+    digestTitle: "CompetePulse digest",
+    digestDate: "2026-08-06",
     sections: [
       {
         competitor: "Acme",

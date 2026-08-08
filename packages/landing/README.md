@@ -55,9 +55,14 @@ destination and one thing to measure.
    loads `widget.js` and `widget.css` when the panel nears the viewport (or
    immediately on a call-to-action click), then mounts the inline widget.
 3. **Widget confirms it painted** — Calendly posts a `calendly.*` message; the
-   panel switches to `data-calendly-state="ready"` and the link is hidden.
-4. **Widget never confirms within 8s, or the script fails** — the panel switches
-   to `failed` and the link stays. A visitor is never left with an empty box.
+   panel switches to `data-calendly-state="ready"` and the link steps aside.
+4. **Bundle never loaded** — `error`: the empty box is hidden and the link stays.
+5. **Bundle loaded and mounted but never confirmed within 8s** — `unconfirmed`:
+   the widget stays visible _and_ the link stays, because hiding a calendar that
+   is probably working would be worse than one redundant link.
+
+A visitor is never left with an empty box, and a working calendar is never
+hidden on the strength of a missing analytics message.
 
 Links carry `utm_source=landing`, `utm_medium=cta|embed`,
 `utm_campaign=design-partners` and `utm_content=<placement>` so bookings can be

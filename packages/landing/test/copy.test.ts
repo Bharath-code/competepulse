@@ -47,7 +47,8 @@ describe("landing copy", () => {
   it("labels the sample digest so nobody reads it as a live customer", () => {
     const competitors = digestPreview.slack.sections.map((s) => s.competitor);
     expect(competitors).toContain("Acme");
-    expect(digestPreview.slack.header).toMatch(/CompetePulse digest — \d{4}-\d{2}-\d{2}/);
+    expect(digestPreview.slack.digestTitle).toBe("CompetePulse digest");
+    expect(digestPreview.slack.digestDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it("keeps the meta description within the search-result snippet budget", () => {

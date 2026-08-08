@@ -43,7 +43,9 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
                 <span class="msg__time">{slack.timestamp}</span>
               </p>
 
-              <p class="digest__header">{slack.header}</p>
+              <p class="digest__header">
+                {slack.digestTitle} — <span class="digest__date">{slack.digestDate}</span>
+              </p>
 
               {
                 slack.sections.map((section) => (
@@ -206,6 +208,11 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
     letter-spacing: -0.02em;
   }
 
+  /* Never split the date across lines on a narrow screen. */
+  .digest__date {
+    white-space: nowrap;
+  }
+
   .entry {
     margin-block-start: 1.1rem;
     padding-block-start: 1.1rem;
@@ -222,14 +229,12 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
   }
 
   .entry__summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    align-items: baseline;
     line-height: 1.55;
   }
 
+  /* Inline, the way Slack renders the tag ahead of the summary. */
   .pill {
+    margin-inline-end: 0.3rem;
     font-family: var(--font-mono);
     font-size: 0.78em;
     font-weight: 700;

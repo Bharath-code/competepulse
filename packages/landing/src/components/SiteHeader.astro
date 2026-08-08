@@ -47,12 +47,12 @@ import Wordmark from "./Wordmark.astro";
     min-height: 4rem;
   }
 
+  /* Booking stays one tap away while scrolling, down to the narrowest phones. */
   .header__cta {
     display: inline-flex;
   }
 
-  /* The hero CTA is already in view on small screens — don't stack two. */
-  @media (max-width: 30rem) {
+  @media (width <= 20rem) {
     .header__cta {
       display: none;
     }

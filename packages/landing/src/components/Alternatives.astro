@@ -61,12 +61,10 @@ import { alternatives } from "../copy";
     }
   }
 
+  /* Price always sits under the name so the three columns line up. */
   .compare__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
+    display: grid;
+    gap: 0.2rem;
   }
 
   .compare__name {

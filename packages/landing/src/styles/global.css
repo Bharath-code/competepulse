@@ -249,10 +249,38 @@ a:hover {
   --btn-bg: #ffffff0a;
 }
 
+.btn--sm {
+  min-height: 2.5rem;
+  padding-inline: 1.1rem;
+  font-size: var(--step--1);
+}
+
 .btn--lg {
   min-height: 3.4rem;
   padding-inline: 1.75rem;
   font-size: var(--step-1);
+}
+
+.btn__arrow {
+  width: 1em;
+  height: 1em;
+  transition: transform 140ms ease-out;
+}
+
+.btn:hover .btn__arrow {
+  transform: translateX(2px);
+}
+
+/* Small phones: keep the header on one line and the CTA label unwrapped. */
+@media (width <= 26rem) {
+  .btn--sm {
+    padding-inline: 0.85rem;
+  }
+
+  .btn--lg {
+    padding-inline: 1.1rem;
+    font-size: var(--step-0);
+  }
 }
 
 .card {

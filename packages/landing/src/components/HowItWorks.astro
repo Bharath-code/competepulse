@@ -75,7 +75,7 @@ import { howItWorks } from "../copy";
     background: var(--surface-sunken);
     color: var(--accent-bright);
     font-size: var(--step--1);
-    overflow-x: auto;
-    white-space: nowrap;
+    /* Wrap rather than clip: a half-visible command reads as a broken layout. */
+    overflow-wrap: anywhere;
   }
 </style>
