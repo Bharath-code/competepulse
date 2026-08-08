@@ -16,8 +16,14 @@
       "migrations_dir": "migrations",
     },
   ],
-  // R2 omitted until the account enables R2 in the Cloudflare dashboard.
-  // Worker falls back to in-memory snapshots when SNAPSHOTS is unset.
+  // R2 immutable snapshots (E2-3)
+  "r2_buckets": [
+    {
+      "binding": "SNAPSHOTS",
+      "bucket_name": "competepulse-snapshots",
+      "preview_bucket_name": "competepulse-snapshots-preview",
+    },
+  ],
   // Crawl fan-out + retries (E2-1)
   "queues": {
     "producers": [{ "binding": "CRAWL_QUEUE", "queue": "competepulse-crawl" }],
