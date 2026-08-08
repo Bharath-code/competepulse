@@ -46,11 +46,7 @@ import {
   verifySlackSignature,
 } from "./slack.js";
 import { CapError, store } from "./store.js";
-import {
-  getWorkspaceStore,
-  type WorkspacePatch,
-  type WorkspaceStore,
-} from "./workspace-store.js";
+import { getWorkspaceStore, type WorkspacePatch, type WorkspaceStore } from "./workspace-store.js";
 
 export interface Env {
   DB?: D1Database;
