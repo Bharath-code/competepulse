@@ -10,16 +10,22 @@
     "preview": "astro preview",
     "typecheck": "astro check --minimumSeverity error",
     "test": "vitest run",
+    "fonts": "node scripts/sync-fonts.mjs",
     "og": "node scripts/generate-og-image.mjs",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@astrojs/sitemap": "^3.7.3",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/instrument-serif": "^5.3.0",
     "astro": "^7.2.0",
+    "opentype.js": "^2.0.0",
     "sharp": "^0.35.3",
     "typescript": "^5.9.3",
     "vitest": "^4.1.10",
+    "wawoff2": "^2.0.1",
     "wrangler": "^4.119.0"
   }
 }

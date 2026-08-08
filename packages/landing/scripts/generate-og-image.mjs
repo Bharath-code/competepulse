@@ -1,72 +1,168 @@
 /**
- * Renders `public/og.png` (1200×630) from an inline SVG.
+ * Renders `public/og.png` (1200×630) — the masthead treatment of the headline.
  *
  * Link previews are the first thing a cold prospect sees when the page is pasted
- * into LinkedIn, email or Slack, so the card carries the headline rather than a
- * bare logo. Run `pnpm --filter @competepulse/landing og` after editing the
- * headline and commit the result — the PNG is a checked-in artifact so the build
- * needs no image pipeline. Requires the Inter font to be installed locally.
+ * into LinkedIn, email or Slack, so the card has to be set in the same faces as
+ * the page. It reads the committed woff2 files, decompresses them, and converts
+ * every string to outlines, because the SVG rasteriser resolves fonts through
+ * fontconfig and would otherwise silently substitute a system face.
+ *
+ * Run `pnpm --filter @competepulse/landing og` after editing the headline and
+ * commit the result — the PNG is a checked-in artifact so the build needs no
+ * image pipeline.
  */
 
-import { mkdir, writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import opentype from "opentype.js";
 import sharp from "sharp";
+import { decompress } from "wawoff2";
 
 const here = dirname(fileURLToPath(import.meta.url));
+const fontsDir = resolve(here, "../public/fonts");
 const outFile = resolve(here, "../public/og.png");
 
 const WIDTH = 1200;
 const HEIGHT = 630;
+const MARGIN = 72;
+const RIGHT = WIDTH - MARGIN;
+
+const PAPER = "#f5f2ea";
+const INK = "#17130e";
+const INK_3 = "#6f6659";
+const SIGNAL = "#c4300f";
+const RULE = "#d8d0bd";
+
+/**
+ * Decompression must stay sequential: wawoff2 shares one wasm heap, and running
+ * these concurrently returns silently corrupted buffers.
+ */
+async function loadFonts(files) {
+  const fonts = [];
+  for (const file of files) {
+    const sfnt = await decompress(await readFile(resolve(fontsDir, file)));
+    fonts.push(opentype.parse(Uint8Array.from(sfnt).buffer));
+  }
+  return fonts;
+}
+
+const [serif, serifItalic, sans, mono] = await loadFonts([
+  "instrument-serif-400.woff2",
+  "instrument-serif-400-italic.woff2",
+  "ibm-plex-sans-400.woff2",
+  "ibm-plex-mono-400.woff2",
+]);
+
+/**
+ * Serialise glyph outlines ourselves.
+ *
+ * opentype's `toPathData` rounds through a string concatenation that yields the
+ * literal "NaN" for coordinates JavaScript prints in exponential form. Renderers
+ * abort a path at the first parse error, so a single bad number silently swallows
+ * the rest of the line — which is exactly how it failed here.
+ */
+function serialize(commands) {
+  const n = (value) => {
+    if (!Number.isFinite(value)) throw new Error(`non-finite path coordinate: ${value}`);
+    return String(Math.round(value * 100) / 100);
+  };
+
+  return commands
+    .map((c) => {
+      switch (c.type) {
+        case "M":
+          return `M${n(c.x)} ${n(c.y)}`;
+        case "L":
+          return `L${n(c.x)} ${n(c.y)}`;
+        case "C":
+          return `C${n(c.x1)} ${n(c.y1)} ${n(c.x2)} ${n(c.y2)} ${n(c.x)} ${n(c.y)}`;
+        case "Q":
+          return `Q${n(c.x1)} ${n(c.y1)} ${n(c.x)} ${n(c.y)}`;
+        default:
+          return "Z";
+      }
+    })
+    .join("");
+}
+
+/**
+ * Lay out one string as SVG path data. opentype's own `getPath` cannot letter-space,
+ * and the mono labels on this card are heavily tracked, so glyphs are advanced by hand.
+ */
+function layout(font, text, size, tracking) {
+  const scale = size / font.unitsPerEm;
+  // Per-character lookup rather than `stringToGlyphs`: opentype's shaper trips
+  // over IBM Plex Mono's ccmp table, and these strings want no ligatures anyway.
+  const glyphs = [...text].map((char) => font.charToGlyph(char));
+  let pen = 0;
+  const parts = [];
+
+  glyphs.forEach((glyph, index) => {
+    parts.push(serialize(glyph.getPath(pen, 0, size).commands));
+    pen += glyph.advanceWidth * scale + tracking;
+    const next = glyphs[index + 1];
+    if (next) pen += font.getKerningValue(glyph, next) * scale;
+  });
+
+  return { d: parts.join(" "), width: pen - tracking };
+}
+
+function text(font, string, { x = MARGIN, y, size, tracking = 0, fill = INK, anchor = "start" }) {
+  const { d, width } = layout(font, string, size, tracking);
+  const dx = anchor === "end" ? x - width : x;
+  return `<g transform="translate(${dx.toFixed(2)} ${y})" fill="${fill}"><path d="${d}"/></g>`;
+}
+
+function rule(y, { x = MARGIN, width = RIGHT - MARGIN, height = 1, fill = RULE } = {}) {
+  return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${fill}"/>`;
+}
+
+const body = [
+  `<rect width="${WIDTH}" height="${HEIGHT}" fill="${PAPER}"/>`,
+  `<rect width="${WIDTH}" height="14" fill="${INK}"/>`,
+
+  text(mono, "ISSUE No. 1", { y: 76, size: 19, tracking: 3.4, fill: INK_3 }),
+  text(mono, "WEEKDAY MORNINGS", {
+    x: RIGHT,
+    y: 76,
+    size: 19,
+    tracking: 3.4,
+    fill: INK_3,
+    anchor: "end",
+  }),
+  rule(98),
+
+  text(serif, "CompetePulse", { y: 168, size: 62 }),
+  rule(196, { height: 2, fill: INK }),
+
+  text(serif, "Every morning in Slack:", { y: 302, size: 78 }),
+  text(serifItalic, "what materially changed", { y: 386, size: 78, fill: SIGNAL }),
+  text(serif, "on your competitors — with links.", { y: 470, size: 78 }),
+
+  rule(512),
+  text(sans, "Pricing and changelog watches, scored for materiality, cited in every line.", {
+    y: 556,
+    size: 25,
+    fill: INK_3,
+  }),
+
+  `<rect x="${MARGIN}" y="578" width="12" height="30" fill="${SIGNAL}"/>`,
+  text(mono, "BOOK A 15-MIN DISCOVERY CALL", { x: MARGIN + 30, y: 601, size: 21, tracking: 2.2 }),
+  text(mono, "NO KLUE BILL. NO VISUALPING NOISE.", {
+    x: RIGHT,
+    y: 601,
+    size: 19,
+    tracking: 1.4,
+    fill: INK_3,
+    anchor: "end",
+  }),
+].join("\n  ");
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
-  <defs>
-    <radialGradient id="glowA" cx="12%" cy="0%" r="70%">
-      <stop offset="0%" stop-color="#17334c" stop-opacity="0.95" />
-      <stop offset="100%" stop-color="#0b0f14" stop-opacity="0" />
-    </radialGradient>
-    <radialGradient id="glowB" cx="100%" cy="4%" r="55%">
-      <stop offset="0%" stop-color="#1d2b26" stop-opacity="0.9" />
-      <stop offset="100%" stop-color="#0b0f14" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#7cc3ff" />
-      <stop offset="100%" stop-color="#3d9cf0" />
-    </linearGradient>
-  </defs>
-
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="#0b0f14" />
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glowA)" />
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glowB)" />
-
-  <g transform="translate(80 82)">
-    <path d="M0 22h18l13-36 19.5 72 14.5-50 9.5 14h34"
-      fill="none" stroke="#3d9cf0" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
-    <text x="128" y="34" font-family="Inter, sans-serif" font-size="34" font-weight="600"
-      letter-spacing="-0.5" fill="#e8eef4">CompetePulse</text>
-  </g>
-
-  <g font-family="Inter, sans-serif" font-size="66" font-weight="600" letter-spacing="-2.4">
-    <text x="80" y="272" fill="#e8eef4">Every morning in Slack:</text>
-    <text x="80" y="352" fill="url(#accent)">what materially changed</text>
-    <text x="80" y="432" fill="url(#accent)">on your competitors<tspan fill="#e8eef4" dx="18">— with links.</tspan></text>
-  </g>
-
-  <text x="80" y="502" font-family="Inter, sans-serif" font-size="27" font-weight="400" fill="#9fb0c2">
-    Pricing and changelog watches, scored for materiality, cited in every line.
-  </text>
-
-  <g transform="translate(80 548)">
-    <rect width="386" height="56" rx="28" fill="url(#accent)" />
-    <text x="193" y="36" text-anchor="middle" font-family="Inter, sans-serif" font-size="23"
-      font-weight="600" fill="#04121f">Book a 15-min discovery call</text>
-    <text x="418" y="36" font-family="Inter, sans-serif" font-size="21" fill="#7c8fa3">
-      No Klue bill. No Visualping noise.
-    </text>
-  </g>
+  ${body}
 </svg>`;
 
-await mkdir(dirname(outFile), { recursive: true });
 const png = await sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toBuffer();
 await writeFile(outFile, png);
 

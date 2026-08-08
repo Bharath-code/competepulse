@@ -8,31 +8,27 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
 <section class="section" aria-labelledby="digest-heading">
   <div class="container digest">
     <div class="digest__intro">
-      <p class="eyebrow">{digestPreview.kicker}</p>
+      <p class="kicker kicker--signal">{digestPreview.kicker}</p>
       <h2 class="section-title" id="digest-heading">{digestPreview.title}</h2>
-      <p class="lede">{digestPreview.body}</p>
+      <p class="lead">{digestPreview.body}</p>
     </div>
 
     <figure class="digest__figure">
-      <div class="slack card">
+      <div class="slack night">
         <div class="slack__chrome">
-          <span class="slack__lights" aria-hidden="true">
-            <i></i><i></i><i></i>
-          </span>
-          <span class="slack__channel mono">{slack.channel}</span>
+          <span class="slack__channel">{slack.channel}</span>
         </div>
 
         <div class="slack__thread">
           <div class="msg">
             <span class="msg__avatar" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
+              <svg viewBox="0 0 26 16" focusable="false">
                 <path
-                  d="M2.5 13h3.4l2.2-6.2 3.4 12.4 2.5-8.6 1.6 2.4h6.4"
+                  d="M0.9 9.4h3.3l2-6 3.3 12.1 2.4-8.4 1.6 2.3h11.6"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2.2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
+                  stroke-width="1.8"
+                  stroke-linecap="square"></path>
               </svg>
             </span>
 
@@ -40,7 +36,7 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
               <p class="msg__meta">
                 <b>{slack.appName}</b>
                 <span class="msg__app">APP</span>
-                <span class="msg__time">{slack.timestamp}</span>
+                <span>{slack.timestamp}</span>
               </p>
 
               <p class="digest__header">
@@ -91,9 +87,7 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
         </div>
       </div>
 
-      <figcaption class="digest__caption">
-        Example digest. Acme and Northwind are placeholders — your watchlist is your competitors.
-      </figcaption>
+      <figcaption class="digest__caption">{digestPreview.caption}</figcaption>
     </figure>
   </div>
 </section>
@@ -104,11 +98,11 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
     gap: var(--space-xl);
   }
 
-  @media (min-width: 62rem) {
+  @media (width >= 64rem) {
     .digest {
-      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+      column-gap: var(--space-xl);
       align-items: start;
-      gap: var(--space-xl);
     }
 
     .digest__intro {
@@ -121,215 +115,197 @@ const materialityLabel = { high: "HIGH", low: "LOW" } as const;
     margin: 0;
   }
 
+  /* The artifact is genuinely dark, so it sits on the paper like a plate. */
   .slack {
-    overflow: hidden;
-    box-shadow: var(--shadow-lift);
+    border: 1px solid var(--ink);
+    box-shadow: 10px 10px 0 var(--paper-deep);
   }
 
   .slack__chrome {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.7rem 1rem;
-    border-block-end: 1px solid var(--border);
-    background: var(--surface-sunken);
-  }
-
-  .slack__lights {
-    display: inline-flex;
-    gap: 0.35rem;
-  }
-
-  .slack__lights i {
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 50%;
-    background: var(--border-strong);
-  }
-
-  .slack__channel {
-    color: var(--text-faint);
-    font-size: var(--step--1);
+    padding: 0.6rem 1rem;
+    border-block-end: 1px solid var(--night-rule);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.08em;
+    color: var(--night-muted);
   }
 
   .slack__thread {
-    padding: clamp(1rem, 3vw, 1.5rem);
+    padding: clamp(1rem, 2.6vw, 1.6rem);
   }
 
   .msg {
     display: grid;
-    grid-template-columns: 2.25rem minmax(0, 1fr);
+    grid-template-columns: 2rem minmax(0, 1fr);
     gap: 0.85rem;
   }
 
   .msg__avatar {
     display: grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(160deg, #1d4a72, #123049);
-    color: var(--accent-bright);
+    width: 2rem;
+    height: 2rem;
+    background: var(--night-2);
+    color: var(--night-high);
   }
 
   .msg__avatar svg {
-    width: 1.4rem;
-    height: 1.4rem;
+    width: 1.2rem;
   }
 
   .msg__meta {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    color: var(--night-muted);
   }
 
   .msg__meta b {
-    color: var(--text);
-    font-size: var(--step-0);
-    font-weight: 650;
+    font-family: var(--font-text);
+    font-size: var(--t-small);
+    font-weight: 600;
+    color: var(--night-text);
   }
 
   .msg__app {
-    padding: 0.05rem 0.3rem;
-    border-radius: 3px;
-    background: var(--border);
-    color: var(--text-muted);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    padding: 0.05rem 0.28rem;
+    background: var(--night-rule);
+    color: var(--night-text);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
   }
 
   .digest__header {
-    margin-block: 0.7rem 0.25rem;
-    font-size: var(--step-1);
-    font-weight: 650;
-    letter-spacing: -0.02em;
+    margin-block: 0.7rem 0.3rem;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1.15;
+    color: var(--night-text);
   }
 
-  /* Never split the date across lines on a narrow screen. */
   .digest__date {
     white-space: nowrap;
   }
 
   .entry {
-    margin-block-start: 1.1rem;
-    padding-block-start: 1.1rem;
-    border-block-start: 1px solid var(--border);
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--night-rule);
   }
 
   .entry__competitor {
-    font-weight: 680;
-    letter-spacing: -0.01em;
+    font-size: var(--t-small);
+    font-weight: 600;
   }
 
   .entry__row {
-    margin-block-start: 0.5rem;
+    margin-block-start: 0.45rem;
   }
 
   .entry__summary {
-    line-height: 1.55;
+    font-size: var(--t-small);
+    line-height: 1.5;
   }
 
-  /* Inline, the way Slack renders the tag ahead of the summary. */
   .pill {
-    margin-inline-end: 0.3rem;
+    margin-inline-end: 0.35rem;
     font-family: var(--font-mono);
     font-size: 0.78em;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     white-space: nowrap;
   }
 
   .pill--high {
-    color: var(--high);
+    color: var(--night-high);
   }
 
   .pill--low {
-    color: var(--low);
+    color: var(--night-low);
   }
 
   .pill--none {
-    color: var(--ok);
+    color: var(--night-quiet);
   }
 
   .entry__cite {
     margin-block-start: 0.3rem;
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--night-muted);
   }
 
   .entry__link {
-    color: var(--accent-bright);
+    color: var(--night-link);
     text-decoration: underline;
-    text-decoration-color: #7cc3ff59;
     text-underline-offset: 0.2em;
   }
 
   .entry__why {
     margin-block-start: 0.2rem;
-    font-size: var(--step--1);
-    color: var(--text-muted);
+    font-size: 0.82rem;
+    color: var(--night-muted);
   }
 
   .digest__quiet {
     display: flex;
-    gap: 0.5rem;
-    margin-block-start: 1.1rem;
-    padding-block-start: 1.1rem;
-    border-block-start: 1px solid var(--border);
-    font-size: var(--step--1);
-    color: var(--text-muted);
+    gap: 0.45rem;
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--night-rule);
+    font-size: var(--t-small);
+    color: var(--night-muted);
   }
 
   .digest__quiet b {
-    color: var(--text);
-    font-weight: 620;
+    color: var(--night-text);
+    font-weight: 600;
   }
 
   .reply {
     display: grid;
-    grid-template-columns: 1.75rem minmax(0, 1fr);
-    gap: 0.7rem;
-    margin-block-start: 1.25rem;
-    padding: 0.9rem 1rem;
-    border-radius: var(--radius-md);
-    border: 1px dashed var(--border-strong);
-    background: var(--surface-sunken);
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    gap: 0.65rem;
+    margin-block-start: 1.1rem;
+    padding: 0.85rem 1rem;
+    border: 1px dashed var(--night-rule);
   }
 
   .reply__avatar {
     display: grid;
     place-items: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: var(--radius-sm);
-    background: #3a2f4d;
-    color: #d3bdf0;
-    font-size: 0.7rem;
-    font-weight: 700;
+    width: 1.6rem;
+    height: 1.6rem;
+    background: var(--night-rule);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--night-text);
   }
 
   .reply__question {
-    font-size: var(--step--1);
+    font-size: var(--t-small);
   }
 
   .reply__answer {
-    margin-block-start: 0.35rem;
-    font-size: var(--step--1);
-    color: var(--text-muted);
+    margin-block-start: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--night-muted);
   }
 
   .reply__answer b {
     margin-inline-end: 0.4rem;
-    color: var(--accent-bright);
-    font-weight: 650;
+    color: var(--night-link);
+    font-weight: 600;
   }
 
   .digest__caption {
     margin-block-start: var(--space-md);
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    padding-block-start: var(--space-xs);
+    border-block-start: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--ink-3);
   }
 </style>

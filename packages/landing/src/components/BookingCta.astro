@@ -22,19 +22,21 @@ const href = config.calendlyUrl
   : buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min discovery call");
 ---
 
-<a
-  class:list={["btn", "btn--primary", size !== "md" && `btn--${size}`]}
-  href={href}
-  data-cta-placement={placement}
->
+<a class:list={["btn", size !== "md" && `btn--${size}`]} href={href} data-cta-placement={placement}>
   {label}
-  <svg class="btn__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path
-      d="M3 8h9M8.5 4l4 4-4 4"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.75"
-      stroke-linecap="round"
-      stroke-linejoin="round"></path>
-  </svg>
+  <span class="btn__rule" aria-hidden="true"></span>
 </a>
+
+<style>
+  /* A printed arrow would fight the type; a short rule reads as a lead-out. */
+  .btn__rule {
+    width: 1.6em;
+    height: 1px;
+    background: currentColor;
+    transition: width 140ms ease-out;
+  }
+
+  .btn:hover .btn__rule {
+    width: 2.3em;
+  }
+</style>

@@ -15,33 +15,36 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
       <p class="footer__tagline">{brand.tagline}</p>
     </div>
 
-    <p class="footer__note">{footer.note}</p>
+    <div class="footer__notes">
+      <p class="kicker kicker--tight">{footer.kicker}</p>
+      <p class="footer__note">{footer.note}</p>
+      <p class="footer__colophon">{footer.colophon}</p>
+    </div>
 
-    <div class="footer__meta">
+    <p class="footer__meta">
       <a href={mailto}>{config.contactEmail}</a>
       {config.appUrl && <a href={`${config.appUrl}/dashboard`}>Dashboard</a>}
       <span>{footer.copyright}</span>
-    </div>
+    </p>
   </div>
 </footer>
 
 <style>
   .footer {
     padding-block: var(--space-lg) var(--space-xl);
-    border-block-start: 1px solid var(--border);
-    background: var(--surface-sunken);
+    border-block-start: 3px solid var(--ink);
   }
 
   .footer__inner {
     display: grid;
-    gap: var(--space-md);
+    gap: var(--space-lg);
   }
 
-  @media (min-width: 52rem) {
+  @media (width >= 56rem) {
     .footer__inner {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+      column-gap: var(--space-2xl);
       align-items: start;
-      column-gap: var(--space-xl);
     }
 
     .footer__meta {
@@ -50,15 +53,28 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
   }
 
   .footer__tagline {
-    margin-block-start: 0.4rem;
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    margin-block-start: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
   }
 
   .footer__note {
-    max-width: var(--measure);
-    font-size: var(--step--1);
-    color: var(--text-muted);
+    max-width: 62ch;
+    margin-block-start: var(--space-sm);
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+
+  .footer__colophon {
+    max-width: 62ch;
+    margin-block-start: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--ink-3);
   }
 
   .footer__meta {
@@ -66,8 +82,9 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
     flex-wrap: wrap;
     gap: var(--space-md);
     padding-block-start: var(--space-md);
-    border-block-start: 1px solid var(--border);
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    border-block-start: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-3);
   }
 </style>

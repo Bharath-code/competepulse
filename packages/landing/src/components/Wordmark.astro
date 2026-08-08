@@ -2,23 +2,24 @@
 import { brand } from "../copy";
 
 interface Props {
-  /** Renders an <h1>-adjacent link in the header, plain text in the footer. */
+  /** Nameplate scale for the masthead, running size everywhere else. */
+  size?: "nameplate" | "running";
   href?: string | null;
 }
 
-const { href = "/" } = Astro.props;
+const { size = "running", href = "/" } = Astro.props;
 const Tag = href ? "a" : "span";
 ---
 
-<Tag class="wordmark" href={href ?? undefined}>
-  <svg class="wordmark__mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<Tag class:list={["wordmark", `wordmark--${size}`]} href={href ?? undefined}>
+  <svg class="wordmark__mark" viewBox="0 0 26 16" aria-hidden="true" focusable="false">
     <path
-      d="M1.75 13.25h3.6l2.3-6.6 3.55 13.2 2.6-9.1 1.75 2.5h6.7"
+      d="M0.9 9.4h3.3l2-6 3.3 12.1 2.4-8.4 1.6 2.3h11.6"
       fill="none"
       stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"></path>
+      stroke-width="1.6"
+      stroke-linecap="square"
+      stroke-linejoin="miter"></path>
   </svg>
   <span class="wordmark__text">{brand.name}</span>
 </Tag>
@@ -26,23 +27,27 @@ const Tag = href ? "a" : "span";
 <style>
   .wordmark {
     display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    color: var(--text);
-    font-size: var(--step-1);
-    font-weight: 660;
-    letter-spacing: -0.03em;
+    align-items: baseline;
+    gap: 0.4em;
+    color: var(--ink);
+    font-family: var(--font-display);
     text-decoration: none;
+    white-space: nowrap;
   }
 
   .wordmark__mark {
-    width: 1.4em;
-    height: 1.4em;
-    color: var(--accent);
-    filter: drop-shadow(0 0 10px #3d9cf066);
+    width: 1.05em;
+    align-self: center;
+    color: var(--signal);
   }
 
-  .wordmark__text {
-    white-space: nowrap;
+  .wordmark--nameplate {
+    font-size: clamp(2.1rem, 1.1rem + 4.3vw, 4.25rem);
+    letter-spacing: -0.03em;
+  }
+
+  .wordmark--running {
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
   }
 </style>

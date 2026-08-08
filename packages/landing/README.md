@@ -6,14 +6,14 @@ discovery call.
 
 ## Why it is built this way
 
-| Decision                                               | Reason                                                                                                                                               |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Astro, `output: "static"`                              | Ships HTML and CSS with no framework runtime. The whole page is ~4 kB of gzipped HTML and under 2 kB of JavaScript.                                  |
-| No web fonts                                           | Zero font requests, zero layout shift. The system stack renders instantly on every device.                                                           |
-| Stylesheet inlined                                     | One page, small CSS — inlining removes a render-blocking round trip.                                                                                 |
-| Calendly loaded lazily                                 | The widget bundle is larger than the entire page. It is fetched only when the booking section approaches the viewport, or on a call-to-action click. |
-| Copy centralised in `src/copy.ts`                      | The pitch can be reviewed and tested without touching markup, and `test/copy.test.ts` guards the promises the brief requires.                        |
-| Palette shared with `packages/worker/src/dashboard.ts` | The site and the product read as one thing.                                                                                                          |
+| Decision                                | Reason                                                                                                                                               |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Astro, `output: "static"`               | Ships HTML and CSS with no framework runtime. The whole page is a few kilobytes of gzipped HTML and under 2 kB of JavaScript.                        |
+| Editorial / broadsheet language         | Newsprint ground, ink text, hairline rules, square corners, one signal red. The product is a morning briefing — the page is set like printed news.   |
+| Self-hosted Instrument Serif + IBM Plex | Latin-subset woff2 in `public/fonts/` (see `pnpm fonts`). Preloaded for LCP; metric-matched fallbacks kill layout shift.                             |
+| Stylesheet inlined                      | One page, small CSS — inlining removes a render-blocking round trip.                                                                                 |
+| Calendly loaded lazily                  | The widget bundle is larger than the entire page. It is fetched only when the booking section approaches the viewport, or on a call-to-action click. |
+| Copy centralised in `src/copy.ts`       | The pitch can be reviewed and tested without touching markup, and `test/copy.test.ts` guards the promises the brief requires.                        |
 
 ## Commands
 
@@ -23,6 +23,7 @@ pnpm --filter @competepulse/landing build      # → dist/
 pnpm --filter @competepulse/landing preview    # serve dist/
 pnpm --filter @competepulse/landing typecheck  # astro check
 pnpm --filter @competepulse/landing test       # unit + built-HTML assertions
+pnpm --filter @competepulse/landing fonts      # sync latin woff2 into public/fonts/
 pnpm --filter @competepulse/landing og         # regenerate public/og.png
 ```
 

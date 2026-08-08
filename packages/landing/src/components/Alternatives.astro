@@ -1,90 +1,189 @@
 ---
 import { alternatives } from "../copy";
+
+const [, costLabel, tellsLabel, leavesLabel] = alternatives.columns;
+const rows = [...alternatives.rows, alternatives.ours];
+const oursIndex = rows.length - 1;
 ---
 
 <section class="section" aria-labelledby="alternatives-heading">
   <div class="container">
-    <p class="eyebrow">{alternatives.kicker}</p>
+    <p class="kicker">{alternatives.kicker}</p>
     <h2 class="section-title" id="alternatives-heading">{alternatives.title}</h2>
 
-    <div class="compare">
-      {
-        alternatives.columns.map((column) => (
-          <article class="compare__item">
-            <header class="compare__head">
-              <h3 class="compare__name">{column.name}</h3>
-              <p class="compare__price mono">{column.price}</p>
-            </header>
-            <p class="compare__claim">{column.claim}</p>
-            <p class="compare__counter">{column.counter}</p>
-          </article>
-        ))
-      }
-    </div>
+    <table class="compare">
+      <caption class="visually-hidden">
+        How CompetePulse compares with the alternatives on price, what they report, and the work
+        they leave you with
+      </caption>
+      <thead>
+        <tr>
+          {alternatives.columns.map((column) => <th scope="col">{column}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row, index) => (
+            <tr class:list={[index === oursIndex && "is-ours"]}>
+              <th scope="row">{row.name}</th>
+              <td class="compare__price" data-label={costLabel}>
+                {row.price}
+              </td>
+              <td data-label={tellsLabel}>{row.tells}</td>
+              <td class="compare__leaves" data-label={leavesLabel}>
+                {row.leaves}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
   </div>
 </section>
 
 <style>
   .compare {
-    display: grid;
-    gap: 0;
+    width: 100%;
     margin-block-start: var(--space-xl);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
+    border-collapse: collapse;
+    text-align: start;
   }
 
-  .compare__item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    padding: var(--space-md);
-    border-block-start: 1px solid var(--border);
+  th,
+  td {
+    text-align: start;
+    vertical-align: baseline;
   }
 
-  .compare__item:first-child {
-    border-block-start: none;
+  thead th {
+    padding: 0 var(--space-md) 0.6rem 0;
+    border-block-end: 1px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
   }
 
-  @media (min-width: 52rem) {
-    .compare {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .compare__item {
-      border-block-start: none;
-      border-inline-start: 1px solid var(--border);
-    }
-
-    .compare__item:first-child {
-      border-inline-start: none;
-    }
+  tbody th {
+    font-family: var(--font-display);
+    font-size: var(--t-h3);
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
 
-  /* Price always sits under the name so the three columns line up. */
-  .compare__head {
-    display: grid;
-    gap: 0.2rem;
-  }
-
-  .compare__name {
-    font-size: var(--step-1);
+  td {
+    font-size: var(--t-small);
+    color: var(--ink-2);
   }
 
   .compare__price {
-    color: var(--text-faint);
-    font-size: var(--step--1);
+    font-family: var(--font-mono);
+    color: var(--ink);
   }
 
-  .compare__claim {
-    color: var(--text-faint);
-    font-size: var(--step--1);
+  .compare__leaves {
+    color: var(--ink-3);
   }
 
-  .compare__counter {
-    padding-inline-start: 0.85rem;
-    border-inline-start: 2px solid var(--accent);
-    color: var(--text);
-    font-size: var(--step-0);
+  /* --- wide: a broadsheet table ---------------------------------------- */
+  @media (width >= 58rem) {
+    tbody tr {
+      border-block-end: 1px solid var(--rule);
+    }
+
+    tbody th,
+    td {
+      padding: var(--space-md) var(--space-md) var(--space-md) 0;
+    }
+
+    tbody th,
+    .compare__price {
+      white-space: nowrap;
+    }
+
+    /* Our row is the answer, so it gets the tint and the signal rule. */
+    .is-ours {
+      border-block: 1px solid var(--ink);
+      background: var(--paper-tint);
+    }
+
+    .is-ours th {
+      position: relative;
+      padding-inline-start: var(--space-md);
+      color: var(--signal-deep);
+    }
+
+    .is-ours th::before {
+      content: "";
+      position: absolute;
+      inset-block: 0.9rem;
+      inset-inline-start: 0;
+      width: 3px;
+      background: var(--signal);
+    }
+  }
+
+  /* --- narrow: each option becomes its own labelled block --------------- */
+  @media (width <= 57.999rem) {
+    .compare,
+    tbody,
+    tbody tr,
+    tbody th,
+    td {
+      display: block;
+    }
+
+    thead {
+      display: none;
+    }
+
+    tbody tr {
+      padding-block: var(--space-md);
+      border-block-start: 1px solid var(--rule);
+    }
+
+    tbody tr:first-child {
+      border-block-start: 1px solid var(--ink);
+    }
+
+    tbody th {
+      padding-block-end: var(--space-xs);
+    }
+
+    td {
+      display: grid;
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      gap: 0.4rem 0.75rem;
+      padding-block: 0.3rem;
+    }
+
+    td::before {
+      content: attr(data-label);
+      font-family: var(--font-mono);
+      font-size: var(--t-kicker);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+    }
+
+    .is-ours {
+      padding-inline: var(--space-md);
+      border-block: 1px solid var(--ink);
+      background: var(--paper-tint);
+    }
+
+    .is-ours th {
+      /* signal-deep clears AA on the tinted row (signal itself is 4.46). */
+      color: var(--signal-deep);
+    }
+  }
+
+  @media (width <= 26rem) {
+    td {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.1rem;
+    }
   }
 </style>

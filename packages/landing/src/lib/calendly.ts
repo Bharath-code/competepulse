@@ -12,10 +12,11 @@ export interface CalendlyEmbedTheme {
   primaryColor: string;
 }
 
-export const CALENDLY_DARK_THEME: CalendlyEmbedTheme = {
-  backgroundColor: "111820",
-  textColor: "e8eef4",
-  primaryColor: "3d9cf0",
+/** Matches the paper coupon the embed is mounted inside. */
+export const CALENDLY_THEME: CalendlyEmbedTheme = {
+  backgroundColor: "f5f2ea",
+  textColor: "17130e",
+  primaryColor: "c4300f",
 };
 
 export interface CalendlyLinkOptions {
@@ -57,7 +58,7 @@ export function buildCalendlyUrl(
   if (options.placement) params.set("utm_content", options.placement);
 
   if (options.embed) {
-    const theme = options.theme ?? CALENDLY_DARK_THEME;
+    const theme = options.theme ?? CALENDLY_THEME;
     params.set("hide_event_type_details", "0");
     params.set("background_color", assertHex(theme.backgroundColor, "backgroundColor"));
     params.set("text_color", assertHex(theme.textColor, "textColor"));

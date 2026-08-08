@@ -38,10 +38,20 @@ describe("landing copy", () => {
   });
 
   it("names the alternatives buyers already priced", () => {
-    const names = alternatives.columns.map((column) => column.name).join(" ");
+    const names = alternatives.rows.map((row) => row.name).join(" ");
     expect(names).toMatch(/visualping/i);
     expect(names).toMatch(/klue/i);
     expect(names).toMatch(/chatgpt/i);
+  });
+
+  it("puts CompetePulse in the same table, with a price", () => {
+    expect(alternatives.ours.name).toBe("CompetePulse");
+    expect(alternatives.ours.price).toMatch(/\$\d/);
+    // Every row must answer every column, or the table reads as a gap.
+    expect(alternatives.columns).toHaveLength(4);
+    for (const row of [...alternatives.rows, alternatives.ours]) {
+      expect(Object.values(row).every((value) => value.trim().length > 0)).toBe(true);
+    }
   });
 
   it("labels the sample digest so nobody reads it as a live customer", () => {

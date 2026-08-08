@@ -67,7 +67,7 @@ describe("built page (booking link configured)", () => {
     expect(url.origin + url.pathname).toBe(CALENDLY_URL);
     expect(url.searchParams.get("hide_gdpr_banner")).toBe("1");
     expect(url.searchParams.get("utm_medium")).toBe("embed");
-    expect(url.searchParams.get("background_color")).toBe("111820");
+    expect(url.searchParams.get("background_color")).toBe("f5f2ea");
   });
 
   it("keeps a working booking link for visitors the embed never reaches", () => {
@@ -106,6 +106,27 @@ describe("built page (booking link configured)", () => {
     expect(text).toMatch(/Do I need to install anything to try it\?/);
   });
 
+  it("self-hosts the type and preloads the faces the headline needs", () => {
+    for (const file of [
+      "instrument-serif-400.woff2",
+      "instrument-serif-400-italic.woff2",
+      "ibm-plex-sans-400.woff2",
+      "ibm-plex-sans-600.woff2",
+      "ibm-plex-mono-400.woff2",
+    ]) {
+      expect(existsSync(join(outDir, "fonts", file)), `${file} missing from build`).toBe(true);
+    }
+
+    // Preloaded faces must be crossorigin or the browser fetches them twice.
+    const preloads = [...html.matchAll(/<link rel="preload"[^>]*>/g)].map(([tag]) => tag);
+    expect(preloads).toHaveLength(3);
+    for (const tag of preloads) {
+      expect(tag).toMatch(/as="font"/);
+      expect(tag).toMatch(/crossorigin/);
+    }
+    expect(html).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+  });
+
   it("publishes robots, sitemap, icon and social card", () => {
     const robots = readFileSync(join(outDir, "robots.txt"), "utf8");
     expect(robots).toContain(`Sitemap: ${SITE_URL}/sitemap-index.xml`);
@@ -118,7 +139,8 @@ describe("built page (booking link configured)", () => {
     const headers = readFileSync(join(outDir, "_headers"), "utf8");
     expect(headers).toContain("script-src 'self' https://assets.calendly.com");
     expect(headers).toContain("frame-src https://calendly.com");
-    expect(headers).toContain("Cache-Control: public, max-age=31536000, immutable");
+    expect(headers).toContain("font-src 'self'");
+    expect(headers).toMatch(/\/fonts\/\*\n\s+Cache-Control: public, max-age=31536000, immutable/);
   });
 
   it("stays inside its performance budget", () => {

@@ -9,21 +9,25 @@ const directUrl = buildCalendlyUrl(config.calendlyUrl, { placement: "booking-dir
 const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min discovery call");
 ---
 
-<section class="section booking" id="book" aria-labelledby="booking-heading">
+<section class="booking night" id="book" aria-labelledby="booking-heading">
   <div class="container booking__grid">
     <div class="booking__pitch">
-      <p class="eyebrow booking__badge">{concierge.badge}</p>
-      <h2 class="section-title" id="booking-heading">{concierge.title}</h2>
-      <p class="lede">{concierge.body}</p>
+      <p class="kicker booking__kicker">{concierge.kicker}</p>
+      <h2 class="booking__title" id="booking-heading">{concierge.title}</h2>
+      <p class="booking__body">{concierge.body}</p>
 
-      <p class="booking__asks-label">Who this is for</p>
+      <p class="booking__asks-label">{concierge.asksLabel}</p>
       <ul class="booking__asks">
         {concierge.asks.map((ask) => <li>{ask}</li>)}
       </ul>
     </div>
 
-    <div class="booking__panel card" data-calendly-url={embedUrl ?? undefined}>
-      <p class="booking__panel-title">{concierge.bookingHeading}</p>
+    <!-- Styled as a clip-out coupon: the one thing on the page you tear off. -->
+    <div class="booking__coupon" data-calendly-url={embedUrl ?? undefined}>
+      <p class="booking__coupon-label">
+        <span>{concierge.couponLabel}</span>
+        <span>{concierge.couponNote}</span>
+      </p>
 
       {embedUrl && <div class="booking__widget" data-calendly-target />}
 
@@ -37,22 +41,17 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
         </p>
         {
           directUrl ? (
-            <a
-              class="btn btn--primary btn--lg booking__button"
-              href={directUrl}
-              target="_blank"
-              rel="noopener"
-            >
+            <a class="btn btn--lg booking__button" href={directUrl} target="_blank" rel="noopener">
               {concierge.ctaLabel}
             </a>
           ) : (
-            <a class="btn btn--primary btn--lg booking__button" href={mailto}>
+            <a class="btn btn--lg booking__button" href={mailto}>
               {concierge.ctaLabel}
             </a>
           )
         }
         <p class="booking__email">
-          {concierge.bookingFallbackNote}{" "}
+          {concierge.bookingFallbackNote}
           <a href={mailto}>{config.contactEmail}</a>
         </p>
       </div>
@@ -71,65 +70,101 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
 </script>
 
 <style>
+  .booking {
+    padding-block: var(--space-2xl);
+  }
+
   .booking__grid {
     display: grid;
     gap: var(--space-xl);
   }
 
-  @media (min-width: 62rem) {
+  @media (width >= 62rem) {
     .booking__grid {
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 25rem);
+      column-gap: var(--space-2xl);
       align-items: start;
     }
   }
 
-  .booking__badge {
-    color: var(--low);
+  .booking__kicker {
+    color: var(--night-low);
+  }
+
+  .booking__kicker::after {
+    background: var(--night-rule);
+  }
+
+  .booking__title {
+    margin-block-start: var(--space-sm);
+    max-width: 16ch;
+    font-size: var(--t-h2);
+    color: var(--night-text);
+  }
+
+  .booking__body {
+    max-width: 46ch;
+    margin-block-start: var(--space-md);
+    font-size: var(--t-lead);
+    line-height: 1.45;
+    color: var(--night-muted);
   }
 
   .booking__asks-label {
     margin-block-start: var(--space-lg);
-    font-size: var(--step--1);
-    font-weight: 650;
-    color: var(--text);
+    padding-block-end: var(--space-2xs);
+    border-block-end: 1px solid var(--night-rule);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--night-muted);
   }
 
   .booking__asks {
-    display: grid;
-    gap: 0.45rem;
-    margin-block-start: 0.6rem;
+    margin-block-start: var(--space-sm);
     padding: 0;
     list-style: none;
-    font-size: var(--step--1);
-    color: var(--text-muted);
+    font-size: var(--t-small);
   }
 
   .booking__asks li {
-    padding-inline-start: 1.1rem;
+    padding-block: 0.5rem;
+    padding-inline-start: 1.6rem;
+    border-block-end: 1px solid var(--night-rule);
     position: relative;
   }
 
   .booking__asks li::before {
-    content: "";
+    content: "→";
     position: absolute;
-    inset-block-start: 0.62em;
     inset-inline-start: 0;
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 50%;
-    background: var(--accent);
+    color: var(--night-high);
   }
 
-  .booking__panel {
-    padding: clamp(1.1rem, 3vw, 1.75rem);
+  .booking__coupon {
+    padding: clamp(1.1rem, 2.5vw, 1.6rem);
+    border: 2px dashed var(--paper-deep);
+    background: var(--paper);
+    color: var(--ink);
   }
 
-  .booking__panel-title {
-    font-size: var(--step--1);
-    font-weight: 650;
-    letter-spacing: 0.08em;
+  .booking__coupon-label {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding-block-end: var(--space-xs);
+    border-block-end: 1px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-faint);
+  }
+
+  .booking__coupon-label span:last-child {
+    color: var(--ink-3);
+    letter-spacing: 0.06em;
   }
 
   /* --- embed lifecycle -------------------------------------------------
@@ -147,24 +182,22 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
 
   [data-calendly-state="loading"] .booking__widget {
     display: block;
-    min-height: 12rem;
-    border-radius: var(--radius-md);
-    background: linear-gradient(100deg, transparent 20%, #ffffff0f 40%, transparent 60%)
-      var(--surface-sunken);
-    background-size: 220% 100%;
-    animation: skeleton 1.5s ease-in-out infinite;
+    min-height: 11rem;
+    background: repeating-linear-gradient(-45deg, var(--paper-tint) 0 8px, var(--paper) 8px 16px)
+      var(--paper-tint);
+    animation: coupon-wait 1.4s linear infinite;
+  }
+
+  @keyframes coupon-wait {
+    to {
+      background-position: 22.7px 0;
+    }
   }
 
   /* No min-height once mounted: Calendly's iframe sets its own. */
   [data-calendly-state="ready"] .booking__widget,
   [data-calendly-state="unconfirmed"] .booking__widget {
     display: block;
-  }
-
-  @keyframes skeleton {
-    to {
-      background-position: -120% 0;
-    }
   }
 
   [data-calendly-state="ready"] .booking__fallback,
@@ -177,8 +210,8 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
   }
 
   .booking__fallback-copy {
-    color: var(--text-muted);
-    font-size: var(--step--1);
+    font-size: var(--t-small);
+    color: var(--ink-2);
   }
 
   .booking__button {
@@ -188,15 +221,17 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
 
   .booking__email {
     margin-block-start: var(--space-sm);
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    font-size: 0.8rem;
+    color: var(--ink-3);
   }
 
   .booking__meta {
     margin-block-start: var(--space-md);
-    padding-block-start: var(--space-md);
-    border-block-start: 1px solid var(--border);
-    font-size: var(--step--1);
-    color: var(--text-faint);
+    padding-block-start: var(--space-sm);
+    border-block-start: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--ink-3);
   }
 </style>

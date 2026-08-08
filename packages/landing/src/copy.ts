@@ -1,12 +1,16 @@
 /**
  * All page copy in one place (PRD §2 job-to-be-done, §3 positioning, §6
  * battlecards). Editing the pitch should never require touching markup, and the
- * tests in `test/copy.test.ts` guard the promises we make here.
+ * tests in `test/copy.test.ts` guard the promises the brief requires.
  */
 
 export const brand = {
   name: "CompetePulse",
   tagline: "Slack-native competitive change agent",
+  /** Sits under the nameplate. */
+  strapline: "Competitive intelligence for teams without a competitive-intel team",
+  /** Runs in the sticky bar, the way a newspaper repeats its title. */
+  runningHead: "Pricing and changelog watches · Cited digests · Slack-native",
 } as const;
 
 export const meta = {
@@ -18,29 +22,32 @@ export const meta = {
 } as const;
 
 export const hero = {
-  eyebrow: "Taking 3 design partners",
+  eyebrow: "Now taking 3 design partners",
+  dateline: "Issue No. 1",
   /** The JTBD headline, verbatim from PRD §2. */
   headline: {
     lead: "Every morning in Slack:",
-    emphasis: "what materially changed on your competitors",
-    trail: "— with links.",
+    emphasis: "what materially changed",
+    trail: "on your competitors — with links.",
   },
   /** The one sentence: watches → cited digest → not Klue, not Visualping. */
   subhead:
     "CompetePulse watches your competitors' pricing and changelog pages, keeps only the changes that move deals, and posts a cited digest to your channel. No Klue bill. No Visualping noise.",
   ctaLabel: "Book a 15-min discovery call",
   ctaNote: "15 minutes, no demo theatre. Bring three competitor URLs and leave with a digest.",
-  proofPoints: [
-    "Weekday mornings, in your channel",
-    "Every line cites its snapshot",
-    "No footer or cookie-banner noise",
+  facts: [
+    { label: "When", text: "Weekday mornings, in the channel your team already reads." },
+    { label: "Proof", text: "Every line cites the page and the snapshot it came from." },
+    { label: "Noise", text: "Footer edits, cookie banners and CSS churn never reach you." },
   ],
 } as const;
 
 export const digestPreview = {
-  kicker: "The whole product, in one message",
-  title: "This is what lands at 8:30am.",
-  body: "Grouped by competitor, ranked by materiality, every line citing the page and snapshot it came from. Quiet competitors get one line, not silence — so you know the watch ran.",
+  kicker: "Fig. 1 — The 8:30am digest",
+  title: "The whole product is one message.",
+  body: "Grouped by competitor, ranked by materiality, every line citing the page and snapshot it came from. Quiet competitors still get a line, so you know the watch ran.",
+  caption:
+    "Example digest. Acme and Northwind are placeholders — your watchlist is your competitors.",
   slack: {
     channel: "#competitive",
     appName: "CompetePulse",
@@ -82,7 +89,7 @@ export const digestPreview = {
 } as const;
 
 export const howItWorks = {
-  kicker: "How it works",
+  kicker: "Method",
   title: "Three steps, then it runs itself.",
   steps: [
     {
@@ -107,47 +114,52 @@ export const howItWorks = {
 } as const;
 
 export const alternatives = {
-  kicker: "Why not the obvious options",
+  kicker: "The options on the table",
   title: "You have already priced the alternatives.",
-  columns: [
+  columns: ["Option", "What it costs", "What it tells you", "What it leaves you doing"],
+  rows: [
     {
       name: "Visualping, Distill",
-      price: "Cheap, and loud",
-      claim: "They tell you something changed.",
-      counter: "We tell you what mattered, why it matters, and where we read it.",
+      price: "$14–100 / mo",
+      tells: "Something on the page changed.",
+      leaves: "Reading diffs of cookie banners to find the one that mattered.",
     },
     {
       name: "Klue, Crayon",
-      price: "$15k–$40k+/yr",
-      claim: "A competitive-intel program for teams with a competitive-intel owner.",
-      counter: "You do not have one. Take 80% of the value without the headcount or the contract.",
+      price: "$15k–40k+ / yr",
+      tells: "Everything — if you staff someone to run it.",
+      leaves: "Hiring a competitive-intel owner you did not budget for.",
     },
     {
       name: "Pasting URLs into ChatGPT",
       price: "Tokens, plus your Friday",
-      claim: "No schedule, no memory, no audit trail.",
-      counter: "We keep versioned history, wake up on our own, and refuse to answer uncited.",
+      tells: "Whatever you remembered to ask this week.",
+      leaves: "Being the schedule, the memory and the audit trail.",
     },
   ],
+  ours: {
+    name: "CompetePulse",
+    price: "$149–399 / mo",
+    tells: "What materially changed, cited, in Slack.",
+    leaves: "Reading one message and updating the talk track.",
+  },
 } as const;
 
 export const concierge = {
+  kicker: "Design partners",
   badge: "Free 14-day concierge",
   title: "Free 14-day concierge for 3 design partners.",
   body: "We run the watches by hand for your three closest competitors and deliver the digest every weekday morning. No install, no card, no contract — reply “stop” and it ends.",
+  asksLabel: "Who this is for",
   asks: [
     "You sell B2B SaaS and your team lives in Slack",
     "Someone already keeps a competitor page nobody trusts",
     "You will tell us honestly when a digest was useless",
   ],
   ctaLabel: "Book a 15-min discovery call",
-  bookingHeading: "Pick a time",
+  couponLabel: "Pick a time",
+  couponNote: "Fifteen minutes. Three competitors. One digest.",
   bookingFallbackNote: "Prefer email? Send us the three competitors you care about.",
-} as const;
-
-export const footer = {
-  note: "We monitor public web pages you choose. No logins, no paywalls, no claims about non-public data.",
-  copyright: `© ${new Date().getUTCFullYear()} ${brand.name}`,
 } as const;
 
 export const faq = [
@@ -167,3 +179,10 @@ export const faq = [
       "Public web pages you nominate — typically pricing, changelog and careers pages. Every digest line links to the stored snapshot it was derived from.",
   },
 ] as const;
+
+export const footer = {
+  kicker: "Colophon",
+  note: "We monitor public web pages you choose. No logins, no paywalls, no claims about non-public data.",
+  colophon: "Set in Instrument Serif and IBM Plex. Built on Cloudflare. No cookies, no trackers.",
+  copyright: `© ${new Date().getUTCFullYear()} ${brand.name}`,
+} as const;

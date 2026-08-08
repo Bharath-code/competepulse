@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CALENDLY_DARK_THEME, buildCalendlyUrl, buildMailtoFallback } from "../src/lib/calendly.js";
+import { CALENDLY_THEME, buildCalendlyUrl, buildMailtoFallback } from "../src/lib/calendly.js";
 
 const BASE = "https://calendly.com/competepulse/15min";
 
@@ -20,9 +20,9 @@ describe("buildCalendlyUrl", () => {
   it("marks embedded views separately from plain link clicks", () => {
     const url = new URL(buildCalendlyUrl(BASE, { embed: true })!);
     expect(url.searchParams.get("utm_medium")).toBe("embed");
-    expect(url.searchParams.get("background_color")).toBe(CALENDLY_DARK_THEME.backgroundColor);
-    expect(url.searchParams.get("text_color")).toBe(CALENDLY_DARK_THEME.textColor);
-    expect(url.searchParams.get("primary_color")).toBe(CALENDLY_DARK_THEME.primaryColor);
+    expect(url.searchParams.get("background_color")).toBe(CALENDLY_THEME.backgroundColor);
+    expect(url.searchParams.get("text_color")).toBe(CALENDLY_THEME.textColor);
+    expect(url.searchParams.get("primary_color")).toBe(CALENDLY_THEME.primaryColor);
   });
 
   it("omits embed-only theming from plain links", () => {
@@ -46,7 +46,7 @@ describe("buildCalendlyUrl", () => {
     expect(() =>
       buildCalendlyUrl(BASE, {
         embed: true,
-        theme: { ...CALENDLY_DARK_THEME, primaryColor: "#3d9cf0" },
+        theme: { ...CALENDLY_THEME, primaryColor: "#3d9cf0" },
       }),
     ).toThrow(/hex colour/);
   });

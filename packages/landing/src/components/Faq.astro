@@ -4,12 +4,19 @@ import { faq } from "../copy";
 
 <section class="section faq" aria-labelledby="faq-heading">
   <div class="container">
-    <h2 class="faq__heading" id="faq-heading">Straight answers</h2>
+    <p class="kicker">Straight answers</p>
+    <h2 class="visually-hidden" id="faq-heading">Frequently asked questions</h2>
+
     <dl class="faq__list">
       {
-        faq.map((item) => (
+        faq.map((item, index) => (
           <div class="faq__item">
-            <dt>{item.question}</dt>
+            <dt>
+              <span class="faq__index" aria-hidden="true">
+                Q{index + 1}
+              </span>
+              {item.question}
+            </dt>
             <dd>{item.answer}</dd>
           </div>
         ))
@@ -23,36 +30,55 @@ import { faq } from "../copy";
     padding-block: var(--space-xl);
   }
 
-  .faq__heading {
-    font-size: var(--step-1);
-    color: var(--text-faint);
-    font-weight: 650;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
   .faq__list {
     display: grid;
-    gap: var(--space-md);
-    margin-block-start: var(--space-md);
+    margin-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--ink);
   }
 
-  @media (min-width: 52rem) {
+  @media (width >= 56rem) {
     .faq__list {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-lg);
+    }
+  }
+
+  .faq__item {
+    padding: var(--space-md) 0;
+    border-block-end: 1px solid var(--rule);
+  }
+
+  @media (width >= 56rem) {
+    .faq__item {
+      padding-inline: var(--space-md);
+      border-inline-start: 1px solid var(--rule);
+    }
+
+    .faq__item:first-child {
+      padding-inline-start: 0;
+      border-inline-start: none;
     }
   }
 
   .faq__item dt {
-    font-weight: 650;
-    font-size: var(--step-0);
+    font-size: var(--t-h3);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .faq__index {
+    display: block;
+    margin-block-end: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    color: var(--signal);
   }
 
   .faq__item dd {
-    margin-block-start: 0.4rem;
+    margin-block-start: 0.5rem;
     margin-inline-start: 0;
-    font-size: var(--step--1);
-    color: var(--text-muted);
+    font-size: var(--t-small);
+    color: var(--ink-2);
   }
 </style>
