@@ -1,0 +1,42 @@
+---
+import { buildMailtoFallback } from "../lib/calendly";
+import { resolveConfig } from "../lib/config";
+
+interface Props {
+  label: string;
+  /** Recorded as `utm_content` on the Calendly link, e.g. `hero`. */
+  placement: string;
+  size?: "sm" | "md" | "lg";
+}
+
+const { label, placement, size = "md" } = Astro.props;
+const config = resolveConfig(import.meta.env);
+
+/*
+ * Every call-to-action points at the in-page booking section so the visitor
+ * never leaves the page and the Calendly bundle stays lazy. With no scheduling
+ * link configured we degrade to email rather than shipping a dead button.
+ */
+const href = config.calendlyUrl
+  ? "#book"
+  : buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min discovery call");
+---
+
+<a class:list={["btn", size !== "md" && `btn--${size}`]} href={href} data-cta-placement={placement}>
+  {label}
+  <span class="btn__rule" aria-hidden="true"></span>
+</a>
+
+<style>
+  /* A printed arrow would fight the type; a short rule reads as a lead-out. */
+  .btn__rule {
+    width: 1.6em;
+    height: 1px;
+    background: currentColor;
+    transition: width 140ms ease-out;
+  }
+
+  .btn:hover .btn__rule {
+    width: 2.3em;
+  }
+</style>

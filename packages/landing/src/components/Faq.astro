@@ -1,0 +1,84 @@
+---
+import { faq } from "../copy";
+---
+
+<section class="section faq" aria-labelledby="faq-heading">
+  <div class="container">
+    <p class="kicker">Straight answers</p>
+    <h2 class="visually-hidden" id="faq-heading">Frequently asked questions</h2>
+
+    <dl class="faq__list">
+      {
+        faq.map((item, index) => (
+          <div class="faq__item">
+            <dt>
+              <span class="faq__index" aria-hidden="true">
+                Q{index + 1}
+              </span>
+              {item.question}
+            </dt>
+            <dd>{item.answer}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .faq {
+    padding-block: var(--space-xl);
+  }
+
+  .faq__list {
+    display: grid;
+    margin-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  @media (width >= 56rem) {
+    .faq__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .faq__item {
+    padding: var(--space-md) 0;
+    border-block-end: 1px solid var(--rule);
+  }
+
+  @media (width >= 56rem) {
+    .faq__item {
+      padding-inline: var(--space-md);
+      border-inline-start: 1px solid var(--rule);
+    }
+
+    .faq__item:first-child {
+      padding-inline-start: 0;
+      border-inline-start: none;
+    }
+  }
+
+  .faq__item dt {
+    font-size: var(--t-h3);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .faq__index {
+    display: block;
+    margin-block-end: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    color: var(--signal);
+  }
+
+  .faq__item dd {
+    margin-block-start: 0.5rem;
+    margin-inline-start: 0;
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+</style>

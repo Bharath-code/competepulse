@@ -1,0 +1,311 @@
+---
+import { digestPreview } from "../copy";
+
+const { slack } = digestPreview;
+const materialityLabel = { high: "HIGH", low: "LOW" } as const;
+---
+
+<section class="section" aria-labelledby="digest-heading">
+  <div class="container digest">
+    <div class="digest__intro">
+      <p class="kicker kicker--signal">{digestPreview.kicker}</p>
+      <h2 class="section-title" id="digest-heading">{digestPreview.title}</h2>
+      <p class="lead">{digestPreview.body}</p>
+    </div>
+
+    <figure class="digest__figure">
+      <div class="slack night">
+        <div class="slack__chrome">
+          <span class="slack__channel">{slack.channel}</span>
+        </div>
+
+        <div class="slack__thread">
+          <div class="msg">
+            <span class="msg__avatar" aria-hidden="true">
+              <svg viewBox="0 0 26 16" focusable="false">
+                <path
+                  d="M0.9 9.4h3.3l2-6 3.3 12.1 2.4-8.4 1.6 2.3h11.6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="square"></path>
+              </svg>
+            </span>
+
+            <div class="msg__body">
+              <p class="msg__meta">
+                <b>{slack.appName}</b>
+                <span class="msg__app">APP</span>
+                <span>{slack.timestamp}</span>
+              </p>
+
+              <p class="digest__header">
+                {slack.digestTitle} — <span class="digest__date">{slack.digestDate}</span>
+              </p>
+
+              {
+                slack.sections.map((section) => (
+                  <div class="entry">
+                    <p class="entry__competitor">{section.competitor}</p>
+                    {section.entries.map((item) => (
+                      <div class="entry__row">
+                        <p class="entry__summary">
+                          <span class={`pill pill--${item.materiality}`}>
+                            [{materialityLabel[item.materiality]}]
+                          </span>
+                          {item.summary}
+                        </p>
+                        <p class="entry__cite">
+                          Cite: <span class="entry__link">{item.citation}</span>
+                        </p>
+                        <p class="entry__why">{item.why}</p>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              }
+
+              <p class="digest__quiet">
+                <span class="pill pill--none">[none]</span>
+                <span>
+                  <b>{slack.quiet.competitors.join(", ")}</b>: {slack.quiet.label}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="reply">
+            <span class="reply__avatar" aria-hidden="true">PM</span>
+            <div class="reply__body">
+              <p class="reply__question">{slack.threadPrompt}</p>
+              <p class="reply__answer">
+                <b>{slack.appName}</b>
+                {slack.threadReply}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption class="digest__caption">{digestPreview.caption}</figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .digest {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  @media (width >= 64rem) {
+    .digest {
+      grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+      column-gap: var(--space-xl);
+      align-items: start;
+    }
+
+    .digest__intro {
+      position: sticky;
+      inset-block-start: 6rem;
+    }
+  }
+
+  .digest__figure {
+    margin: 0;
+  }
+
+  /* The artifact is genuinely dark, so it sits on the paper like a plate. */
+  .slack {
+    border: 1px solid var(--ink);
+    box-shadow: 10px 10px 0 var(--paper-deep);
+  }
+
+  .slack__chrome {
+    padding: 0.6rem 1rem;
+    border-block-end: 1px solid var(--night-rule);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.08em;
+    color: var(--night-muted);
+  }
+
+  .slack__thread {
+    padding: clamp(1rem, 2.6vw, 1.6rem);
+  }
+
+  .msg {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  .msg__avatar {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    background: var(--night-2);
+    color: var(--night-high);
+  }
+
+  .msg__avatar svg {
+    width: 1.2rem;
+  }
+
+  .msg__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    color: var(--night-muted);
+  }
+
+  .msg__meta b {
+    font-family: var(--font-text);
+    font-size: var(--t-small);
+    font-weight: 600;
+    color: var(--night-text);
+  }
+
+  .msg__app {
+    padding: 0.05rem 0.28rem;
+    background: var(--night-rule);
+    color: var(--night-text);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+
+  .digest__header {
+    margin-block: 0.7rem 0.3rem;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1.15;
+    color: var(--night-text);
+  }
+
+  .digest__date {
+    white-space: nowrap;
+  }
+
+  .entry {
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--night-rule);
+  }
+
+  .entry__competitor {
+    font-size: var(--t-small);
+    font-weight: 600;
+  }
+
+  .entry__row {
+    margin-block-start: 0.45rem;
+  }
+
+  .entry__summary {
+    font-size: var(--t-small);
+    line-height: 1.5;
+  }
+
+  .pill {
+    margin-inline-end: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .pill--high {
+    color: var(--night-high);
+  }
+
+  .pill--low {
+    color: var(--night-low);
+  }
+
+  .pill--none {
+    color: var(--night-quiet);
+  }
+
+  .entry__cite {
+    margin-block-start: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--night-muted);
+  }
+
+  .entry__link {
+    color: var(--night-link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .entry__why {
+    margin-block-start: 0.2rem;
+    font-size: 0.82rem;
+    color: var(--night-muted);
+  }
+
+  .digest__quiet {
+    display: flex;
+    gap: 0.45rem;
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--night-rule);
+    font-size: var(--t-small);
+    color: var(--night-muted);
+  }
+
+  .digest__quiet b {
+    color: var(--night-text);
+    font-weight: 600;
+  }
+
+  .reply {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    gap: 0.65rem;
+    margin-block-start: 1.1rem;
+    padding: 0.85rem 1rem;
+    border: 1px dashed var(--night-rule);
+  }
+
+  .reply__avatar {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    background: var(--night-rule);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--night-text);
+  }
+
+  .reply__question {
+    font-size: var(--t-small);
+  }
+
+  .reply__answer {
+    margin-block-start: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--night-muted);
+  }
+
+  .reply__answer b {
+    margin-inline-end: 0.4rem;
+    color: var(--night-link);
+    font-weight: 600;
+  }
+
+  .digest__caption {
+    margin-block-start: var(--space-md);
+    padding-block-start: var(--space-xs);
+    border-block-start: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+</style>

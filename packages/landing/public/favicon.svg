@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CompetePulse">
+  <rect width="32" height="32" fill="#f5f2ea" />
+  <rect x="0" y="0" width="32" height="3" fill="#17130e" />
+  <path
+    d="M2 19h5l3.4-9.5 5 18 3.6-12.5 2.4 4H30"
+    fill="none"
+    stroke="#c4300f"
+    stroke-width="2.6"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+</svg>

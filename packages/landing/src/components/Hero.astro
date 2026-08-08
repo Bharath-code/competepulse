@@ -1,0 +1,170 @@
+---
+import { concierge, hero } from "../copy";
+import BookingCta from "./BookingCta.astro";
+---
+
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="container">
+    <p class="hero__flag">
+      <span class="hero__flag-tag">{hero.eyebrow}</span>
+      <span class="hero__flag-note">{concierge.badge}, no card</span>
+    </p>
+
+    <h1 class="hero__headline" id="hero-heading">
+      {hero.headline.lead}
+      <em>{hero.headline.emphasis}</em>
+      {hero.headline.trail}
+    </h1>
+
+    <div class="hero__deck">
+      <p class="hero__standfirst">{hero.subhead}</p>
+
+      <div class="hero__act">
+        <BookingCta label={hero.ctaLabel} placement="hero" size="lg" />
+        <p class="hero__note">{hero.ctaNote}</p>
+      </div>
+    </div>
+
+    <dl class="hero__facts">
+      {
+        hero.facts.map((fact) => (
+          <div class="hero__fact">
+            <dt>{fact.label}</dt>
+            <dd>{fact.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(2.25rem, 5vw, 4rem) var(--space-2xl);
+  }
+
+  .hero__flag {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .hero__flag-tag {
+    padding: 0.3rem 0.55rem;
+    background: var(--signal);
+    color: var(--paper);
+  }
+
+  .hero__flag-note {
+    color: var(--ink-3);
+  }
+
+  .hero__headline {
+    margin-block-start: var(--space-md);
+    max-width: 21ch;
+    font-size: var(--t-display);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    text-wrap: pretty;
+  }
+
+  /* Italic in the signal colour is the one flourish the page gets. */
+  .hero__headline em {
+    font-style: italic;
+    color: var(--signal);
+  }
+
+  .hero__deck {
+    display: grid;
+    gap: var(--space-lg);
+    margin-block-start: var(--space-lg);
+    padding-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--rule);
+  }
+
+  @media (width >= 56rem) {
+    .hero__headline {
+      max-width: 24ch;
+    }
+
+    .hero__deck {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      column-gap: var(--space-xl);
+      align-items: start;
+    }
+
+    .hero__act {
+      padding-inline-start: var(--space-xl);
+      border-inline-start: 1px solid var(--rule);
+    }
+  }
+
+  .hero__standfirst {
+    max-width: 44ch;
+    font-size: var(--t-lead);
+    line-height: 1.45;
+  }
+
+  .hero__act {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-sm);
+  }
+
+  .hero__note {
+    max-width: 32ch;
+    font-size: var(--t-small);
+    color: var(--ink-3);
+  }
+
+  .hero__facts {
+    display: grid;
+    gap: 0;
+    margin-block-start: var(--space-xl);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .hero__fact {
+    padding-block: var(--space-md);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  @media (width >= 48rem) {
+    .hero__facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-block-end: 1px solid var(--rule);
+    }
+
+    .hero__fact {
+      padding-inline: var(--space-md);
+      border-block-end: none;
+      border-inline-start: 1px solid var(--rule);
+    }
+
+    .hero__fact:first-child {
+      padding-inline-start: 0;
+      border-inline-start: none;
+    }
+  }
+
+  .hero__fact dt {
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+
+  .hero__fact dd {
+    margin-block-start: 0.4rem;
+    margin-inline-start: 0;
+    max-width: 34ch;
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+</style>

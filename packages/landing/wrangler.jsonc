@@ -1,0 +1,11 @@
+{
+  // Static-assets-only Worker: no `main`, Cloudflare serves ./dist directly.
+  // Deploy with `pnpm --filter @competepulse/landing deploy` (build first).
+  "name": "competepulse-landing",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+  },
+}

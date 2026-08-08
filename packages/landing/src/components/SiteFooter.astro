@@ -1,0 +1,90 @@
+---
+import { brand, footer } from "../copy";
+import { buildMailtoFallback } from "../lib/calendly";
+import { resolveConfig } from "../lib/config";
+import Wordmark from "./Wordmark.astro";
+
+const config = resolveConfig(import.meta.env);
+const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
+---
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__brand">
+      <Wordmark href={null} />
+      <p class="footer__tagline">{brand.tagline}</p>
+    </div>
+
+    <div class="footer__notes">
+      <p class="kicker kicker--tight">{footer.kicker}</p>
+      <p class="footer__note">{footer.note}</p>
+      <p class="footer__colophon">{footer.colophon}</p>
+    </div>
+
+    <p class="footer__meta">
+      <a href={mailto}>{config.contactEmail}</a>
+      {config.appUrl && <a href={`${config.appUrl}/dashboard`}>Dashboard</a>}
+      <span>{footer.copyright}</span>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding-block: var(--space-lg) var(--space-xl);
+    border-block-start: 3px solid var(--ink);
+  }
+
+  .footer__inner {
+    display: grid;
+    gap: var(--space-lg);
+  }
+
+  @media (width >= 56rem) {
+    .footer__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+      column-gap: var(--space-2xl);
+      align-items: start;
+    }
+
+    .footer__meta {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .footer__tagline {
+    margin-block-start: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .footer__note {
+    max-width: 62ch;
+    margin-block-start: var(--space-sm);
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+
+  .footer__colophon {
+    max-width: 62ch;
+    margin-block-start: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--ink-3);
+  }
+
+  .footer__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-3);
+  }
+</style>

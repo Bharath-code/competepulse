@@ -7,8 +7,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 const FORBIDDEN_PATHS = [
-  /^\.env$/,
-  /^\.env\./, // .env.local, .env.production, …
+  /(^|\/)\.env$/,
+  /(^|\/)\.env\./, // .env.local, .env.production, … at any depth
   /(^|\/)\.dev\.vars$/,
   /(^|\/)credentials\.(json|txt)$/i,
   /(^|\/)id_rsa$/,
@@ -16,7 +16,11 @@ const FORBIDDEN_PATHS = [
 ];
 
 // Allow the committed templates only.
-const ALLOWLIST = new Set([".env.example", "packages/worker/.dev.vars.example"]);
+const ALLOWLIST = new Set([
+  ".env.example",
+  "packages/worker/.dev.vars.example",
+  "packages/landing/.env.example",
+]);
 
 const LEAK_PATTERNS = [
   /\bsk_live_[A-Za-z0-9]{10,}\b/,

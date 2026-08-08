@@ -15,11 +15,12 @@ Phase 1 eng complete for **E0–E5**, including **E4-1 Dodo Payments** (Starter 
 
 pnpm workspace (`packages/*`):
 
-| Package                | Description                                                                                                 |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `@competepulse/core`   | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
-| `@competepulse/worker` | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing. |
-| `@competepulse/agent`  | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
+| Package                 | Description                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `@competepulse/core`    | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
+| `@competepulse/worker`  | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing. |
+| `@competepulse/agent`   | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
+| `@competepulse/landing` | Static Astro marketing page + Calendly booking (P0-3). See [its README](packages/landing/README.md).        |
 
 ## Requirements
 
@@ -34,6 +35,7 @@ pnpm install
 pnpm --filter @competepulse/core build
 pnpm --filter @competepulse/agent build
 pnpm dev                                  # worker on http://localhost:8787
+pnpm dev:landing                          # landing page on http://localhost:4321
 ```
 
 No secrets are required for local development: when `FIRECRAWL_API_KEY` is
@@ -76,6 +78,26 @@ curl -s -XPOST localhost:8787/billing/checkout -H 'content-type: application/jso
 # open the returned checkoutUrl (or GET it) to activate the plan
 ```
 
+## Landing page + Calendly (P0-3)
+
+The outbound landing page lives in [`packages/landing`](packages/landing) — a static
+Astro build whose single call-to-action books a 15-minute discovery call.
+
+```bash
+pnpm dev:landing                              # http://localhost:4321
+
+# production build (Calendly link is validated at build time)
+PUBLIC_SITE_URL=https://competepulse.com \
+PUBLIC_CALENDLY_URL=https://calendly.com/<user>/15min \
+  pnpm --filter @competepulse/landing build
+
+pnpm --filter @competepulse/landing deploy    # Cloudflare assets-only Worker
+```
+
+Config template: [`packages/landing/.env.example`](packages/landing/.env.example).
+With `PUBLIC_CALENDLY_URL` unset the page still ships: every call-to-action falls
+back to a `mailto:` link instead of a dead button.
+
 ## Slack install (E1-2)
 
 1. Create a Slack app from [`packages/agent/slack-app-manifest.json`](packages/agent/slack-app-manifest.json).
@@ -104,6 +126,7 @@ Slash commands:
 | `pnpm eval`          | Run the materiality eval dry-run + precision gate |
 | `pnpm secrets:check` | Fail if tracked env/secret files or leak patterns |
 | `pnpm dev`           | Start the Worker locally (`wrangler dev`)         |
+| `pnpm dev:landing`   | Start the landing page locally (`astro dev`)      |
 
 ## Try the crawl + Slack surface
 

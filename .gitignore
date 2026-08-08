@@ -8,6 +8,7 @@ node_modules/
 .wrangler/
 dist/
 .next/
+.astro/
 *.log
 .idea/
 .vscode/

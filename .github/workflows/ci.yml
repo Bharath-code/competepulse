@@ -9,6 +9,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  ASTRO_TELEMETRY_DISABLED: "1"
+
 jobs:
   check:
     name: lint · typecheck · test · eval
