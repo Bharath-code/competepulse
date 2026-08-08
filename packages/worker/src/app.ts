@@ -45,9 +45,15 @@ import {
   slackTextResponse,
   verifySlackSignature,
 } from "./slack.js";
-import { CapError, store, type QuietMode } from "./store.js";
+import { CapError, store } from "./store.js";
+import {
+  getWorkspaceStore,
+  type WorkspacePatch,
+  type WorkspaceStore,
+} from "./workspace-store.js";
 
 export interface Env {
+  DB?: D1Database;
   FIRECRAWL_API_KEY?: string;
   SLACK_SIGNING_SECRET?: string;
   SLACK_BOT_TOKEN?: string;
@@ -92,44 +98,48 @@ export function createApp() {
   app.get("/", (c) => c.redirect("/dashboard"));
 
   app.post("/workspaces", async (c) => {
+    const wsStore = getWorkspaceStore(c.env);
     const body = await c.req.json().catch(() => null);
     if (!body || typeof body.slackTeamId !== "string") {
       return c.json({ error: "slackTeamId is required" }, 400);
     }
     const plan: PlanId = PLAN_IDS.includes(body.plan) ? body.plan : "starter";
-    const workspace = store.ensureWorkspace(body.slackTeamId, plan);
-    const patch: { digestChannelId?: string; quietMode?: QuietMode; plan?: PlanId } = {};
+    const workspace = await wsStore.ensureWorkspace(body.slackTeamId, plan);
+    const patch: WorkspacePatch = {};
     if (typeof body.digestChannelId === "string") patch.digestChannelId = body.digestChannelId;
     if (body.quietMode === "all_quiet" || body.quietMode === "skip")
       patch.quietMode = body.quietMode;
     if (PLAN_IDS.includes(body.plan)) patch.plan = body.plan;
-    if (Object.keys(patch).length) store.updateWorkspace(workspace.id, patch);
-    return c.json({ workspace: store.getWorkspace(workspace.id) }, 201);
+    if (Object.keys(patch).length) await wsStore.updateWorkspace(workspace.id, patch);
+    return c.json({ workspace: await wsStore.getWorkspace(workspace.id) }, 201);
   });
 
-  app.get("/workspaces", (c) => c.json({ workspaces: store.listWorkspaces() }));
+  app.get("/workspaces", async (c) =>
+    c.json({ workspaces: await getWorkspaceStore(c.env).listWorkspaces() }),
+  );
 
   app.patch("/workspaces/:id", async (c) => {
+    const wsStore = getWorkspaceStore(c.env);
     const body = await c.req.json().catch(() => null);
     if (!body) return c.json({ error: "JSON body required" }, 400);
-    const patch: { digestChannelId?: string; quietMode?: QuietMode; plan?: PlanId } = {};
+    const patch: WorkspacePatch = {};
     if (typeof body.digestChannelId === "string") patch.digestChannelId = body.digestChannelId;
     if (body.quietMode === "all_quiet" || body.quietMode === "skip")
       patch.quietMode = body.quietMode;
     if (PLAN_IDS.includes(body.plan)) patch.plan = body.plan;
-    const updated = store.updateWorkspace(c.req.param("id"), patch);
+    const updated = await wsStore.updateWorkspace(c.req.param("id"), patch);
     if (!updated) return c.json({ error: "workspace not found" }, 404);
     return c.json({ workspace: updated });
   });
 
-  app.get("/workspaces/:id/usage", (c) => {
-    const ws = store.getWorkspace(c.req.param("id"));
+  app.get("/workspaces/:id/usage", async (c) => {
+    const ws = await getWorkspaceStore(c.env).getWorkspace(c.req.param("id"));
     if (!ws) return c.json({ error: "workspace not found" }, 404);
     return c.json(store.usageSummary(ws.id));
   });
 
-  app.get("/workspaces/:id/changes", (c) => {
-    const ws = store.getWorkspace(c.req.param("id"));
+  app.get("/workspaces/:id/changes", async (c) => {
+    const ws = await getWorkspaceStore(c.env).getWorkspace(c.req.param("id"));
     if (!ws) return c.json({ error: "workspace not found" }, 404);
     const changes = store.listWorkspaceChanges(ws.id).map((change) => {
       const snap = change.toSnapshotId ? store.getSnapshot(change.toSnapshotId) : undefined;
@@ -466,6 +476,7 @@ export function createApp() {
   // --- Billing (E4-1 Dodo Payments) ---
 
   app.post("/billing/checkout", async (c) => {
+    const wsStore = getWorkspaceStore(c.env);
     const body = await c.req.json().catch(() => null);
     if (!body || typeof body.workspaceId !== "string") {
       return c.json({ error: "workspaceId is required" }, 400);
@@ -473,7 +484,7 @@ export function createApp() {
     if (typeof body.plan !== "string" || !isPaidPlan(body.plan)) {
       return c.json({ error: "plan must be 'starter' or 'pro'" }, 400);
     }
-    const workspace = store.getWorkspace(body.workspaceId);
+    const workspace = await wsStore.getWorkspace(body.workspaceId);
     if (!workspace) return c.json({ error: "workspace not found" }, 404);
 
     const plan = body.plan as PaidPlanId;
@@ -502,12 +513,13 @@ export function createApp() {
 
   app.get("/billing/mock-complete", async (c) => {
     // Local/dev path when DODO_PAYMENTS_API_KEY is unset.
+    const wsStore = getWorkspaceStore(c.env);
     const workspaceId = c.req.query("workspace_id");
     const planRaw = c.req.query("plan");
     if (!workspaceId || !planRaw || !isPaidPlan(planRaw)) {
       return c.json({ error: "workspace_id and plan=starter|pro are required" }, 400);
     }
-    const workspace = store.getWorkspace(workspaceId);
+    const workspace = await wsStore.getWorkspace(workspaceId);
     if (!workspace) return c.json({ error: "workspace not found" }, 404);
 
     const event = buildMockSubscriptionWebhook({
@@ -515,7 +527,7 @@ export function createApp() {
       plan: planRaw,
       email: c.req.query("email") ?? undefined,
     });
-    const applied = applyBillingEvent(dodoConfigFromEnv(c.env), event);
+    const applied = await applyBillingEvent(wsStore, dodoConfigFromEnv(c.env), event);
     if (c.req.header("accept")?.includes("text/html")) {
       return c.html(
         `<!doctype html><html><body style="font-family:sans-serif;padding:2rem">
@@ -525,7 +537,7 @@ export function createApp() {
         </body></html>`,
       );
     }
-    return c.json({ ok: true, workspace: store.getWorkspace(workspaceId), event: applied });
+    return c.json({ ok: true, workspace: await wsStore.getWorkspace(workspaceId), event: applied });
   });
 
   app.post("/billing/webhooks/dodo", async (c) => {
@@ -556,12 +568,12 @@ export function createApp() {
       return c.json({ error: "invalid JSON" }, 400);
     }
 
-    const applied = applyBillingEvent(config, event);
+    const applied = await applyBillingEvent(getWorkspaceStore(c.env), config, event);
     return c.json({ received: true, ...applied });
   });
 
-  app.get("/billing/status/:workspaceId", (c) => {
-    const workspace = store.getWorkspace(c.req.param("workspaceId"));
+  app.get("/billing/status/:workspaceId", async (c) => {
+    const workspace = await getWorkspaceStore(c.env).getWorkspace(c.req.param("workspaceId"));
     if (!workspace) return c.json({ error: "workspace not found" }, 404);
     return c.json({
       workspaceId: workspace.id,
@@ -578,13 +590,17 @@ export function createApp() {
   return app;
 }
 
-function applyBillingEvent(config: ReturnType<typeof dodoConfigFromEnv>, event: DodoWebhookEvent) {
+async function applyBillingEvent(
+  wsStore: WorkspaceStore,
+  config: ReturnType<typeof dodoConfigFromEnv>,
+  event: DodoWebhookEvent,
+) {
   const applied = applyDodoWebhookEvent(config, event);
 
   const workspace =
-    (applied.workspaceId ? store.getWorkspace(applied.workspaceId) : undefined) ??
+    (applied.workspaceId ? await wsStore.getWorkspace(applied.workspaceId) : undefined) ??
     (applied.subscriptionId
-      ? store.getWorkspaceBySubscriptionId(applied.subscriptionId)
+      ? await wsStore.getWorkspaceBySubscriptionId(applied.subscriptionId)
       : undefined);
 
   if (!workspace && !applied.handled) {
@@ -597,14 +613,14 @@ function applyBillingEvent(config: ReturnType<typeof dodoConfigFromEnv>, event: 
   }
 
   if (workspace && applied.handled) {
-    const patch: Parameters<typeof store.updateWorkspace>[1] = {
+    const patch: WorkspacePatch = {
       subscriptionStatus: applied.status,
     };
     if (applied.plan) patch.plan = applied.plan;
     if (applied.subscriptionId) patch.dodoSubscriptionId = applied.subscriptionId;
     if (applied.customerId) patch.dodoCustomerId = applied.customerId;
     if (applied.email) patch.billingEmail = applied.email;
-    store.updateWorkspace(workspace.id, patch);
+    await wsStore.updateWorkspace(workspace.id, patch);
     return { ...applied, workspaceId: workspace.id };
   }
 
