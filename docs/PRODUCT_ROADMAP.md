@@ -17,7 +17,7 @@
 
 - [ ] **P0-1** Build ICP list of 100 PMM / Enablement contacts
 - [ ] **P0-2** Complete 10 discovery calls (script in PRD Appendix C)
-- [ ] **P0-3** Landing page + Calendly live
+- [ ] **P0-3** Landing page + Calendly live — *page built in `packages/landing`; needs a domain + `PUBLIC_CALENDLY_URL` to go live*
 - [ ] **P0-4** Register domain + Slack app stub
 
 ### Week 3–4: Design Partners & Gate
