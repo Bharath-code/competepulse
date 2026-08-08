@@ -1,0 +1,25 @@
+{
+  "name": "@competepulse/landing",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CompetePulse marketing landing page (P0-3) — static Astro site + Calendly booking",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check --minimumSeverity error",
+    "test": "vitest run",
+    "og": "node scripts/generate-og-image.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.2.0",
+    "sharp": "^0.35.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.119.0"
+  }
+}

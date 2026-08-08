@@ -1,0 +1,92 @@
+---
+import { alternatives } from "../copy";
+---
+
+<section class="section" aria-labelledby="alternatives-heading">
+  <div class="container">
+    <p class="eyebrow">{alternatives.kicker}</p>
+    <h2 class="section-title" id="alternatives-heading">{alternatives.title}</h2>
+
+    <div class="compare">
+      {
+        alternatives.columns.map((column) => (
+          <article class="compare__item">
+            <header class="compare__head">
+              <h3 class="compare__name">{column.name}</h3>
+              <p class="compare__price mono">{column.price}</p>
+            </header>
+            <p class="compare__claim">{column.claim}</p>
+            <p class="compare__counter">{column.counter}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .compare {
+    display: grid;
+    gap: 0;
+    margin-block-start: var(--space-xl);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .compare__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: var(--space-md);
+    border-block-start: 1px solid var(--border);
+  }
+
+  .compare__item:first-child {
+    border-block-start: none;
+  }
+
+  @media (min-width: 52rem) {
+    .compare {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .compare__item {
+      border-block-start: none;
+      border-inline-start: 1px solid var(--border);
+    }
+
+    .compare__item:first-child {
+      border-inline-start: none;
+    }
+  }
+
+  .compare__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .compare__name {
+    font-size: var(--step-1);
+  }
+
+  .compare__price {
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+
+  .compare__claim {
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+
+  .compare__counter {
+    padding-inline-start: 0.85rem;
+    border-inline-start: 2px solid var(--accent);
+    color: var(--text);
+    font-size: var(--step-0);
+  }
+</style>

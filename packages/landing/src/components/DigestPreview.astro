@@ -1,0 +1,330 @@
+---
+import { digestPreview } from "../copy";
+
+const { slack } = digestPreview;
+const materialityLabel = { high: "HIGH", low: "LOW" } as const;
+---
+
+<section class="section" aria-labelledby="digest-heading">
+  <div class="container digest">
+    <div class="digest__intro">
+      <p class="eyebrow">{digestPreview.kicker}</p>
+      <h2 class="section-title" id="digest-heading">{digestPreview.title}</h2>
+      <p class="lede">{digestPreview.body}</p>
+    </div>
+
+    <figure class="digest__figure">
+      <div class="slack card">
+        <div class="slack__chrome">
+          <span class="slack__lights" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </span>
+          <span class="slack__channel mono">{slack.channel}</span>
+        </div>
+
+        <div class="slack__thread">
+          <div class="msg">
+            <span class="msg__avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path
+                  d="M2.5 13h3.4l2.2-6.2 3.4 12.4 2.5-8.6 1.6 2.4h6.4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+            </span>
+
+            <div class="msg__body">
+              <p class="msg__meta">
+                <b>{slack.appName}</b>
+                <span class="msg__app">APP</span>
+                <span class="msg__time">{slack.timestamp}</span>
+              </p>
+
+              <p class="digest__header">{slack.header}</p>
+
+              {
+                slack.sections.map((section) => (
+                  <div class="entry">
+                    <p class="entry__competitor">{section.competitor}</p>
+                    {section.entries.map((item) => (
+                      <div class="entry__row">
+                        <p class="entry__summary">
+                          <span class={`pill pill--${item.materiality}`}>
+                            [{materialityLabel[item.materiality]}]
+                          </span>
+                          {item.summary}
+                        </p>
+                        <p class="entry__cite">
+                          Cite: <span class="entry__link">{item.citation}</span>
+                        </p>
+                        <p class="entry__why">{item.why}</p>
+                      </div>
+                    ))}
+                  </div>
+                ))
+              }
+
+              <p class="digest__quiet">
+                <span class="pill pill--none">[none]</span>
+                <span>
+                  <b>{slack.quiet.competitors.join(", ")}</b>: {slack.quiet.label}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="reply">
+            <span class="reply__avatar" aria-hidden="true">PM</span>
+            <div class="reply__body">
+              <p class="reply__question">{slack.threadPrompt}</p>
+              <p class="reply__answer">
+                <b>{slack.appName}</b>
+                {slack.threadReply}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <figcaption class="digest__caption">
+        Example digest. Acme and Northwind are placeholders — your watchlist is your competitors.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .digest {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  @media (min-width: 62rem) {
+    .digest {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      align-items: start;
+      gap: var(--space-xl);
+    }
+
+    .digest__intro {
+      position: sticky;
+      inset-block-start: 6rem;
+    }
+  }
+
+  .digest__figure {
+    margin: 0;
+  }
+
+  .slack {
+    overflow: hidden;
+    box-shadow: var(--shadow-lift);
+  }
+
+  .slack__chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 1rem;
+    border-block-end: 1px solid var(--border);
+    background: var(--surface-sunken);
+  }
+
+  .slack__lights {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+
+  .slack__lights i {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+
+  .slack__channel {
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+
+  .slack__thread {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .msg {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  .msg__avatar {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, #1d4a72, #123049);
+    color: var(--accent-bright);
+  }
+
+  .msg__avatar svg {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  .msg__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+
+  .msg__meta b {
+    color: var(--text);
+    font-size: var(--step-0);
+    font-weight: 650;
+  }
+
+  .msg__app {
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .digest__header {
+    margin-block: 0.7rem 0.25rem;
+    font-size: var(--step-1);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+  }
+
+  .entry {
+    margin-block-start: 1.1rem;
+    padding-block-start: 1.1rem;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .entry__competitor {
+    font-weight: 680;
+    letter-spacing: -0.01em;
+  }
+
+  .entry__row {
+    margin-block-start: 0.5rem;
+  }
+
+  .entry__summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: baseline;
+    line-height: 1.55;
+  }
+
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .pill--high {
+    color: var(--high);
+  }
+
+  .pill--low {
+    color: var(--low);
+  }
+
+  .pill--none {
+    color: var(--ok);
+  }
+
+  .entry__cite {
+    margin-block-start: 0.3rem;
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+
+  .entry__link {
+    color: var(--accent-bright);
+    text-decoration: underline;
+    text-decoration-color: #7cc3ff59;
+    text-underline-offset: 0.2em;
+  }
+
+  .entry__why {
+    margin-block-start: 0.2rem;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .digest__quiet {
+    display: flex;
+    gap: 0.5rem;
+    margin-block-start: 1.1rem;
+    padding-block-start: 1.1rem;
+    border-block-start: 1px solid var(--border);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .digest__quiet b {
+    color: var(--text);
+    font-weight: 620;
+  }
+
+  .reply {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.7rem;
+    margin-block-start: 1.25rem;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--border-strong);
+    background: var(--surface-sunken);
+  }
+
+  .reply__avatar {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-sm);
+    background: #3a2f4d;
+    color: #d3bdf0;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .reply__question {
+    font-size: var(--step--1);
+  }
+
+  .reply__answer {
+    margin-block-start: 0.35rem;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .reply__answer b {
+    margin-inline-end: 0.4rem;
+    color: var(--accent-bright);
+    font-weight: 650;
+  }
+
+  .digest__caption {
+    margin-block-start: var(--space-md);
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+</style>

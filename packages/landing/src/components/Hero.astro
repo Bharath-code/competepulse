@@ -1,0 +1,152 @@
+---
+import { concierge, hero } from "../copy";
+import BookingCta from "./BookingCta.astro";
+---
+
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="container hero__inner">
+    <p class="eyebrow hero__eyebrow">
+      <span class="hero__pulse" aria-hidden="true"></span>
+      {hero.eyebrow}
+    </p>
+
+    <h1 class="hero__heading" id="hero-heading">
+      {hero.headline.lead}
+      <em>{hero.headline.emphasis}</em>
+      {hero.headline.trail}
+    </h1>
+
+    <p class="hero__subhead">{hero.subhead}</p>
+
+    <div class="hero__actions">
+      <BookingCta label={hero.ctaLabel} placement="hero" size="lg" />
+      <p class="hero__note">{hero.ctaNote}</p>
+      <p class="hero__offer">
+        <strong>{concierge.badge}</strong> for 3 design partners — no install, no card.
+      </p>
+    </div>
+
+    <ul class="hero__proof">
+      {
+        hero.proofPoints.map((point) => (
+          <li>
+            <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path
+                d="M3 8.5l3.2 3.2L13 5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.9"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            {point}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(3rem, 8vw, 5.5rem) clamp(2.5rem, 5vw, 3.5rem);
+  }
+
+  .hero__inner {
+    max-width: 48rem;
+    text-align: center;
+  }
+
+  .hero__eyebrow {
+    color: var(--ok);
+  }
+
+  .hero__pulse {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 0 #7fd99a80;
+    animation: pulse 2.6s ease-out infinite;
+  }
+
+  @keyframes pulse {
+    70% {
+      box-shadow: 0 0 0 0.5rem #7fd99a00;
+    }
+    100% {
+      box-shadow: 0 0 0 0 #7fd99a00;
+    }
+  }
+
+  .hero__heading {
+    margin-block-start: var(--space-md);
+    font-size: var(--step-4);
+    letter-spacing: -0.035em;
+  }
+
+  .hero__heading em {
+    font-style: normal;
+    background: linear-gradient(100deg, var(--accent-bright), #b9e2ff 55%, var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero__subhead {
+    max-width: 40rem;
+    margin: var(--space-md) auto 0;
+    font-size: var(--step-1);
+    color: var(--text-muted);
+  }
+
+  .hero__actions {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-sm);
+    margin-block-start: var(--space-lg);
+  }
+
+  .hero__note {
+    max-width: 30rem;
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+
+  .hero__offer {
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .hero__offer strong {
+    color: var(--low);
+    font-weight: 650;
+  }
+
+  .hero__proof {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem var(--space-md);
+    margin-block-start: var(--space-lg);
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .hero__proof li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    white-space: nowrap;
+  }
+
+  .hero__proof svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    color: var(--ok);
+  }
+</style>

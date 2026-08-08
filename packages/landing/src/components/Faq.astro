@@ -1,0 +1,58 @@
+---
+import { faq } from "../copy";
+---
+
+<section class="section faq" aria-labelledby="faq-heading">
+  <div class="container">
+    <h2 class="faq__heading" id="faq-heading">Straight answers</h2>
+    <dl class="faq__list">
+      {
+        faq.map((item) => (
+          <div class="faq__item">
+            <dt>{item.question}</dt>
+            <dd>{item.answer}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>
+
+<style>
+  .faq {
+    padding-block: var(--space-xl);
+  }
+
+  .faq__heading {
+    font-size: var(--step-1);
+    color: var(--text-faint);
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .faq__list {
+    display: grid;
+    gap: var(--space-md);
+    margin-block-start: var(--space-md);
+  }
+
+  @media (min-width: 52rem) {
+    .faq__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-lg);
+    }
+  }
+
+  .faq__item dt {
+    font-weight: 650;
+    font-size: var(--step-0);
+  }
+
+  .faq__item dd {
+    margin-block-start: 0.4rem;
+    margin-inline-start: 0;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+</style>

@@ -1,0 +1,48 @@
+---
+import { brand } from "../copy";
+
+interface Props {
+  /** Renders an <h1>-adjacent link in the header, plain text in the footer. */
+  href?: string | null;
+}
+
+const { href = "/" } = Astro.props;
+const Tag = href ? "a" : "span";
+---
+
+<Tag class="wordmark" href={href ?? undefined}>
+  <svg class="wordmark__mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M1.75 13.25h3.6l2.3-6.6 3.55 13.2 2.6-9.1 1.75 2.5h6.7"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"></path>
+  </svg>
+  <span class="wordmark__text">{brand.name}</span>
+</Tag>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text);
+    font-size: var(--step-1);
+    font-weight: 660;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+  }
+
+  .wordmark__mark {
+    width: 1.4em;
+    height: 1.4em;
+    color: var(--accent);
+    filter: drop-shadow(0 0 10px #3d9cf066);
+  }
+
+  .wordmark__text {
+    white-space: nowrap;
+  }
+</style>

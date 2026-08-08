@@ -1,0 +1,198 @@
+---
+import { concierge, hero } from "../copy";
+import { buildCalendlyUrl, buildMailtoFallback } from "../lib/calendly";
+import { resolveConfig } from "../lib/config";
+
+const config = resolveConfig(import.meta.env);
+const embedUrl = buildCalendlyUrl(config.calendlyUrl, { placement: "booking", embed: true });
+const directUrl = buildCalendlyUrl(config.calendlyUrl, { placement: "booking-direct" });
+const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min discovery call");
+---
+
+<section class="section booking" id="book" aria-labelledby="booking-heading">
+  <div class="container booking__grid">
+    <div class="booking__pitch">
+      <p class="eyebrow booking__badge">{concierge.badge}</p>
+      <h2 class="section-title" id="booking-heading">{concierge.title}</h2>
+      <p class="lede">{concierge.body}</p>
+
+      <p class="booking__asks-label">Who this is for</p>
+      <ul class="booking__asks">
+        {concierge.asks.map((ask) => <li>{ask}</li>)}
+      </ul>
+    </div>
+
+    <div class="booking__panel card" data-calendly-url={embedUrl ?? undefined}>
+      <p class="booking__panel-title">{concierge.bookingHeading}</p>
+
+      {embedUrl && <div class="booking__widget" data-calendly-target />}
+
+      <div class="booking__fallback">
+        <p class="booking__fallback-copy">
+          {
+            directUrl
+              ? "Pick any 15-minute slot that suits you — the calendar opens in a new tab."
+              : "Scheduling link is being set up. Email works right now."
+          }
+        </p>
+        {
+          directUrl ? (
+            <a
+              class="btn btn--primary btn--lg booking__button"
+              href={directUrl}
+              target="_blank"
+              rel="noopener"
+            >
+              {concierge.ctaLabel}
+            </a>
+          ) : (
+            <a class="btn btn--primary btn--lg booking__button" href={mailto}>
+              {concierge.ctaLabel}
+            </a>
+          )
+        }
+        <p class="booking__email">
+          {concierge.bookingFallbackNote}{" "}
+          <a href={mailto}>{config.contactEmail}</a>
+        </p>
+      </div>
+
+      <p class="booking__meta">{hero.ctaNote}</p>
+    </div>
+  </div>
+</section>
+
+{
+  /* Astro hoists and bundles this at build time, so it must not be conditional.
+    The script no-ops when no `data-calendly-url` panel is present. */
+}
+<script>
+  import "../scripts/calendly-embed";
+</script>
+
+<style>
+  .booking__grid {
+    display: grid;
+    gap: var(--space-xl);
+  }
+
+  @media (min-width: 62rem) {
+    .booking__grid {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: start;
+    }
+  }
+
+  .booking__badge {
+    color: var(--low);
+  }
+
+  .booking__asks-label {
+    margin-block-start: var(--space-lg);
+    font-size: var(--step--1);
+    font-weight: 650;
+    color: var(--text);
+  }
+
+  .booking__asks {
+    display: grid;
+    gap: 0.45rem;
+    margin-block-start: 0.6rem;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .booking__asks li {
+    padding-inline-start: 1.1rem;
+    position: relative;
+  }
+
+  .booking__asks li::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0.62em;
+    inset-inline-start: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .booking__panel {
+    padding: clamp(1.1rem, 3vw, 1.75rem);
+  }
+
+  .booking__panel-title {
+    font-size: var(--step--1);
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  /* --- embed lifecycle -------------------------------------------------
+   * idle/loading -> skeleton + working link stay visible
+   * ready        -> Calendly iframe replaces the link
+   * failed       -> link only, no empty box
+   */
+  .booking__widget {
+    display: none;
+    margin-block-start: var(--space-md);
+  }
+
+  [data-calendly-state="loading"] .booking__widget {
+    display: block;
+    min-height: 12rem;
+    border-radius: var(--radius-md);
+    background: linear-gradient(100deg, transparent 20%, #ffffff0f 40%, transparent 60%)
+      var(--surface-sunken);
+    background-size: 220% 100%;
+    animation: skeleton 1.5s ease-in-out infinite;
+  }
+
+  [data-calendly-state="ready"] .booking__widget {
+    display: block;
+    min-height: 44rem;
+  }
+
+  @keyframes skeleton {
+    to {
+      background-position: -120% 0;
+    }
+  }
+
+  [data-calendly-state="ready"] .booking__fallback,
+  [data-calendly-state="ready"] .booking__meta {
+    display: none;
+  }
+
+  .booking__fallback {
+    margin-block-start: var(--space-md);
+  }
+
+  .booking__fallback-copy {
+    color: var(--text-muted);
+    font-size: var(--step--1);
+  }
+
+  .booking__button {
+    width: 100%;
+    margin-block-start: var(--space-md);
+  }
+
+  .booking__email {
+    margin-block-start: var(--space-sm);
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+
+  .booking__meta {
+    margin-block-start: var(--space-md);
+    padding-block-start: var(--space-md);
+    border-block-start: 1px solid var(--border);
+    font-size: var(--step--1);
+    color: var(--text-faint);
+  }
+</style>

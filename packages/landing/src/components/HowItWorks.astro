@@ -1,0 +1,81 @@
+---
+import { howItWorks } from "../copy";
+---
+
+<section class="section" aria-labelledby="how-heading">
+  <div class="container">
+    <p class="eyebrow">{howItWorks.kicker}</p>
+    <h2 class="section-title" id="how-heading">{howItWorks.title}</h2>
+
+    <ol class="steps">
+      {
+        howItWorks.steps.map((step) => (
+          <li class="step">
+            <p class="step__number mono" aria-hidden="true">
+              {step.number}
+            </p>
+            <h3 class="step__title">{step.title}</h3>
+            <p class="step__body">{step.body}</p>
+            {step.command && <p class="step__command mono">{step.command}</p>}
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .steps {
+    display: grid;
+    gap: var(--space-md);
+    margin-block-start: var(--space-xl);
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+
+  @media (min-width: 52rem) {
+    .steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: var(--space-md);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, #ffffff08, transparent 60%);
+  }
+
+  .step__number {
+    color: var(--accent);
+    font-size: var(--step--1);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .step__title {
+    font-size: var(--step-1);
+  }
+
+  .step__body {
+    font-size: var(--step--1);
+    color: var(--text-muted);
+  }
+
+  .step__command {
+    margin-block-start: auto;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--accent-bright);
+    font-size: var(--step--1);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+</style>
