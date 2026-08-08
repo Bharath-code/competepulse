@@ -4,18 +4,15 @@
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    // FIRECRAWL_API_KEY / Slack secrets are intentionally unset for local
-    // dev. Set them via `.dev.vars` or dashboard secrets for live integrations.
+    "DODO_PAYMENTS_ENVIRONMENT": "test_mode",
   },
   // D1 binding for production watchlists (schema: migrations/).
-  // Local/tests use the in-memory MemoryStore; create the DB with:
-  //   wrangler d1 create competepulse
-  // then set database_id below.
+  // Local/tests use the in-memory MemoryStore.
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "competepulse",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "294bf257-2999-4b74-bbc1-d2fe976605ab",
       "migrations_dir": "migrations",
     },
   ],
