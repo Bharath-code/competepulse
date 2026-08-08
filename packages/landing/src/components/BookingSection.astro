@@ -155,10 +155,10 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse — 15-min
     animation: skeleton 1.5s ease-in-out infinite;
   }
 
+  /* No min-height once mounted: Calendly's iframe sets its own. */
   [data-calendly-state="ready"] .booking__widget,
   [data-calendly-state="unconfirmed"] .booking__widget {
     display: block;
-    min-height: 44rem;
   }
 
   @keyframes skeleton {
