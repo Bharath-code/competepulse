@@ -6,44 +6,55 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  /** Defaults to index,follow. Use noindex for private prep pages. */
+  robots?: string;
+  /** When false, omit marketing Product/FAQ JSON-LD (interview brief). */
+  includeProductSchema?: boolean;
 }
 
-const { title = meta.title, description = meta.description } = Astro.props;
+const {
+  title = meta.title,
+  description = meta.description,
+  robots = "index, follow, max-image-preview:large",
+  includeProductSchema = true,
+} = Astro.props;
 
 const config = resolveConfig(import.meta.env);
 const canonical = new URL(Astro.url.pathname.replace(/\/$/, "") || "/", config.siteUrl).toString();
 const ogImage = new URL("/og.png", config.siteUrl).toString();
 
-const structuredData = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${config.siteUrl}/#organization`,
-      name: brand.name,
-      url: config.siteUrl,
-      description: brand.tagline,
-      email: config.contactEmail,
-    },
-    {
-      "@type": "SoftwareApplication",
-      name: brand.name,
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web, Slack",
-      url: config.siteUrl,
-      description: meta.description,
-      publisher: { "@id": `${config.siteUrl}/#organization` },
-    },
-    {
-      "@type": "FAQPage",
-      mainEntity: faq.map((item) => ({
-        "@type": "Question",
-        name: item.question,
-        acceptedAnswer: { "@type": "Answer", text: item.answer },
-      })),
-    },
-  ],
-};
+const structuredData = includeProductSchema
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": `${config.siteUrl}/#organization`,
+          name: brand.name,
+          url: config.siteUrl,
+          description: brand.tagline,
+          email: config.contactEmail,
+        },
+        {
+          "@type": "SoftwareApplication",
+          name: brand.name,
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web, Slack",
+          url: config.siteUrl,
+          description: meta.description,
+          publisher: { "@id": `${config.siteUrl}/#organization` },
+        },
+        {
+          "@type": "FAQPage",
+          mainEntity: faq.map((item) => ({
+            "@type": "Question",
+            name: item.question,
+            acceptedAnswer: { "@type": "Answer", text: item.answer },
+          })),
+        },
+      ],
+    }
+  : null;
 ---
 
 <!doctype html>
@@ -56,7 +67,7 @@ const structuredData = {
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content="#f5f2ea" />
     <meta name="color-scheme" content="light" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content={robots} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -108,7 +119,11 @@ const structuredData = {
       )
     }
 
-    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />
+    {
+      structuredData && (
+        <script type="application/ld+json" set:html={JSON.stringify(structuredData)} is:inline />
+      )
+    }
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>

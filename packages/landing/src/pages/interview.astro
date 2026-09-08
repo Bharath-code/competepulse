@@ -1,0 +1,891 @@
+---
+import Wordmark from "../components/Wordmark.astro";
+import {
+  architectureLayers,
+  checkTopics,
+  drills,
+  interviewMeta,
+  nav,
+  packages,
+  pipelineSteps,
+  pitches,
+  problemSolution,
+  qualityStory,
+  stackChoices,
+  yourStory,
+  yourStoryTemplate,
+} from "../interview/content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const categoryFilters = [
+  { id: "all", label: "All" },
+  { id: "product", label: "Product" },
+  { id: "architecture", label: "Architecture" },
+  { id: "systems", label: "Systems" },
+  { id: "behavioral", label: "Behavioral" },
+] as const;
+---
+
+<BaseLayout
+  title={interviewMeta.title}
+  description={interviewMeta.description}
+  robots="noindex, nofollow"
+  includeProductSchema={false}
+>
+  <header class="iv-top">
+    <div class="container iv-top__inner">
+      <Wordmark size="running" href="/" />
+      <p class="iv-top__kicker">{interviewMeta.kicker}</p>
+      <a class="iv-top__back" href="/">← Landing</a>
+    </div>
+  </header>
+
+  <nav class="iv-nav" data-interview-nav aria-label="Briefing sections">
+    <div class="container iv-nav__inner">
+      {
+        nav.map((item) => (
+          <a href={`#${item.id}`}>{item.label}</a>
+        ))
+      }
+    </div>
+  </nav>
+
+  <main id="main" class="iv">
+    <section class="iv-hero container">
+      <p class="kicker kicker--signal">{interviewMeta.kicker}</p>
+      <h1 class="iv-hero__title">{interviewMeta.headline}</h1>
+      <p class="lead iv-hero__lead">{interviewMeta.lead}</p>
+
+      <div class="iv-progress" data-progress>
+        <div class="iv-progress__head">
+          <p class="kicker kicker--tight">Readiness</p>
+          <p class="iv-progress__label" data-progress-label>0 / {checkTopics.length} ready</p>
+        </div>
+        <div class="iv-progress__track" aria-hidden="true">
+          <div class="iv-progress__meter" data-progress-meter style="width: 0%"></div>
+        </div>
+        <ul class="iv-progress__list">
+          {
+            checkTopics.map((topic) => (
+              <li>
+                <label>
+                  <input type="checkbox" data-topic-id={topic.id} />
+                  <span>{topic.label}</span>
+                </label>
+              </li>
+            ))
+          }
+        </ul>
+        <button type="button" class="iv-ghost" data-progress-reset>Reset checklist</button>
+      </div>
+    </section>
+
+    <section id="pitch" class="section iv-section">
+      <div class="container">
+        <p class="kicker">01 · Pitch</p>
+        <h2 class="section-title">Say it out loud before you open Slack.</h2>
+        <p class="lead">Cover the problem, the wedge, and the anti-positions (not Klue, not Visualping).</p>
+
+        <div class="iv-pitch-grid">
+          {
+            ([pitches.thirtySeconds, pitches.twoMinutes] as const).map((pitch, i) => (
+              <article class="iv-panel">
+                <div class="iv-panel__head">
+                  <h3>{pitch.label}</h3>
+                  <button type="button" class="iv-ghost" data-copy-pitch={`pitch-text-${i}`}>
+                    Copy
+                  </button>
+                </div>
+                <p id={`pitch-text-${i}`} class="iv-panel__body">{pitch.text}</p>
+              </article>
+            ))
+          }
+        </div>
+
+        <div class="iv-two-col">
+          <div>
+            <h3 class="iv-subhead">Problem (pain)</h3>
+            <ul class="iv-bullets">
+              {problemSolution.problem.map((line) => <li>{line}</li>)}
+            </ul>
+          </div>
+          <div>
+            <h3 class="iv-subhead">Phase-1 wedge</h3>
+            <ul class="iv-bullets">
+              {problemSolution.wedge.map((line) => <li>{line}</li>)}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture" class="section iv-section">
+      <div class="container">
+        <p class="kicker">02 · Architecture</p>
+        <h2 class="section-title">Draw this on the whiteboard.</h2>
+        <p class="lead">
+          One sentence: Eve-shaped agent for Slack UX + HITL; Cloudflare for crawl ops and
+          history; Firecrawl for extract quality; core for materiality + evals.
+        </p>
+
+        <pre class="iv-diagram" aria-label="High-level architecture diagram">
+{`Slack / Dashboard
+        │
+        ▼
+┌───────────────────┐     tools/HITL      ┌────────────────────┐
+│  @competepulse/   │ ◄──────────────────► │  @competepulse/    │
+│  agent            │                      │  worker (Hono/CF)  │
+└───────────────────┘                      └─────────┬──────────┘
+        ▲                                            │ Queues
+        │ skills + digest voice                      ▼
+        │                                  Firecrawl ──► Browser Run
+        │                                            │
+┌───────┴───────────┐                                ▼
+│  @competepulse/   │ ◄──── diffPricing ──── R2 snapshots + D1
+│  core (+ evals)   │
+└───────────────────┘
+        │
+        ▼
+   pnpm eval ≥85% precision gate (CI)`}
+        </pre>
+
+        <ol class="iv-layers">
+          {
+            architectureLayers.map((layer, i) => (
+              <li>
+                <span class="iv-layers__n" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3>{layer.name}</h3>
+                  <p>{layer.owns}</p>
+                  <p class="iv-mono">{layer.package}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+
+        <h3 class="iv-subhead">Packages</h3>
+        <ul class="iv-pkg">
+          {
+            packages.map((pkg) => (
+              <li>
+                <code>{pkg.name}</code>
+                <span>{pkg.blurb}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section id="pipeline" class="section iv-section">
+      <div class="container">
+        <p class="kicker">03 · Pipeline</p>
+        <h2 class="section-title">Crawl → snapshot → materiality → Slack.</h2>
+        <ol class="iv-pipeline">
+          {
+            pipelineSteps.map((s) => (
+              <li>
+                <span class="iv-pipeline__step">{s.step}</span>
+                <div>
+                  <h3>{s.title}</h3>
+                  <p>{s.detail}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <section id="stack" class="section iv-section">
+      <div class="container">
+        <p class="kicker">04 · Stack & tradeoffs</p>
+        <h2 class="section-title">Why this — and what you rejected.</h2>
+        <p class="lead">
+          Open each card. Practice the interview line out loud. Interviewers hire people who can
+          defend decisions, not recite logos.
+        </p>
+
+        <div class="iv-stack">
+          {
+            stackChoices.map((choice) => (
+              <details class="iv-stack__card" data-stack-card>
+                <summary>
+                  <span class="iv-stack__layer">{choice.layer}</span>
+                  <span class="iv-stack__choice">{choice.choice}</span>
+                </summary>
+                <div class="iv-stack__body">
+                  <p>
+                    <strong>Why</strong> — {choice.why}
+                  </p>
+                  <p>
+                    <strong>Against / cost</strong> — {choice.against}
+                  </p>
+                  <p>
+                    <strong>Rejected</strong> — {choice.rejected}
+                  </p>
+                  <blockquote class="iv-quote">
+                    <p class="kicker kicker--tight">Say this</p>
+                    <p>{choice.interviewLine}</p>
+                  </blockquote>
+                </div>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section id="quality" class="section iv-section">
+      <div class="container">
+        <p class="kicker">05 · Quality / evals</p>
+        <h2 class="section-title">Human judgment before shipping.</h2>
+        <p class="lead">{qualityStory.thesis}</p>
+
+        <ol class="iv-bullets iv-bullets--numbered">
+          {qualityStory.steps.map((step) => <li>{step}</li>)}
+        </ol>
+
+        <article class="iv-panel iv-panel--night">
+          <p class="kicker kicker--tight">Worked example</p>
+          <h3>{qualityStory.example.name}</h3>
+          <ul class="iv-bullets">
+            <li>
+              <strong>Human:</strong> {qualityStory.example.human}
+            </li>
+            <li>
+              <strong>System:</strong> {qualityStory.example.system}
+            </li>
+            <li>
+              <strong>Counter:</strong> {qualityStory.example.counter}
+            </li>
+          </ul>
+          <p class="iv-mono">CI: pnpm eval · gate precision ≥ 85% · ≥ 20 fixtures</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="drill" class="section iv-section">
+      <div class="container" data-drill-board>
+        <p class="kicker">06 · Interview drill</p>
+        <h2 class="section-title">Answer first. Reveal second.</h2>
+        <p class="lead">
+          Filter by category. Say your answer out loud, then reveal the model answer and patch
+          gaps.
+        </p>
+
+        <div class="iv-filters" role="group" aria-label="Filter drill questions">
+          {
+            categoryFilters.map((filter) => (
+              <button
+                type="button"
+                class="iv-filter"
+                data-drill-filter={filter.id}
+                aria-pressed={filter.id === "all" ? "true" : "false"}
+              >
+                {filter.label}
+              </button>
+            ))
+          }
+        </div>
+
+        <div class="iv-drills">
+          {
+            drills.map((item, index) => (
+              <article class="iv-drill" data-drill-card data-category={item.category}>
+                <p class="iv-drill__meta">
+                  <span class="iv-mono">Q{index + 1}</span>
+                  <span class="iv-drill__cat">{item.category}</span>
+                </p>
+                <h3>{item.question}</h3>
+                <button type="button" class="btn btn--sm" data-drill-reveal>
+                  Reveal model answer
+                </button>
+                <button type="button" class="iv-ghost" data-drill-hide hidden>
+                  Hide answer
+                </button>
+                <div class="iv-drill__answer" data-drill-answer hidden>
+                  <p>{item.answer}</p>
+                  {item.followUp && (
+                    <p class="iv-drill__follow">
+                      <strong>Follow-up:</strong> {item.followUp}
+                    </p>
+                  )}
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section id="your-story" class="section iv-section">
+      <div class="container">
+        <p class="kicker">07 · Your story</p>
+        <h2 class="section-title">Only you can finish this section.</h2>
+        <p class="lead">{yourStoryTemplate.rolePrompt}</p>
+
+        <div class="iv-story">
+          <article class="iv-panel">
+            <h3>What I owned</h3>
+            <p data-story-field="owned">{yourStory.owned}</p>
+          </article>
+          <article class="iv-panel">
+            <h3>Hardest call</h3>
+            <p data-story-field="hardest">{yourStory.hardest}</p>
+          </article>
+          <article class="iv-panel">
+            <h3>Metric / proof</h3>
+            <p data-story-field="metric">{yourStory.metric}</p>
+          </article>
+          <article class="iv-panel">
+            <h3>What I'd build next</h3>
+            <p data-story-field="next">{yourStory.next}</p>
+          </article>
+        </div>
+
+        <p class="iv-footnote">
+          Edit <code>packages/landing/src/interview/content.ts</code> → <code>yourStory</code>, then
+          refresh. Mark “Your story” ready on the checklist when the TODOs are gone.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="iv-foot">
+    <div class="container">
+      <p>
+        CompetePulse interview brief · local prep · <a href="/">competepulse.com</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="../scripts/interview-prep.ts"></script>
+</BaseLayout>
+
+<style>
+  .iv-top {
+    border-block-start: 6px solid var(--ink);
+    border-block-end: 1px solid var(--rule);
+    background: var(--paper);
+  }
+
+  .iv-top__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    min-height: 3.25rem;
+  }
+
+  .iv-top__kicker {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .iv-top__back {
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  @media (width <= 40rem) {
+    .iv-top__kicker {
+      display: none;
+    }
+  }
+
+  .iv-nav {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 30;
+    border-block-end: 1px solid var(--ink);
+    background: var(--paper);
+  }
+
+  .iv-nav__inner {
+    display: flex;
+    gap: 0.15rem;
+    overflow-x: auto;
+    padding-block: 0.55rem;
+    scrollbar-width: thin;
+  }
+
+  .iv-nav a {
+    flex: 0 0 auto;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid transparent;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-3);
+  }
+
+  .iv-nav a:hover,
+  .iv-nav a[aria-current="true"] {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--paper-tint);
+  }
+
+  .iv-hero {
+    padding-block: var(--space-xl) var(--space-lg);
+  }
+
+  .iv-hero__title {
+    margin-block-start: var(--space-sm);
+    font-size: var(--t-display);
+    max-width: 16ch;
+  }
+
+  .iv-hero__lead {
+    max-width: 40rem;
+  }
+
+  .iv-progress {
+    margin-block-start: var(--space-lg);
+    padding: var(--space-md);
+    border: 1px solid var(--ink);
+    background: var(--paper-tint);
+  }
+
+  .iv-progress__head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-md);
+    align-items: baseline;
+  }
+
+  .iv-progress__label {
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+
+  .iv-progress__track {
+    margin-block: var(--space-sm);
+    height: 0.35rem;
+    background: var(--paper-deep);
+  }
+
+  .iv-progress__meter {
+    height: 100%;
+    background: var(--signal);
+    transition: width 180ms ease-out;
+  }
+
+  .iv-progress__list {
+    display: grid;
+    gap: 0.55rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (width >= 48rem) {
+    .iv-progress__list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .iv-progress__list label {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    cursor: pointer;
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+
+  .iv-progress__list input {
+    margin-block-start: 0.2rem;
+    accent-color: var(--signal);
+  }
+
+  .iv-ghost {
+    margin-block-start: var(--space-sm);
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .iv-ghost:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .iv-section .section-title {
+    max-width: 22ch;
+  }
+
+  .iv-pitch-grid {
+    display: grid;
+    gap: var(--space-md);
+    margin-block-start: var(--space-lg);
+  }
+
+  @media (width >= 56rem) {
+    .iv-pitch-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .iv-panel {
+    padding: var(--space-md);
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+  }
+
+  .iv-panel__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-block-end: var(--space-sm);
+    padding-block-end: var(--space-xs);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .iv-panel__body {
+    font-size: var(--t-small);
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+
+  .iv-panel--night {
+    margin-block-start: var(--space-lg);
+    background: var(--night);
+    color: var(--night-text);
+    border-color: var(--night-rule);
+  }
+
+  .iv-panel--night .kicker {
+    color: var(--night-muted);
+  }
+
+  .iv-panel--night .kicker::after {
+    background: var(--night-rule);
+  }
+
+  .iv-two-col {
+    display: grid;
+    gap: var(--space-lg);
+    margin-block-start: var(--space-lg);
+  }
+
+  @media (width >= 48rem) {
+    .iv-two-col {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .iv-subhead {
+    margin-block-end: var(--space-sm);
+    font-size: var(--t-h3);
+  }
+
+  .iv-bullets {
+    padding-inline-start: 1.1rem;
+    color: var(--ink-2);
+    font-size: var(--t-small);
+  }
+
+  .iv-bullets li + li {
+    margin-block-start: 0.45rem;
+  }
+
+  .iv-bullets--numbered {
+    margin-block-start: var(--space-md);
+    max-width: 46rem;
+  }
+
+  .iv-diagram {
+    margin-block-start: var(--space-lg);
+    padding: var(--space-md);
+    overflow-x: auto;
+    border: 1px solid var(--ink);
+    background: var(--night);
+    color: var(--night-text);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  .iv-layers {
+    display: grid;
+    gap: 0;
+    margin-block-start: var(--space-lg);
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .iv-layers li {
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--space-md);
+    padding-block: var(--space-md);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .iv-layers__n {
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.14em;
+    color: var(--signal);
+  }
+
+  .iv-layers p {
+    margin-block-start: 0.35rem;
+    color: var(--ink-2);
+    font-size: var(--t-small);
+  }
+
+  .iv-mono,
+  .iv-pkg code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--ochre);
+  }
+
+  .iv-pkg {
+    display: grid;
+    gap: 0.75rem;
+    margin-block-start: var(--space-sm);
+    padding: 0;
+    list-style: none;
+  }
+
+  .iv-pkg li {
+    display: grid;
+    gap: 0.25rem;
+    padding-block: 0.65rem;
+    border-block-end: 1px solid var(--rule);
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+
+  .iv-pipeline {
+    display: grid;
+    gap: 0;
+    margin-block-start: var(--space-lg);
+    padding: 0;
+    list-style: none;
+  }
+
+  .iv-pipeline li {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: var(--space-md);
+    padding-block: var(--space-md);
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .iv-pipeline__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .iv-pipeline h3 {
+    font-size: var(--t-h3);
+  }
+
+  .iv-pipeline p {
+    margin-block-start: 0.35rem;
+    color: var(--ink-2);
+    font-size: var(--t-small);
+  }
+
+  .iv-stack {
+    display: grid;
+    gap: 0;
+    margin-block-start: var(--space-lg);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .iv-stack__card {
+    border-block-end: 1px solid var(--rule);
+  }
+
+  .iv-stack__card summary {
+    display: grid;
+    gap: 0.25rem;
+    padding-block: var(--space-md);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .iv-stack__card summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .iv-stack__layer {
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--signal);
+  }
+
+  .iv-stack__choice {
+    font-size: var(--t-h3);
+    font-weight: 600;
+  }
+
+  .iv-stack__body {
+    display: grid;
+    gap: 0.75rem;
+    padding-block-end: var(--space-md);
+    max-width: 46rem;
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+
+  .iv-quote {
+    margin: 0;
+    padding: var(--space-sm) var(--space-md);
+    border-inline-start: 3px solid var(--signal);
+    background: var(--paper-tint);
+    color: var(--ink);
+  }
+
+  .iv-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-block-start: var(--space-md);
+  }
+
+  .iv-filter {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 0;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--ink-2);
+  }
+
+  .iv-filter[aria-pressed="true"] {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .iv-drills {
+    display: grid;
+    gap: var(--space-md);
+    margin-block-start: var(--space-lg);
+  }
+
+  @media (width >= 56rem) {
+    .iv-drills {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .iv-drill {
+    display: grid;
+    gap: var(--space-sm);
+    align-content: start;
+    padding: var(--space-md);
+    border: 1px solid var(--rule-strong);
+  }
+
+  .iv-drill__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  .iv-drill__cat {
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .iv-drill h3 {
+    font-size: var(--t-h3);
+  }
+
+  .iv-drill__answer {
+    padding-block-start: var(--space-sm);
+    border-block-start: 1px solid var(--rule);
+    font-size: var(--t-small);
+    color: var(--ink-2);
+  }
+
+  .iv-drill__follow {
+    margin-block-start: 0.65rem;
+    color: var(--ochre);
+  }
+
+  .iv-story {
+    display: grid;
+    gap: var(--space-md);
+    margin-block-start: var(--space-lg);
+  }
+
+  @media (width >= 48rem) {
+    .iv-story {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .iv-story .iv-panel p {
+    font-size: var(--t-small);
+    color: var(--ink-2);
+    white-space: pre-wrap;
+  }
+
+  .iv-footnote {
+    margin-block-start: var(--space-lg);
+    font-size: var(--t-small);
+    color: var(--ink-3);
+  }
+
+  .iv-footnote code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  .iv-foot {
+    padding-block: var(--space-lg);
+    border-block-start: 1px solid var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+</style>

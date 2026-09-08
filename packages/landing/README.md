@@ -4,7 +4,24 @@ The CompetePulse marketing page — roadmap task **P0-3 (Landing page + Calendly
 static page whose only job is to turn an outbound click into a booked 15-minute
 discovery call.
 
+**Go live:** follow [docs/GO_LIVE_CHECKLIST.md](../../docs/GO_LIVE_CHECKLIST.md) (domain + `PUBLIC_CALENDLY_URL` + deploy).
+
+## Interview brief (private)
+
+Interactive interview prep lives at **`/interview`** (noindex). It covers architecture,
+pipeline, stack tradeoffs (why / against / rejected), the materiality eval story, and a
+reveal-style Q&A drill.
+
+```bash
+pnpm --filter @competepulse/landing dev
+# open http://localhost:4321/interview
+```
+
+Edit talking points and your ownership story in
+[`src/interview/content.ts`](./src/interview/content.ts) (`yourStory`).
+
 ## Why it is built this way
+
 
 | Decision                                | Reason                                                                                                                                               |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |

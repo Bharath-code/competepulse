@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -147,11 +147,28 @@ describe("built page (booking link configured)", () => {
     const htmlGzip = gzipSync(readFileSync(join(outDir, "index.html"))).length;
     expect(htmlGzip, "gzipped HTML (styles are inlined)").toBeLessThan(16_000);
 
+    // Budget the marketing page only — /interview ships its own drill script and
+    // must not inflate the outbound landing's JS ceiling.
     const assets = join(outDir, "_astro");
-    const js = readdirSync(assets)
-      .filter((file) => file.endsWith(".js"))
-      .reduce((total, file) => total + statSync(join(assets, file)).size, 0);
-    expect(js, "client JavaScript shipped").toBeLessThan(4_000);
+    const referenced = new Set(
+      [...html.matchAll(/\/_astro\/([^"']+\.js)/g)].map((match) => match[1]!),
+    );
+    const js = [...referenced].reduce((total, file) => {
+      const path = join(assets, file);
+      return total + (existsSync(path) ? statSync(path).size : 0);
+    }, 0);
+    expect(js, "client JavaScript on index").toBeLessThan(4_000);
+  });
+
+  it("ships a noindex interview brief with reveal drills", () => {
+    const nested = join(outDir, "interview", "index.html");
+    const flat = join(outDir, "interview.html");
+    const pagePath = existsSync(flat) ? flat : nested;
+    expect(existsSync(pagePath), "interview page missing from build").toBe(true);
+    const page = readFileSync(pagePath, "utf8");
+    expect(page).toMatch(/noindex/);
+    expect(textOf(page)).toMatch(/Explain CompetePulse like you built it/);
+    expect(textOf(page)).toMatch(/Interview drill/);
   });
 });
 
