@@ -6,6 +6,20 @@
 FIRECRAWL_API_KEY=
 SLACK_SIGNING_SECRET=
 SLACK_BOT_TOKEN=
+SLACK_CLIENT_ID=
+SLACK_CLIENT_SECRET=
+
+# Protect /dashboard + mutating APIs when set (Bearer or ?access_token=)
+DASHBOARD_ACCESS_TOKEN=
+
+# Slack incoming webhook or similar for founder digest-fail alerts
+FOUNDER_ALERT_WEBHOOK=
+
+# Public worker origin for OAuth redirect (optional; defaults to request origin)
+PUBLIC_WORKER_URL=
+
+# Set to 0 in production to refuse silent browser fixtures on thin scrapes
+ALLOW_BROWSER_FIXTURES=1
 
 # Dodo Payments (optional locally — mock checkout activates plans without keys)
 DODO_PAYMENTS_API_KEY=

@@ -30,6 +30,7 @@ describe("D1 workspace SQL helpers", () => {
       dodoSubscriptionId: "sub_1",
       subscriptionStatus: "active",
       billingEmail: "bill@example.com",
+      slackBotToken: null,
     });
   });
 

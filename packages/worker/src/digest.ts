@@ -1,5 +1,5 @@
 import { formatDigestBlocks, type QuietMode } from "@competepulse/agent";
-import type { DigestDelivery, MemoryStore } from "./store.js";
+import type { DigestDelivery, Store } from "./store.js";
 
 export interface DigestRunResult {
   delivered: boolean;
@@ -8,16 +8,19 @@ export interface DigestRunResult {
   body: string;
   blocks?: unknown[];
   delivery?: DigestDelivery;
+  /** Set when Slack post was attempted. */
+  slackPosted?: boolean;
+  slackError?: string;
 }
 
 /**
  * Idempotent weekday digest for one workspace (PRD E1-4 / E3-1 / E3-2).
  */
-export function runWorkspaceDigest(
-  data: MemoryStore,
+export async function runWorkspaceDigest(
+  data: Store,
   workspaceId: string,
   now: Date = new Date(),
-): DigestRunResult {
+): Promise<DigestRunResult> {
   const deliveryDate = utcDateKey(now);
 
   if (isWeekendUtc(now)) {
@@ -29,7 +32,7 @@ export function runWorkspaceDigest(
     };
   }
 
-  const existing = data.getDigestDelivery(workspaceId, deliveryDate);
+  const existing = await data.getDigestDelivery(workspaceId, deliveryDate);
   if (existing) {
     return {
       delivered: false,
@@ -41,28 +44,29 @@ export function runWorkspaceDigest(
     };
   }
 
-  const workspace = data.getWorkspace(workspaceId);
+  const workspace = await data.getWorkspace(workspaceId);
   const quietMode: QuietMode = workspace?.quietMode ?? "all_quiet";
-  const watches = data.listWatches(workspaceId);
+  const watches = await data.listWatches(workspaceId);
 
   if (watches.length === 0) {
     const body = "*CompetePulse digest*: No watches configured.";
-    const delivery = data.saveDigestDelivery({ workspaceId, deliveryDate, body });
+    const delivery = await data.saveDigestDelivery({ workspaceId, deliveryDate, body });
     return { delivered: true, skipped: false, deliveryDate, body, delivery };
   }
 
-  const sections = watches.map((watch) => {
-    const changes = data.listChanges(watch.id);
+  const sections = [];
+  for (const watch of watches) {
+    const changes = await data.listChanges(watch.id);
     const todays = changes.filter((c) => c.createdAt.slice(0, 10) === deliveryDate);
-    return { competitor: watch.competitor, changes: todays };
-  });
+    sections.push({ competitor: watch.competitor, changes: todays });
+  }
 
   const formatted = formatDigestBlocks(sections, { date: deliveryDate, quietMode });
   if (formatted.allQuiet && quietMode === "skip") {
     return { delivered: false, skipped: true, deliveryDate, body: "", blocks: [] };
   }
 
-  const delivery = data.saveDigestDelivery({
+  const delivery = await data.saveDigestDelivery({
     workspaceId,
     deliveryDate,
     body: formatted.text,
@@ -79,11 +83,16 @@ export function runWorkspaceDigest(
   };
 }
 
-export function runAllWorkspaceDigests(
-  data: MemoryStore,
+export async function runAllWorkspaceDigests(
+  data: Store,
   now: Date = new Date(),
-): DigestRunResult[] {
-  return data.listWorkspaces().map((ws) => runWorkspaceDigest(data, ws.id, now));
+): Promise<DigestRunResult[]> {
+  const workspaces = await data.listWorkspaces();
+  const results: DigestRunResult[] = [];
+  for (const ws of workspaces) {
+    results.push(await runWorkspaceDigest(data, ws.id, now));
+  }
+  return results;
 }
 
 export function utcDateKey(date: Date): string {

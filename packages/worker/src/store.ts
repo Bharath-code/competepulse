@@ -25,6 +25,8 @@ export interface Workspace {
   dodoSubscriptionId: string | null;
   subscriptionStatus: SubscriptionStatus;
   billingEmail: string | null;
+  /** Per-workspace bot token from Slack OAuth install (B3). */
+  slackBotToken: string | null;
   createdAt: string;
 }
 
@@ -116,6 +118,81 @@ export class CapError extends Error {
   }
 }
 
+export type WorkspacePatch = Partial<
+  Pick<
+    Workspace,
+    | "plan"
+    | "digestChannelId"
+    | "quietMode"
+    | "dodoCustomerId"
+    | "dodoSubscriptionId"
+    | "subscriptionStatus"
+    | "billingEmail"
+    | "slackBotToken"
+  >
+>;
+
+/**
+ * Async product store (Path B1). Production uses D1; tests/local use
+ * {@link AsyncMemoryStore} over {@link MemoryStore}.
+ */
+export interface Store {
+  ensureWorkspace(slackTeamId: string, plan?: PlanId): Promise<Workspace>;
+  listWorkspaces(): Promise<Workspace[]>;
+  getWorkspace(id: string): Promise<Workspace | undefined>;
+  updateWorkspace(id: string, patch: WorkspacePatch): Promise<Workspace | undefined>;
+  getWorkspaceBySubscriptionId(subscriptionId: string): Promise<Workspace | undefined>;
+  claimWebhook(webhookId: string): Promise<boolean>;
+  setDigestChannel(workspaceId: string, channelId: string): Promise<Workspace | undefined>;
+
+  addWatch(input: {
+    competitor: string;
+    url: string;
+    label: WatchLabel;
+    workspaceId?: string;
+  }): Promise<Watch>;
+  listWatches(workspaceId?: string): Promise<Watch[]>;
+  getWatch(id: string): Promise<Watch | undefined>;
+  touchWatch(id: string, success: boolean): Promise<void>;
+  removeWatch(id: string, workspaceId?: string): Promise<boolean>;
+
+  latestSnapshot(watchId: string): Promise<Snapshot | undefined>;
+  listSnapshots(watchId: string): Promise<Snapshot[]>;
+  getSnapshot(id: string): Promise<Snapshot | undefined>;
+  addSnapshot(snapshot: Snapshot): Promise<void>;
+
+  addChange(change: StoredChange): Promise<void>;
+  listChanges(watchId: string): Promise<StoredChange[]>;
+  listWorkspaceChanges(workspaceId: string): Promise<StoredChange[]>;
+  getChange(id: string): Promise<StoredChange | undefined>;
+
+  addBattlecard(draft: BattlecardDraft): Promise<BattlecardDraft>;
+  getBattlecard(id: string): Promise<BattlecardDraft | undefined>;
+  updateBattlecard(draft: BattlecardDraft): Promise<BattlecardDraft>;
+
+  getDigestDelivery(workspaceId: string, deliveryDate: string): Promise<DigestDelivery | null>;
+  saveDigestDelivery(input: {
+    workspaceId: string;
+    deliveryDate: string;
+    body: string;
+    blocksJson?: string;
+  }): Promise<DigestDelivery>;
+
+  addCrawlRun(run: CrawlRun): Promise<CrawlRun>;
+  updateCrawlRun(run: CrawlRun): Promise<CrawlRun>;
+  getCrawlRun(id: string): Promise<CrawlRun | undefined>;
+  listCrawlRuns(workspaceId?: string): Promise<CrawlRun[]>;
+
+  recordUsage(entry: Omit<UsageEntry, "id">): Promise<UsageEntry>;
+  listUsage(workspaceId: string): Promise<UsageEntry[]>;
+  usageSummary(workspaceId: string): Promise<{
+    workspaceId: string;
+    totalCostCents: number;
+    byMetric: Record<string, { quantity: number; costCents: number }>;
+    entries: UsageEntry[];
+  }>;
+}
+
 /** Stable non-cryptographic content hash (djb2) for snapshot dedupe. */
 export function contentHash(value: unknown): string {
   const json = JSON.stringify(value);
@@ -174,6 +251,7 @@ export class MemoryStore {
       dodoSubscriptionId: null,
       subscriptionStatus: "none",
       billingEmail: null,
+      slackBotToken: null,
       createdAt: new Date().toISOString(),
     };
     this.workspaces.set(workspace.id, workspace);
@@ -189,21 +267,7 @@ export class MemoryStore {
     return this.workspaces.get(id);
   }
 
-  updateWorkspace(
-    id: string,
-    patch: Partial<
-      Pick<
-        Workspace,
-        | "plan"
-        | "digestChannelId"
-        | "quietMode"
-        | "dodoCustomerId"
-        | "dodoSubscriptionId"
-        | "subscriptionStatus"
-        | "billingEmail"
-      >
-    >,
-  ): Workspace | undefined {
+  updateWorkspace(id: string, patch: WorkspacePatch): Workspace | undefined {
     const ws = this.workspaces.get(id);
     if (!ws) return undefined;
     const updated = { ...ws, ...patch };
@@ -239,6 +303,7 @@ export class MemoryStore {
       dodoSubscriptionId: null,
       subscriptionStatus: "none",
       billingEmail: null,
+      slackBotToken: null,
       createdAt: new Date().toISOString(),
     });
     this.workspacesByTeam.set(workspaceId, workspaceId);
@@ -452,3 +517,118 @@ export class MemoryStore {
 }
 
 export const store = new MemoryStore();
+
+/** Async facade over {@link MemoryStore} for the shared {@link Store} interface. */
+export class AsyncMemoryStore implements Store {
+  constructor(private readonly inner: MemoryStore = store) {}
+
+  ensureWorkspace(slackTeamId: string, plan?: PlanId) {
+    return Promise.resolve(this.inner.ensureWorkspace(slackTeamId, plan));
+  }
+  listWorkspaces() {
+    return Promise.resolve(this.inner.listWorkspaces());
+  }
+  getWorkspace(id: string) {
+    return Promise.resolve(this.inner.getWorkspace(id));
+  }
+  updateWorkspace(id: string, patch: WorkspacePatch) {
+    return Promise.resolve(this.inner.updateWorkspace(id, patch));
+  }
+  getWorkspaceBySubscriptionId(subscriptionId: string) {
+    return Promise.resolve(this.inner.getWorkspaceBySubscriptionId(subscriptionId));
+  }
+  claimWebhook(webhookId: string) {
+    return Promise.resolve(this.inner.claimWebhook(webhookId));
+  }
+  setDigestChannel(workspaceId: string, channelId: string) {
+    return Promise.resolve(this.inner.setDigestChannel(workspaceId, channelId));
+  }
+  addWatch(input: {
+    competitor: string;
+    url: string;
+    label: WatchLabel;
+    workspaceId?: string;
+  }) {
+    return Promise.resolve(this.inner.addWatch(input));
+  }
+  listWatches(workspaceId?: string) {
+    return Promise.resolve(this.inner.listWatches(workspaceId));
+  }
+  getWatch(id: string) {
+    return Promise.resolve(this.inner.getWatch(id));
+  }
+  touchWatch(id: string, success: boolean) {
+    this.inner.touchWatch(id, success);
+    return Promise.resolve();
+  }
+  removeWatch(id: string, workspaceId?: string) {
+    return Promise.resolve(this.inner.removeWatch(id, workspaceId));
+  }
+  latestSnapshot(watchId: string) {
+    return Promise.resolve(this.inner.latestSnapshot(watchId));
+  }
+  listSnapshots(watchId: string) {
+    return Promise.resolve(this.inner.listSnapshots(watchId));
+  }
+  getSnapshot(id: string) {
+    return Promise.resolve(this.inner.getSnapshot(id));
+  }
+  addSnapshot(snapshot: Snapshot) {
+    this.inner.addSnapshot(snapshot);
+    return Promise.resolve();
+  }
+  addChange(change: StoredChange) {
+    this.inner.addChange(change);
+    return Promise.resolve();
+  }
+  listChanges(watchId: string) {
+    return Promise.resolve(this.inner.listChanges(watchId));
+  }
+  listWorkspaceChanges(workspaceId: string) {
+    return Promise.resolve(this.inner.listWorkspaceChanges(workspaceId));
+  }
+  getChange(id: string) {
+    return Promise.resolve(this.inner.getChange(id));
+  }
+  addBattlecard(draft: BattlecardDraft) {
+    return Promise.resolve(this.inner.addBattlecard(draft));
+  }
+  getBattlecard(id: string) {
+    return Promise.resolve(this.inner.getBattlecard(id));
+  }
+  updateBattlecard(draft: BattlecardDraft) {
+    return Promise.resolve(this.inner.updateBattlecard(draft));
+  }
+  getDigestDelivery(workspaceId: string, deliveryDate: string) {
+    return Promise.resolve(this.inner.getDigestDelivery(workspaceId, deliveryDate));
+  }
+  saveDigestDelivery(input: {
+    workspaceId: string;
+    deliveryDate: string;
+    body: string;
+    blocksJson?: string;
+  }) {
+    return Promise.resolve(this.inner.saveDigestDelivery(input));
+  }
+  addCrawlRun(run: CrawlRun) {
+    return Promise.resolve(this.inner.addCrawlRun(run));
+  }
+  updateCrawlRun(run: CrawlRun) {
+    return Promise.resolve(this.inner.updateCrawlRun(run));
+  }
+  getCrawlRun(id: string) {
+    return Promise.resolve(this.inner.getCrawlRun(id));
+  }
+  listCrawlRuns(workspaceId?: string) {
+    return Promise.resolve(this.inner.listCrawlRuns(workspaceId));
+  }
+  recordUsage(entry: Omit<UsageEntry, "id">) {
+    return Promise.resolve(this.inner.recordUsage(entry));
+  }
+  listUsage(workspaceId: string) {
+    return Promise.resolve(this.inner.listUsage(workspaceId));
+  }
+  usageSummary(workspaceId: string) {
+    return Promise.resolve(this.inner.usageSummary(workspaceId));
+  }
+}

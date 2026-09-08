@@ -6,22 +6,24 @@ import {
   planLimits,
   type ExtractSnapshot,
 } from "@competepulse/core";
+import { getStore } from "./get-store.js";
 import type { CrawlJob } from "./queue.js";
 import { memorySnapshots, snapshotPublicPath, snapshotR2Key, type SnapshotBucket } from "./r2.js";
 import { scrape } from "./scrape.js";
 import {
   contentHash,
-  store,
   type CrawlRun,
-  type MemoryStore,
   type Snapshot,
+  type Store,
   type StoredChange,
 } from "./store.js";
 
 export interface CrawlDeps {
-  data?: MemoryStore;
+  data?: Store;
   bucket?: SnapshotBucket;
   apiKey?: string;
+  /** When true and bucket is memory-only, allow fixture scrapes without R2. */
+  allowMemorySnapshots?: boolean;
 }
 
 export interface CrawlOutcome {
@@ -37,12 +39,12 @@ export interface CrawlOutcome {
  * Shared by the sync HTTP path and the queue consumer (E2-1…E2-5, E5-3).
  */
 export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Promise<CrawlOutcome> {
-  const data = deps.data ?? store;
+  const data = deps.data ?? getStore();
   const bucket = deps.bucket ?? memorySnapshots;
-  const watch = data.getWatch(job.watchId);
+  const watch = await data.getWatch(job.watchId);
   if (!watch) throw new Error(`fatal: watch ${job.watchId} not found`);
 
-  const workspace = data.getWorkspace(watch.workspaceId);
+  const workspace = await data.getWorkspace(watch.workspaceId);
   const limits = planLimits(workspace?.plan ?? "starter");
 
   const run: CrawlRun = {
@@ -57,8 +59,8 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
     startedAt: new Date().toISOString(),
     finishedAt: null,
   };
-  data.addCrawlRun(run);
-  data.touchWatch(watch.id, false);
+  await data.addCrawlRun(run);
+  await data.touchWatch(watch.id, false);
 
   try {
     const result = await scrape(watch.url, {
@@ -69,6 +71,51 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
 
     const createdAt = new Date().toISOString();
     const hash = contentHash(result.extracted);
+
+    // Dedupe: identical content hash → reuse latest snapshot row (B4).
+    // Still meter the scrape attempt — COGS was spent even if content was unchanged.
+    const previous = await data.latestSnapshot(watch.id);
+    if (previous && previous.contentHash === hash) {
+      const costCents =
+        result.provider === "browser" ? limits.browserCostCents : limits.crawlCostCents;
+      const finished: CrawlRun = {
+        ...run,
+        status: "succeeded",
+        provider: result.provider,
+        costCents,
+        finishedAt: createdAt,
+      };
+      await data.updateCrawlRun(finished);
+      await data.touchWatch(watch.id, true);
+      await data.recordUsage({
+        workspaceId: watch.workspaceId,
+        metric: result.provider === "browser" ? "browser" : "crawl",
+        quantity: 1,
+        costCents,
+        at: createdAt,
+        meta: watch.id,
+      });
+      const noopChange: StoredChange = {
+        id: crypto.randomUUID(),
+        watchId: watch.id,
+        materiality: "none",
+        summary: "No content change (identical hash).",
+        findings: [],
+        citations: [watch.url],
+        fromSnapshotId: previous.id,
+        toSnapshotId: previous.id,
+        createdAt,
+      };
+      await data.addChange(noopChange);
+      return {
+        run: finished,
+        snapshot: previous,
+        change: noopChange,
+        provider: result.provider,
+        snapshotUrl: snapshotPublicPath(previous.r2Key),
+      };
+    }
+
     const r2Key = snapshotR2Key(watch.id, createdAt, hash);
     const payload = JSON.stringify({
       url: watch.url,
@@ -80,7 +127,6 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
     });
     await bucket.put(r2Key, payload);
 
-    const previous = data.latestSnapshot(watch.id);
     const snapshot: Snapshot = {
       id: crypto.randomUUID(),
       watchId: watch.id,
@@ -91,7 +137,7 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
       markdown: result.markdown,
       createdAt,
     };
-    data.addSnapshot(snapshot);
+    await data.addSnapshot(snapshot);
 
     const event = classify(previous?.extracted ?? null, result.extracted, watch.url);
     const change: StoredChange = {
@@ -102,7 +148,7 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
       toSnapshotId: snapshot.id,
       createdAt,
     };
-    data.addChange(change);
+    await data.addChange(change);
 
     const costCents =
       result.provider === "browser" ? limits.browserCostCents : limits.crawlCostCents;
@@ -113,9 +159,9 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
       costCents,
       finishedAt: createdAt,
     };
-    data.updateCrawlRun(finished);
-    data.touchWatch(watch.id, true);
-    data.recordUsage({
+    await data.updateCrawlRun(finished);
+    await data.touchWatch(watch.id, true);
+    await data.recordUsage({
       workspaceId: watch.workspaceId,
       metric: result.provider === "browser" ? "browser" : "crawl",
       quantity: 1,
@@ -138,7 +184,7 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
       error: err instanceof Error ? err.message : String(err),
       finishedAt: new Date().toISOString(),
     };
-    data.updateCrawlRun(finished);
+    await data.updateCrawlRun(finished);
     throw err;
   }
 }

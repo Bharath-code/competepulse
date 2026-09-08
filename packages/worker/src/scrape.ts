@@ -112,6 +112,8 @@ export interface ScrapeOptions {
   label?: WatchLabel;
   /** Force Browser Run even when markdown is thick (tests). */
   forceBrowser?: boolean;
+  /** When false, thin pages error instead of silent fixture (prod). Default true. */
+  allowBrowserFixtures?: boolean;
 }
 
 /**
@@ -150,6 +152,7 @@ export async function scrape(url: string, opts: ScrapeOptions = {}): Promise<Scr
       url,
       label,
       fixture: opts.fixture === "thin_page" ? "acme_v1" : opts.fixture,
+      allowFixtures: opts.allowBrowserFixtures !== false,
     });
   }
   return result;

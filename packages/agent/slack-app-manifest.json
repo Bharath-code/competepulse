@@ -20,6 +20,9 @@
     ]
   },
   "oauth_config": {
+    "redirect_urls": [
+      "https://YOUR_WORKER_HOST/slack/oauth/callback"
+    ],
     "scopes": {
       "bot": [
         "commands",

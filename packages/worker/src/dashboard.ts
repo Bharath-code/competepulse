@@ -133,11 +133,24 @@ export function dashboardHtml(): string {
         <button id="refresh" class="secondary" type="button">Refresh</button>
         <button id="upgrade-starter" class="secondary" type="button">Starter $149</button>
         <button id="upgrade-pro" type="button">Upgrade Pro $399</button>
+        <a class="muted" href="/slack/install" style="margin-left:auto">Add to Slack</a>
+      </div>
+      <div class="toolbar" id="add-watch-form">
+        <input id="w-competitor" placeholder="Competitor" />
+        <input id="w-url" placeholder="https://…/pricing" style="min-width:220px" />
+        <select id="w-label">
+          <option value="pricing">pricing</option>
+          <option value="changelog">changelog</option>
+          <option value="docs">docs</option>
+          <option value="careers">careers</option>
+          <option value="other">other</option>
+        </select>
+        <button id="w-add" type="button">Add watch</button>
       </div>
       <p class="meter muted" id="billing">—</p>
       <table>
         <thead>
-          <tr><th>Competitor</th><th>Label</th><th>URL</th><th>Last crawl</th></tr>
+          <tr><th>Competitor</th><th>Label</th><th>URL</th><th>Last crawl</th><th></th></tr>
         </thead>
         <tbody id="watches"></tbody>
       </table>
@@ -193,7 +206,16 @@ export function dashboardHtml(): string {
           <td><span class="tag">\${escapeHtml(w.label)}</span></td>
           <td><a href="\${escapeAttr(w.url)}" target="_blank" rel="noreferrer">\${escapeHtml(w.url)}</a></td>
           <td class="muted">\${fmt(w.lastCrawlAt)}</td>
-        </tr>\`).join("") || '<tr><td colspan="4" class="muted">No watches yet.</td></tr>';
+          <td><button type="button" class="secondary" data-remove="\${escapeAttr(w.id)}">Remove</button></td>
+        </tr>\`).join("") || '<tr><td colspan="5" class="muted">No watches yet.</td></tr>';
+
+      $("watches").onclick = async (ev) => {
+        const btn = ev.target.closest("[data-remove]");
+        if (!btn) return;
+        const wsId = $("workspace").value;
+        await fetch("/watches/" + encodeURIComponent(btn.dataset.remove) + "?workspaceId=" + encodeURIComponent(wsId), { method: "DELETE" });
+        await refresh();
+      };
 
       const ws = workspaces.find((w) => w.id === wsId);
       const competitors = new Set(watches.map((w) => w.competitor.toLowerCase())).size;
@@ -283,6 +305,28 @@ export function dashboardHtml(): string {
     $("refresh").onclick = refresh;
     $("upgrade-starter").onclick = () => checkout("starter");
     $("upgrade-pro").onclick = () => checkout("pro");
+    $("w-add").onclick = async () => {
+      const wsId = $("workspace").value;
+      if (!wsId) return;
+      const res = await fetch("/watches", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: wsId,
+          competitor: $("w-competitor").value,
+          url: $("w-url").value,
+          label: $("w-label").value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        $("caps").textContent = data.error || "add failed";
+        return;
+      }
+      $("w-competitor").value = "";
+      $("w-url").value = "";
+      await refresh();
+    };
     $("workspace").onchange = () =>
       Promise.all([loadWatchlist(), loadChanges(), loadUsage(), loadBilling()]);
     refresh().catch((err) => { $("usage").textContent = String(err); });

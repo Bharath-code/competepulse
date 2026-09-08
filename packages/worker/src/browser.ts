@@ -2,16 +2,18 @@ import type { ExtractSnapshot, PricingSnapshot, WatchLabel } from "@competepulse
 import { FIXTURES, type ScrapeResult } from "./scrape.js";
 
 /**
- * Cloudflare Browser Run fallback (E2-5). When Firecrawl returns a thin body
- * (< N chars), we re-fetch via a headless browser path. Locally this uses the
- * same deterministic fixtures so tests stay hermetic.
+ * Cloudflare Browser Run fallback (E2-5).
+ * - Tests / local: deterministic fixtures when `allowFixtures` is true (default).
+ * - Production: requires `fetchPage` inject or throws (no silent fixture).
  */
 export interface BrowserRunOptions {
   url: string;
   label: WatchLabel;
   fixture?: string;
-  /** Injected for tests; production would call CF Browser Rendering. */
+  /** Injected for tests; production should call CF Browser Rendering. */
   fetchPage?: (url: string) => Promise<{ markdown: string; extracted: ExtractSnapshot }>;
+  /** When false, refuse fixture fallback (Path B4). Default true for hermetic tests. */
+  allowFixtures?: boolean;
 }
 
 export async function browserRunFallback(opts: BrowserRunOptions): Promise<ScrapeResult> {
@@ -24,6 +26,12 @@ export async function browserRunFallback(opts: BrowserRunOptions): Promise<Scrap
       provider: "browser",
       thin: false,
     };
+  }
+
+  if (opts.allowFixtures === false) {
+    throw new Error(
+      `browser_fallback_unavailable: thin scrape for ${opts.url} and no Browser Rendering binding`,
+    );
   }
 
   const fixtureKey = opts.fixture ?? "acme_v1";

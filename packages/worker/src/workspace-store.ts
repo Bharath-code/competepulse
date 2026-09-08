@@ -1,19 +1,8 @@
 import type { PlanId } from "@competepulse/core";
 import type { SubscriptionStatus } from "./billing/dodo.js";
-import { store, type QuietMode, type Workspace } from "./store.js";
+import { store, type QuietMode, type Workspace, type WorkspacePatch } from "./store.js";
 
-export type WorkspacePatch = Partial<
-  Pick<
-    Workspace,
-    | "plan"
-    | "digestChannelId"
-    | "quietMode"
-    | "dodoCustomerId"
-    | "dodoSubscriptionId"
-    | "subscriptionStatus"
-    | "billingEmail"
-  >
->;
+export type { WorkspacePatch } from "./store.js";
 
 /** Workspace persistence used by billing + workspace CRUD. */
 export interface WorkspaceStore {
@@ -24,7 +13,7 @@ export interface WorkspaceStore {
   getWorkspaceBySubscriptionId(subscriptionId: string): Promise<Workspace | undefined>;
 }
 
-type WorkspaceRow = {
+export type WorkspaceRow = {
   id: string;
   slack_team_id: string;
   plan: string;
@@ -35,6 +24,7 @@ type WorkspaceRow = {
   dodo_subscription_id: string | null;
   subscription_status: string;
   billing_email: string | null;
+  slack_bot_token?: string | null;
   created_at: string;
 };
 
@@ -50,6 +40,7 @@ export function workspaceFromRow(row: WorkspaceRow): Workspace {
     dodoSubscriptionId: row.dodo_subscription_id,
     subscriptionStatus: row.subscription_status as SubscriptionStatus,
     billingEmail: row.billing_email,
+    slackBotToken: row.slack_bot_token ?? null,
     createdAt: row.created_at,
   };
 }
@@ -89,6 +80,10 @@ export function buildWorkspaceUpdateSql(
     assignments.push("billing_email = ?");
     values.push(patch.billingEmail);
   }
+  if (patch.slackBotToken !== undefined) {
+    assignments.push("slack_bot_token = ?");
+    values.push(patch.slackBotToken);
+  }
 
   if (assignments.length === 0) return null;
   return {
@@ -97,6 +92,7 @@ export function buildWorkspaceUpdateSql(
   };
 }
 
+/** Workspace-only D1 adapter (unit-tested). Production product paths use {@link D1Store}. */
 export class D1WorkspaceStore implements WorkspaceStore {
   constructor(private readonly db: D1Database) {}
 
@@ -171,22 +167,29 @@ export const memoryWorkspaceStore: WorkspaceStore = {
     store.getWorkspaceBySubscriptionId(subscriptionId),
 };
 
-let cachedD1: D1WorkspaceStore | null = null;
-let cachedDb: D1Database | null = null;
+let cachedWs: D1WorkspaceStore | null = null;
+let cachedWsDb: D1Database | null = null;
 
+/**
+ * Prefer {@link getStore} for product + billing so plan caps share one SoR.
+ * This helper remains for narrow workspace-only call sites / tests.
+ */
 export function getWorkspaceStore(env: { DB?: D1Database }): WorkspaceStore {
+  // Dynamic import avoided: callers should use getStore from get-store.ts.
+  // When DB is present, D1WorkspaceStore is workspace-SQL only — billing tests
+  // that need full product persistence should use getStore({ DB }).
   if (env.DB) {
-    if (!cachedD1 || cachedDb !== env.DB) {
-      cachedD1 = new D1WorkspaceStore(env.DB);
-      cachedDb = env.DB;
+    if (!cachedWs || cachedWsDb !== env.DB) {
+      cachedWs = new D1WorkspaceStore(env.DB);
+      cachedWsDb = env.DB;
     }
-    return cachedD1;
+    return cachedWs;
   }
   return memoryWorkspaceStore;
 }
 
-/** Reset cached D1 store (unit tests only). */
+/** Reset cached D1 workspace store (unit tests only). */
 export function resetWorkspaceStoreCache(): void {
-  cachedD1 = null;
-  cachedDb = null;
+  cachedWs = null;
+  cachedWsDb = null;
 }
