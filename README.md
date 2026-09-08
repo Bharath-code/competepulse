@@ -6,10 +6,21 @@ Slack-native competitive change agent — CI without a CI team.
 
 - [Product Requirements (PRD)](docs/PRD.md)
 - [Product Roadmap](docs/PRODUCT_ROADMAP.md)
+- [Go-live checklist (landing)](docs/GO_LIVE_CHECKLIST.md)
+- [Outreach / ICP](docs/OUTREACH.md)
+- [Concierge ops](docs/CONCIERGE_OPS.md)
+- [Materiality rubric v0](docs/MATERIALITY_RUBRIC_V0.md)
+- [Go / no-go](docs/GO_NO_GO.md)
+- [Worker deploy runbook](docs/RUNBOOK_DEPLOY.md)
+- [Pilot exit checklist](docs/PILOTS_B7.md)
 
 ## Status
 
-Phase 1 eng complete for **E0–E5**, including **E4-1 Dodo Payments** (Starter $149 / Pro $399). Thin dashboard at `/dashboard` with upgrade buttons. Discovery / Phase 0 GTM items remain open in `docs/`.
+**Phase 1 eng:** core classifier, crawl orchestration, eval gate, Dodo billing math, Slack slash parsing, and landing are in-repo.
+
+**Production readiness (Path A→B):** durable D1 product store, Slack outbound digests, OAuth install, dashboard access token, and deploy runbook are implemented in code. Phase 0 GTM (domain, Calendly, design partners) remains founder-operated — see [`docs/GO_LIVE_CHECKLIST.md`](docs/GO_LIVE_CHECKLIST.md) and [`docs/GO_NO_GO.md`](docs/GO_NO_GO.md).
+
+Local demo still works without secrets (fixtures + MemoryStore). Production requires D1 + secrets per [`docs/RUNBOOK_DEPLOY.md`](docs/RUNBOOK_DEPLOY.md).
 
 ## Monorepo layout
 
@@ -20,7 +31,7 @@ pnpm workspace (`packages/*`):
 | `@competepulse/core`    | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
 | `@competepulse/worker`  | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing. |
 | `@competepulse/agent`   | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
-| `@competepulse/landing` | Static Astro marketing page + Calendly booking (P0-3). See [its README](packages/landing/README.md).        |
+| `@competepulse/landing` | Static Astro marketing page + Calendly booking (P0-3). Interview brief at `/interview`. See [its README](packages/landing/README.md). |
 
 ## Requirements
 

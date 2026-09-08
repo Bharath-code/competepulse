@@ -2,8 +2,8 @@
 
 **Product:** Slack-native competitive change agent  
 **PRD:** [PRD.md](./PRD.md)  
-**Status:** Phase 1 — MVP eng complete (billing via Dodo Payments)  
-**Last updated:** 2026-08-06
+**Status:** Phase 1 eng path built; Path A GTM open; Path B production hardening in code (D1 store, Slack outbound, OAuth, access token). See [GO_LIVE_CHECKLIST.md](./GO_LIVE_CHECKLIST.md), [RUNBOOK_DEPLOY.md](./RUNBOOK_DEPLOY.md).  
+**Last updated:** 2026-09-08
 
 ---
 
@@ -11,7 +11,7 @@
 
 **Goal:** 3 design partners; prove digests are loved before full automation.
 
-**Status:** 0/8 tasks complete | **Current Phase:** Phase 0 (GTM / discovery still open)
+**Status:** Ops templates ready (`OUTREACH.md`, `CONCIERGE_OPS.md`, `GO_NO_GO.md`); founder execution pending | **Current Phase:** Phase 0 (GTM / discovery still open)
 
 ### Week 1–2: Learn & Outreach
 
@@ -38,7 +38,7 @@
 
 **Goal:** Automated Slack digests; 5 paid pilots; eval precision ≥85%.
 
-**Status:** Eng epics E0–E5 done (E4-1 via Dodo Payments)
+**Status:** Eng epics E0–E5 demoable locally; production SoR is D1 via `getStore` (B1). Slack outbound + OAuth + access gate landed in worker (B2/B3/B5). Browser fixtures refused when `ALLOW_BROWSER_FIXTURES=0` (B4).
 
 ### Epic E0: Project Setup
 
@@ -84,9 +84,11 @@
 
 **Phase 1 exit criteria:**
 - [ ] 5 paying or paid pilots *(GTM / design partners)*
-- [x] Digests fully automated for partners *(eng path: cron + queue + formatter)*
+- [x] Digests fully automated for partners *(eng path: cron + queue + formatter + chat.postMessage when token/channel set)*
 - [x] Eval materiality precision ≥85%
 - [ ] Estimated gross margin ≥70% at plan caps *(needs live crawl spend after pilots)*
+
+**Honesty note:** Roadmap `[x]` on E1–E5 means the code path exists and is tested hermetically. Claiming production “flawless” still requires Path A partner signal + Path B runbook staging proof ([RUNBOOK_DEPLOY.md](./RUNBOOK_DEPLOY.md)).
 
 ---
 
