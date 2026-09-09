@@ -16,7 +16,7 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
     </div>
 
     <div class="footer__notes">
-      <p class="kicker kicker--tight">{footer.kicker}</p>
+      <p class="label">{footer.kicker}</p>
       <p class="footer__note">{footer.note}</p>
       <p class="footer__colophon">{footer.colophon}</p>
     </div>
@@ -32,7 +32,8 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
 <style>
   .footer {
     padding-block: var(--space-lg) var(--space-xl);
-    border-block-start: 3px solid var(--ink);
+    border-block-start: 1px solid var(--ink);
+    background: var(--ground-tint);
   }
 
   .footer__inner {
@@ -56,7 +57,7 @@ const mailto = buildMailtoFallback(config.contactEmail, "CompetePulse");
     margin-block-start: 0.35rem;
     font-family: var(--font-mono);
     font-size: var(--t-kicker);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-3);
   }

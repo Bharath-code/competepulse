@@ -2,7 +2,7 @@
 import { brand } from "../copy";
 
 interface Props {
-  /** Nameplate scale for the masthead, running size everywhere else. */
+  /** Nameplate scale for the hero brand, running size in chrome. */
   size?: "nameplate" | "running";
   href?: string | null;
 }
@@ -31,6 +31,7 @@ const Tag = href ? "a" : "span";
     gap: 0.4em;
     color: var(--ink);
     font-family: var(--font-display);
+    font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
   }
@@ -42,12 +43,12 @@ const Tag = href ? "a" : "span";
   }
 
   .wordmark--nameplate {
-    font-size: clamp(2.1rem, 1.1rem + 4.3vw, 4.25rem);
-    letter-spacing: -0.03em;
+    font-size: clamp(2.1rem, 1.2rem + 3.8vw, 4rem);
+    letter-spacing: -0.035em;
   }
 
   .wordmark--running {
-    font-size: 1.35rem;
-    letter-spacing: -0.02em;
+    font-size: 1.2rem;
+    letter-spacing: -0.025em;
   }
 </style>

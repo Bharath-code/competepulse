@@ -65,33 +65,33 @@ const structuredData = includeProductSchema
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="theme-color" content="#f5f2ea" />
+    <meta name="theme-color" content="#f0f6f9" />
     <meta name="color-scheme" content="light" />
     <meta name="robots" content={robots} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
-    {/* The headline is the LCP element, so its two faces load with the page. */}
+    {/* Brand + body faces for LCP; display weight is the hero wordmark. */}
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/instrument-serif-400.woff2"
+      href="/fonts/bricolage-grotesque-700.woff2"
       crossorigin
     />
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/instrument-serif-400-italic.woff2"
+      href="/fonts/source-sans-3-400.woff2"
       crossorigin
     />
     <link
       rel="preload"
       as="font"
       type="font/woff2"
-      href="/fonts/ibm-plex-sans-400.woff2"
+      href="/fonts/source-sans-3-600.woff2"
       crossorigin
     />
 

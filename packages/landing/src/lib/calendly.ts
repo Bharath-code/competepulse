@@ -12,11 +12,11 @@ export interface CalendlyEmbedTheme {
   primaryColor: string;
 }
 
-/** Matches the paper coupon the embed is mounted inside. */
+/** Matches the booking panel the embed is mounted inside. */
 export const CALENDLY_THEME: CalendlyEmbedTheme = {
-  backgroundColor: "f5f2ea",
-  textColor: "17130e",
-  primaryColor: "c4300f",
+  backgroundColor: "f0f6f9",
+  textColor: "121c26",
+  primaryColor: "cb2d26",
 };
 
 export interface CalendlyLinkOptions {

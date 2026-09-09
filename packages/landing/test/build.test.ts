@@ -67,7 +67,7 @@ describe("built page (booking link configured)", () => {
     expect(url.origin + url.pathname).toBe(CALENDLY_URL);
     expect(url.searchParams.get("hide_gdpr_banner")).toBe("1");
     expect(url.searchParams.get("utm_medium")).toBe("embed");
-    expect(url.searchParams.get("background_color")).toBe("f5f2ea");
+    expect(url.searchParams.get("background_color")).toBe("f0f6f9");
   });
 
   it("keeps a working booking link for visitors the embed never reaches", () => {
@@ -108,11 +108,10 @@ describe("built page (booking link configured)", () => {
 
   it("self-hosts the type and preloads the faces the headline needs", () => {
     for (const file of [
-      "instrument-serif-400.woff2",
-      "instrument-serif-400-italic.woff2",
-      "ibm-plex-sans-400.woff2",
-      "ibm-plex-sans-600.woff2",
-      "ibm-plex-mono-400.woff2",
+      "bricolage-grotesque-700.woff2",
+      "source-sans-3-400.woff2",
+      "source-sans-3-600.woff2",
+      "jetbrains-mono-400.woff2",
     ]) {
       expect(existsSync(join(outDir, "fonts", file)), `${file} missing from build`).toBe(true);
     }

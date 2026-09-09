@@ -1,126 +1,77 @@
 ---
-import { brand, hero } from "../copy";
+import { brand } from "../copy";
 import BookingCta from "./BookingCta.astro";
 import Wordmark from "./Wordmark.astro";
 ---
 
 <header class="masthead">
   <div class="container masthead__inner">
-    <p class="masthead__dateline">
-      <span>{hero.dateline}</span>
-      <span>Weekday mornings</span>
-    </p>
-
-    <Wordmark size="nameplate" href="/" />
-
-    <p class="masthead__strapline">{brand.strapline}</p>
+    <Wordmark size="running" href="/" />
+    <p class="masthead__meta">{brand.runningHead}</p>
+    <BookingCta label="Book a call" placement="running-head" size="sm" />
   </div>
 </header>
 
-<!--
-  The nameplate scrolls away; the running head keeps booking one click off.
-  Its wordmark is plain text, not a second link to the same page, and it fades
-  in once the nameplate has left so the name is not printed twice at rest.
--->
-<div class="runninghead">
-  <div class="container runninghead__inner">
-    <span class="runninghead__brand"><Wordmark size="running" href={null} /></span>
-    <p class="runninghead__meta">{brand.runningHead}</p>
-    <BookingCta label="Book a call" placement="running-head" size="sm" />
-  </div>
-</div>
-
 <style>
   .masthead {
-    padding-block: clamp(0.9rem, 2vw, 1.35rem) 0;
-    border-block-start: 6px solid var(--ink);
-  }
-
-  .masthead__inner {
-    display: grid;
-    justify-items: center;
-    gap: 0.5rem;
-    text-align: center;
-  }
-
-  .masthead__dateline,
-  .masthead__strapline {
-    font-family: var(--font-mono);
-    font-size: var(--t-kicker);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-
-  .masthead__dateline {
-    display: flex;
-    gap: 1.5rem;
-  }
-
-  .masthead__strapline {
-    padding-block-start: 0.35rem;
-    letter-spacing: 0.1em;
-  }
-
-  .runninghead {
     position: sticky;
     inset-block-start: 0;
-    z-index: 20;
-    margin-block-start: clamp(1.1rem, 3vw, 1.8rem);
-    border-block: 1px solid var(--ink);
-    background: var(--paper);
-  }
-
-  .runninghead__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
-    min-height: 3.4rem;
-  }
-
-  .runninghead__brand {
-    display: inline-flex;
-    animation: runninghead-reveal linear both;
+    z-index: var(--z-sticky);
+    border-block-end: 1px solid transparent;
+    background: var(--ground);
+    animation: masthead-state linear both;
     animation-timeline: scroll(root block);
-    animation-range: 3rem 8rem;
+    animation-range: 0 6rem;
   }
 
-  @keyframes runninghead-reveal {
-    from {
-      opacity: 0;
-    }
+  @keyframes masthead-state {
     to {
-      opacity: 1;
+      border-block-end-color: var(--rule);
+      box-shadow: 0 8px 24px oklch(0.22 0.025 250 / 0.06);
     }
   }
 
   @supports not (animation-timeline: scroll()) {
-    .runninghead__brand {
-      opacity: 1;
+    .masthead {
+      border-block-end-color: var(--rule);
     }
   }
 
-  .runninghead__meta {
+  .masthead__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    min-height: 3.15rem;
+  }
+
+  .masthead__meta {
     flex: 1;
     padding-inline: var(--space-md);
     border-inline-start: 1px solid var(--rule);
     font-family: var(--font-mono);
     font-size: var(--t-kicker);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-3);
   }
 
   @media (width <= 52rem) {
-    .runninghead__meta {
+    .masthead__meta {
       display: none;
     }
   }
 
   @media (width <= 20rem) {
-    .runninghead :global(.btn) {
+    .masthead :global(.btn) {
       display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .masthead {
+      animation: none;
+      border-block-end-color: var(--rule);
     }
   }
 </style>

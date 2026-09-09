@@ -9,7 +9,7 @@ export const brand = {
   tagline: "Slack-native competitive change agent",
   /** Sits under the nameplate. */
   strapline: "Competitive intelligence for teams without a competitive-intel team",
-  /** Runs in the sticky bar, the way a newspaper repeats its title. */
+  /** Runs in the sticky bar under the wordmark. */
   runningHead: "Pricing and changelog watches · Cited digests · Slack-native",
 } as const;
 
@@ -183,6 +183,7 @@ export const faq = [
 export const footer = {
   kicker: "Colophon",
   note: "We monitor public web pages you choose. No logins, no paywalls, no claims about non-public data.",
-  colophon: "Set in Instrument Serif and IBM Plex. Built on Cloudflare. No cookies, no trackers.",
+  colophon:
+    "Set in Bricolage Grotesque, Source Sans 3, and JetBrains Mono. Built on Cloudflare. No cookies, no trackers.",
   copyright: `© ${new Date().getUTCFullYear()} ${brand.name}`,
 } as const;

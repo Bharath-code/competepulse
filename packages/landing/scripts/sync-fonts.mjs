@@ -20,15 +20,14 @@ const modules = resolve(here, "../node_modules/@fontsource");
 
 /** [package, source file, destination] — latin subsets only. */
 const FONTS = [
-  ["instrument-serif", "instrument-serif-latin-400-normal.woff2", "instrument-serif-400.woff2"],
   [
-    "instrument-serif",
-    "instrument-serif-latin-400-italic.woff2",
-    "instrument-serif-400-italic.woff2",
+    "bricolage-grotesque",
+    "bricolage-grotesque-latin-700-normal.woff2",
+    "bricolage-grotesque-700.woff2",
   ],
-  ["ibm-plex-sans", "ibm-plex-sans-latin-400-normal.woff2", "ibm-plex-sans-400.woff2"],
-  ["ibm-plex-sans", "ibm-plex-sans-latin-600-normal.woff2", "ibm-plex-sans-600.woff2"],
-  ["ibm-plex-mono", "ibm-plex-mono-latin-400-normal.woff2", "ibm-plex-mono-400.woff2"],
+  ["source-sans-3", "source-sans-3-latin-400-normal.woff2", "source-sans-3-400.woff2"],
+  ["source-sans-3", "source-sans-3-latin-600-normal.woff2", "source-sans-3-600.woff2"],
+  ["jetbrains-mono", "jetbrains-mono-latin-400-normal.woff2", "jetbrains-mono-400.woff2"],
 ];
 
 await mkdir(outDir, { recursive: true });
@@ -48,14 +47,16 @@ await writeFile(
   [
     "# Fonts",
     "",
-    "Both families are licensed under the SIL Open Font License 1.1 and are",
+    "All families are licensed under the SIL Open Font License 1.1 and are",
     "redistributed here as latin-subset woff2, copied from the @fontsource",
     "packages by `scripts/sync-fonts.mjs`.",
     "",
-    "- **Instrument Serif** — Copyright The Instrument Serif Project Authors.",
-    "  <https://github.com/Instrument/instrument-serif>",
-    "- **IBM Plex Sans / IBM Plex Mono** — Copyright IBM Corp.",
-    "  <https://github.com/IBM/plex>",
+    "- **Bricolage Grotesque** — Copyright The Bricolage Grotesque Project Authors.",
+    "  <https://github.com/evilliquid/Bricolage-Grotesque>",
+    "- **Source Sans 3** — Copyright Adobe Systems Incorporated.",
+    "  <https://github.com/adobe-fonts/source-sans>",
+    "- **JetBrains Mono** — Copyright JetBrains.",
+    "  <https://github.com/JetBrains/JetBrainsMono>",
     "",
     "Full licence text: <https://openfontlicense.org/>",
     "",

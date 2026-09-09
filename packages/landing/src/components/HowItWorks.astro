@@ -4,7 +4,7 @@ import { howItWorks } from "../copy";
 
 <section class="section" aria-labelledby="how-heading">
   <div class="container">
-    <p class="kicker">{howItWorks.kicker}</p>
+    <p class="label">{howItWorks.kicker}</p>
     <h2 class="section-title" id="how-heading">{howItWorks.title}</h2>
 
     <ol class="steps">
@@ -27,7 +27,6 @@ import { howItWorks } from "../copy";
 </section>
 
 <style>
-  /* A printed procedure: numerals in the margin, hairlines between steps. */
   .steps {
     margin-block-start: var(--space-xl);
     padding: 0;
@@ -37,7 +36,7 @@ import { howItWorks } from "../copy";
 
   .step {
     display: grid;
-    grid-template-columns: 3.5rem minmax(0, 1fr);
+    grid-template-columns: 3.25rem minmax(0, 1fr);
     gap: var(--space-sm);
     padding-block: var(--space-md);
     border-block-end: 1px solid var(--rule);
@@ -45,7 +44,7 @@ import { howItWorks } from "../copy";
 
   @media (width >= 56rem) {
     .step {
-      grid-template-columns: 5rem minmax(0, 22ch) minmax(0, 1fr);
+      grid-template-columns: 4.5rem minmax(0, 22ch) minmax(0, 1fr);
       gap: var(--space-lg);
       align-items: start;
       padding-block: var(--space-lg);
@@ -57,9 +56,9 @@ import { howItWorks } from "../copy";
   }
 
   .step__number {
-    font-family: var(--font-display);
-    font-size: 2.4rem;
-    line-height: 0.9;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    line-height: 1.2;
     color: var(--signal);
   }
 
@@ -81,9 +80,10 @@ import { howItWorks } from "../copy";
 
   .step__command {
     margin-block-start: var(--space-sm);
-    padding: 0.5rem 0.7rem;
-    border-inline-start: 2px solid var(--signal);
-    background: var(--paper-tint);
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--ground-tint);
     font-family: var(--font-mono);
     font-size: 0.82rem;
     overflow-wrap: anywhere;

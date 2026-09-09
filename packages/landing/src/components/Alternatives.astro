@@ -8,7 +8,7 @@ const oursIndex = rows.length - 1;
 
 <section class="section" aria-labelledby="alternatives-heading">
   <div class="container">
-    <p class="kicker">{alternatives.kicker}</p>
+    <p class="label">{alternatives.kicker}</p>
     <h2 class="section-title" id="alternatives-heading">{alternatives.title}</h2>
 
     <table class="compare">
@@ -61,7 +61,7 @@ const oursIndex = rows.length - 1;
     font-family: var(--font-mono);
     font-size: var(--t-kicker);
     font-weight: 400;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-3);
   }
@@ -69,8 +69,8 @@ const oursIndex = rows.length - 1;
   tbody th {
     font-family: var(--font-display);
     font-size: var(--t-h3);
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   td {
@@ -87,7 +87,6 @@ const oursIndex = rows.length - 1;
     color: var(--ink-3);
   }
 
-  /* --- wide: a broadsheet table ---------------------------------------- */
   @media (width >= 58rem) {
     tbody tr {
       border-block-end: 1px solid var(--rule);
@@ -103,29 +102,16 @@ const oursIndex = rows.length - 1;
       white-space: nowrap;
     }
 
-    /* Our row is the answer, so it gets the tint and the signal rule. */
     .is-ours {
       border-block: 1px solid var(--ink);
-      background: var(--paper-tint);
+      background: var(--signal-soft);
     }
 
     .is-ours th {
-      position: relative;
-      padding-inline-start: var(--space-md);
       color: var(--signal-deep);
-    }
-
-    .is-ours th::before {
-      content: "";
-      position: absolute;
-      inset-block: 0.9rem;
-      inset-inline-start: 0;
-      width: 3px;
-      background: var(--signal);
     }
   }
 
-  /* --- narrow: each option becomes its own labelled block --------------- */
   @media (width <= 57.999rem) {
     .compare,
     tbody,
@@ -163,7 +149,7 @@ const oursIndex = rows.length - 1;
       content: attr(data-label);
       font-family: var(--font-mono);
       font-size: var(--t-kicker);
-      letter-spacing: 0.12em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--ink-3);
     }
@@ -171,11 +157,10 @@ const oursIndex = rows.length - 1;
     .is-ours {
       padding-inline: var(--space-md);
       border-block: 1px solid var(--ink);
-      background: var(--paper-tint);
+      background: var(--signal-soft);
     }
 
     .is-ours th {
-      /* signal-deep clears AA on the tinted row (signal itself is 4.46). */
       color: var(--signal-deep);
     }
   }

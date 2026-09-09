@@ -1,170 +1,214 @@
 ---
-import { concierge, hero } from "../copy";
+import { hero } from "../copy";
 import BookingCta from "./BookingCta.astro";
+import SlackDigest from "./SlackDigest.astro";
+import Wordmark from "./Wordmark.astro";
 ---
 
 <section class="hero" aria-labelledby="hero-heading">
-  <div class="container">
-    <p class="hero__flag">
-      <span class="hero__flag-tag">{hero.eyebrow}</span>
-      <span class="hero__flag-note">{concierge.badge}, no card</span>
-    </p>
+  <div class="container hero__grid">
+    <div class="hero__lead">
+      <p class="hero__brand">
+        <Wordmark size="nameplate" href={null} />
+      </p>
 
-    <h1 class="hero__headline" id="hero-heading">
-      {hero.headline.lead}
-      <em>{hero.headline.emphasis}</em>
-      {hero.headline.trail}
-    </h1>
+      <p class="label hero__status">
+        <span class="hero__status-dot" aria-hidden="true"></span>
+        {hero.eyebrow} · {hero.dateline}
+      </p>
 
-    <div class="hero__deck">
+      <h1 class="hero__headline" id="hero-heading">
+        {hero.headline.lead}
+        <span class="hero__emphasis">{hero.headline.emphasis}</span>
+        {hero.headline.trail}
+      </h1>
+
       <p class="hero__standfirst">{hero.subhead}</p>
-
-      <div class="hero__act">
-        <BookingCta label={hero.ctaLabel} placement="hero" size="lg" />
-        <p class="hero__note">{hero.ctaNote}</p>
-      </div>
     </div>
 
-    <dl class="hero__facts">
-      {
-        hero.facts.map((fact) => (
-          <div class="hero__fact">
-            <dt>{fact.label}</dt>
-            <dd>{fact.text}</dd>
-          </div>
-        ))
-      }
-    </dl>
+    <div class="hero__visual">
+      <SlackDigest showThread={true} />
+    </div>
+
+    <div class="hero__act">
+      <BookingCta label={hero.ctaLabel} placement="hero" size="lg" />
+      <p class="hero__note">{hero.ctaNote}</p>
+    </div>
   </div>
 </section>
 
 <style>
   .hero {
-    padding-block: clamp(2.25rem, 5vw, 4rem) var(--space-2xl);
+    padding-block: clamp(0.75rem, 2.5vw, 2.25rem) var(--space-xl);
   }
 
-  .hero__flag {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    font-family: var(--font-mono);
-    font-size: var(--t-kicker);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  .hero__flag-tag {
-    padding: 0.3rem 0.55rem;
-    background: var(--signal);
-    color: var(--paper);
-  }
-
-  .hero__flag-note {
-    color: var(--ink-3);
-  }
-
-  .hero__headline {
-    margin-block-start: var(--space-md);
-    max-width: 21ch;
-    font-size: var(--t-display);
-    line-height: 0.98;
-    letter-spacing: -0.025em;
-    text-wrap: pretty;
-  }
-
-  /* Italic in the signal colour is the one flourish the page gets. */
-  .hero__headline em {
-    font-style: italic;
-    color: var(--signal);
-  }
-
-  .hero__deck {
+  /*
+   * Mobile: brand → copy → CTA → digest peek.
+   * Desktop: lead + CTA left, digest right — one composition.
+   */
+  .hero__grid {
     display: grid;
-    gap: var(--space-lg);
-    margin-block-start: var(--space-lg);
-    padding-block-start: var(--space-lg);
-    border-block-start: 1px solid var(--rule);
+    gap: var(--space-sm);
+    align-items: start;
   }
 
-  @media (width >= 56rem) {
-    .hero__headline {
-      max-width: 24ch;
-    }
-
-    .hero__deck {
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-      column-gap: var(--space-xl);
-      align-items: start;
-    }
-
-    .hero__act {
-      padding-inline-start: var(--space-xl);
-      border-inline-start: 1px solid var(--rule);
-    }
-  }
-
-  .hero__standfirst {
-    max-width: 44ch;
-    font-size: var(--t-lead);
-    line-height: 1.45;
+  .hero__lead {
+    display: grid;
+    justify-items: start;
+    order: 1;
+    gap: 0.55rem;
   }
 
   .hero__act {
     display: grid;
     justify-items: start;
-    gap: var(--space-sm);
+    order: 2;
+    gap: var(--space-xs);
+  }
+
+  .hero__visual {
+    order: 3;
+  }
+
+  .hero__visual :global(.reply) {
+    display: none;
+  }
+
+  .hero__brand :global(.wordmark--nameplate) {
+    font-size: clamp(1.85rem, 8vw, 2.4rem);
+  }
+
+  .hero__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .hero__status-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--signal);
+  }
+
+  .hero__headline {
+    max-width: 16ch;
+    font-size: clamp(1.85rem, 7.5vw, 2.35rem);
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+  }
+
+  .hero__emphasis {
+    color: var(--signal);
+  }
+
+  .hero__standfirst {
+    max-width: 48ch;
+    font-size: 1.02rem;
+    line-height: 1.4;
+    color: var(--ink-2);
   }
 
   .hero__note {
-    max-width: 32ch;
+    max-width: 36ch;
     font-size: var(--t-small);
     color: var(--ink-3);
   }
 
-  .hero__facts {
-    display: grid;
-    gap: 0;
-    margin-block-start: var(--space-xl);
-    border-block-start: 1px solid var(--ink);
-  }
-
-  .hero__fact {
-    padding-block: var(--space-md);
-    border-block-end: 1px solid var(--rule);
-  }
-
   @media (width >= 48rem) {
-    .hero__facts {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      border-block-end: 1px solid var(--rule);
+    .hero__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      grid-template-rows: auto 1fr;
+      gap: var(--space-lg);
+      column-gap: clamp(1.5rem, 3.5vw, 3rem);
     }
 
-    .hero__fact {
-      padding-inline: var(--space-md);
-      border-block-end: none;
-      border-inline-start: 1px solid var(--rule);
+    .hero__lead,
+    .hero__act,
+    .hero__visual {
+      order: initial;
     }
 
-    .hero__fact:first-child {
-      padding-inline-start: 0;
-      border-inline-start: none;
+    .hero__lead {
+      grid-column: 1;
+      grid-row: 1;
+      gap: var(--space-sm);
+    }
+
+    .hero__act {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: start;
+      gap: var(--space-sm);
+    }
+
+    .hero__visual {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      align-self: center;
+    }
+
+    .hero__visual :global(.reply) {
+      display: grid;
+    }
+
+    .hero__brand :global(.wordmark--nameplate) {
+      font-size: var(--t-brand);
+    }
+
+    .hero__headline {
+      font-size: var(--t-display);
+    }
+
+    .hero__standfirst {
+      font-size: var(--t-lead);
+      line-height: 1.45;
     }
   }
 
-  .hero__fact dt {
-    font-family: var(--font-mono);
-    font-size: var(--t-kicker);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--signal);
+  .hero__lead > *,
+  .hero__act,
+  .hero__visual {
+    animation: hero-rise 640ms var(--ease-out) both;
   }
 
-  .hero__fact dd {
-    margin-block-start: 0.4rem;
-    margin-inline-start: 0;
-    max-width: 34ch;
-    font-size: var(--t-small);
-    color: var(--ink-2);
+  .hero__lead > :nth-child(1) {
+    animation-delay: 0ms;
+  }
+  .hero__lead > :nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .hero__lead > :nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .hero__lead > :nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .hero__visual {
+    animation-delay: 100ms;
+  }
+  .hero__act {
+    animation-delay: 180ms;
+  }
+
+  @keyframes hero-rise {
+    from {
+      opacity: 0.4;
+      transform: translateY(0.55rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__lead > *,
+    .hero__act,
+    .hero__visual {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
   }
 </style>

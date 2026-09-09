@@ -1,0 +1,358 @@
+---
+import { digestPreview } from "../copy";
+
+interface Props {
+  /** Show the thread follow-up (full proof). Hero uses a tighter cut. */
+  showThread?: boolean;
+  /** Accessible name for the figure. */
+  labelledBy?: string;
+}
+
+const { showThread = true, labelledBy } = Astro.props;
+const { slack } = digestPreview;
+const materialityLabel = { high: "HIGH", low: "LOW" } as const;
+---
+
+<figure class="slack-fig" aria-labelledby={labelledBy}>
+  <div class="slack console" role="img" aria-label="Example CompetePulse Slack digest for Acme and Northwind">
+    <div class="slack__chrome">
+      <span class="slack__dots" aria-hidden="true"></span>
+      <span class="slack__channel">{slack.channel}</span>
+      <span class="slack__time">{slack.timestamp}</span>
+    </div>
+
+    <div class="slack__thread">
+      <div class="msg">
+        <span class="msg__avatar" aria-hidden="true">
+          <svg viewBox="0 0 26 16" focusable="false">
+            <path
+              d="M0.9 9.4h3.3l2-6 3.3 12.1 2.4-8.4 1.6 2.3h11.6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="square"></path>
+          </svg>
+        </span>
+
+        <div class="msg__body">
+          <p class="msg__meta">
+            <b>{slack.appName}</b>
+            <span class="msg__app">APP</span>
+            <span>{slack.timestamp}</span>
+          </p>
+
+          <p class="digest__header">
+            {slack.digestTitle} — <span class="digest__date">{slack.digestDate}</span>
+          </p>
+
+          {
+            slack.sections.map((section, sIdx) => (
+              <div class="entry" style={`--i: ${sIdx}`}>
+                <p class="entry__competitor">{section.competitor}</p>
+                {section.entries.map((item, eIdx) => (
+                  <div class="entry__row" style={`--i: ${sIdx + eIdx + 1}`}>
+                    <p class="entry__summary">
+                      <span class={`tag tag--${item.materiality}`}>
+                        {materialityLabel[item.materiality]}
+                      </span>
+                      {item.summary}
+                    </p>
+                    <p class="entry__cite">
+                      Cite: <span class="entry__link">{item.citation}</span>
+                    </p>
+                    <p class="entry__why">{item.why}</p>
+                  </div>
+                ))}
+              </div>
+            ))
+          }
+
+          <p class="digest__quiet" style={`--i: ${slack.sections.length + 2}`}>
+            <span class="tag tag--none">NONE</span>
+            <span>
+              <b>{slack.quiet.competitors.join(", ")}</b>: {slack.quiet.label}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      {
+        showThread && (
+          <div class="reply" style={`--i: ${slack.sections.length + 3}`}>
+            <span class="reply__avatar" aria-hidden="true">
+              PM
+            </span>
+            <div class="reply__body">
+              <p class="reply__question">{slack.threadPrompt}</p>
+              <p class="reply__answer">
+                <b>{slack.appName}</b>
+                {slack.threadReply}
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </div>
+
+  <figcaption class="slack-fig__caption">{digestPreview.caption}</figcaption>
+</figure>
+
+<style>
+  .slack-fig {
+    margin: 0;
+  }
+
+  .slack {
+    overflow: hidden;
+    border: 1px solid var(--ink);
+    border-radius: calc(var(--radius) + 0.15rem);
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.06) inset,
+      0 18px 40px oklch(0.2 0.02 250 / 0.18);
+  }
+
+  .slack__chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    border-block-end: 1px solid var(--console-rule);
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    letter-spacing: 0.06em;
+    color: var(--console-muted);
+  }
+
+  .slack__dots {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--signal);
+    box-shadow:
+      1rem 0 0 var(--console-rule),
+      2rem 0 0 var(--console-rule);
+  }
+
+  .slack__channel {
+    flex: 1;
+    color: var(--console-text);
+  }
+
+  .slack__thread {
+    padding: clamp(0.9rem, 2.4vw, 1.35rem);
+  }
+
+  .msg {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+  .msg__avatar {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius);
+    background: var(--console-2);
+    color: var(--console-high);
+  }
+
+  .msg__avatar svg {
+    width: 1.15rem;
+  }
+
+  .msg__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-kicker);
+    color: var(--console-muted);
+  }
+
+  .msg__meta b {
+    font-family: var(--font-text);
+    font-size: var(--t-small);
+    font-weight: 600;
+    color: var(--console-text);
+  }
+
+  .msg__app {
+    padding: 0.05rem 0.28rem;
+    border-radius: 0.2rem;
+    background: var(--console-rule);
+    color: var(--console-text);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+
+  .digest__header {
+    margin-block: 0.65rem 0.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 0.95rem + 0.8vw, 1.4rem);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--console-text);
+  }
+
+  .entry,
+  .entry__row,
+  .digest__quiet,
+  .reply {
+    /* Visible by default — motion only enhances. */
+    animation: digest-line 520ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * var(--motion-stagger) + 120ms);
+  }
+
+  .entry {
+    margin-block-start: 0.9rem;
+    padding-block-start: 0.9rem;
+    border-block-start: 1px solid var(--console-rule);
+  }
+
+  .entry__competitor {
+    font-size: var(--t-small);
+    font-weight: 600;
+  }
+
+  .entry__row {
+    margin-block-start: 0.4rem;
+  }
+
+  .entry__summary {
+    font-size: var(--t-small);
+    line-height: 1.5;
+  }
+
+  .tag {
+    display: inline-block;
+    margin-inline-end: 0.35rem;
+    padding: 0.08rem 0.35rem;
+    border-radius: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    vertical-align: 0.05em;
+  }
+
+  .tag--high {
+    background: oklch(0.35 0.08 28);
+    color: var(--console-high);
+  }
+
+  .tag--low {
+    background: oklch(0.32 0.05 85);
+    color: var(--console-low);
+  }
+
+  .tag--none {
+    background: oklch(0.3 0.04 155);
+    color: var(--console-quiet);
+  }
+
+  .entry__cite {
+    margin-block-start: 0.28rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--console-muted);
+  }
+
+  .entry__link {
+    color: var(--console-link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .entry__why {
+    margin-block-start: 0.2rem;
+    font-size: 0.82rem;
+    color: var(--console-muted);
+  }
+
+  .digest__quiet {
+    display: flex;
+    gap: 0.45rem;
+    margin-block-start: 0.9rem;
+    padding-block-start: 0.9rem;
+    border-block-start: 1px solid var(--console-rule);
+    font-size: var(--t-small);
+    color: var(--console-muted);
+  }
+
+  .digest__quiet b {
+    color: var(--console-text);
+    font-weight: 600;
+  }
+
+  .reply {
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    gap: 0.65rem;
+    margin-block-start: 1rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--console-rule);
+    border-radius: var(--radius);
+    background: var(--console-2);
+  }
+
+  .reply__avatar {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: var(--radius);
+    background: var(--console-rule);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--console-text);
+  }
+
+  .reply__question {
+    font-size: var(--t-small);
+  }
+
+  .reply__answer {
+    margin-block-start: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--console-muted);
+  }
+
+  .reply__answer b {
+    margin-inline-end: 0.35rem;
+    color: var(--console-link);
+    font-weight: 600;
+  }
+
+  .slack-fig__caption {
+    margin-block-start: var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+
+  @keyframes digest-line {
+    from {
+      opacity: 0.35;
+      transform: translateY(0.35rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .entry,
+    .entry__row,
+    .digest__quiet,
+    .reply {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

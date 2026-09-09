@@ -4,7 +4,7 @@ import { faq } from "../copy";
 
 <section class="section faq" aria-labelledby="faq-heading">
   <div class="container">
-    <p class="kicker">Straight answers</p>
+    <p class="label">Straight answers</p>
     <h2 class="visually-hidden" id="faq-heading">Frequently asked questions</h2>
 
     <dl class="faq__list">
@@ -27,7 +27,8 @@ import { faq } from "../copy";
 
 <style>
   .faq {
-    padding-block: var(--space-xl);
+    padding-block: var(--space-xl) var(--space-2xl);
+    border-block-start: 1px solid var(--rule);
   }
 
   .faq__list {
@@ -71,7 +72,7 @@ import { faq } from "../copy";
     font-family: var(--font-mono);
     font-size: var(--t-kicker);
     font-weight: 400;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     color: var(--signal);
   }
 

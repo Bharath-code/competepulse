@@ -1,5 +1,5 @@
 /**
- * Renders `public/og.png` (1200×630) — the masthead treatment of the headline.
+ * Renders `public/og.png` (1200×630) — brand + JTBD headline on the cool-LED ground.
  *
  * Link previews are the first thing a cold prospect sees when the page is pasted
  * into LinkedIn, email or Slack, so the card has to be set in the same faces as
@@ -28,11 +28,11 @@ const HEIGHT = 630;
 const MARGIN = 72;
 const RIGHT = WIDTH - MARGIN;
 
-const PAPER = "#f5f2ea";
-const INK = "#17130e";
-const INK_3 = "#6f6659";
-const SIGNAL = "#c4300f";
-const RULE = "#d8d0bd";
+const GROUND = "#f0f6f9";
+const INK = "#121c26";
+const INK_3 = "#636a71";
+const SIGNAL = "#cb2d26";
+const RULE = "#cbd2d6";
 
 /**
  * Decompression must stay sequential: wawoff2 shares one wasm heap, and running
@@ -47,11 +47,10 @@ async function loadFonts(files) {
   return fonts;
 }
 
-const [serif, serifItalic, sans, mono] = await loadFonts([
-  "instrument-serif-400.woff2",
-  "instrument-serif-400-italic.woff2",
-  "ibm-plex-sans-400.woff2",
-  "ibm-plex-mono-400.woff2",
+const [display, sans, mono] = await loadFonts([
+  "bricolage-grotesque-700.woff2",
+  "source-sans-3-400.woff2",
+  "jetbrains-mono-400.woff2",
 ]);
 
 /**
@@ -92,8 +91,6 @@ function serialize(commands) {
  */
 function layout(font, text, size, tracking) {
   const scale = size / font.unitsPerEm;
-  // Per-character lookup rather than `stringToGlyphs`: opentype's shaper trips
-  // over IBM Plex Mono's ccmp table, and these strings want no ligatures anyway.
   const glyphs = [...text].map((char) => font.charToGlyph(char));
   let pen = 0;
   const parts = [];
@@ -119,41 +116,41 @@ function rule(y, { x = MARGIN, width = RIGHT - MARGIN, height = 1, fill = RULE }
 }
 
 const body = [
-  `<rect width="${WIDTH}" height="${HEIGHT}" fill="${PAPER}"/>`,
-  `<rect width="${WIDTH}" height="14" fill="${INK}"/>`,
+  `<rect width="${WIDTH}" height="${HEIGHT}" fill="${GROUND}"/>`,
+  `<rect width="${WIDTH}" height="10" fill="${SIGNAL}"/>`,
 
-  text(mono, "ISSUE No. 1", { y: 76, size: 19, tracking: 3.4, fill: INK_3 }),
+  text(mono, "NOW TAKING 3 DESIGN PARTNERS", { y: 78, size: 18, tracking: 2.2, fill: INK_3 }),
   text(mono, "WEEKDAY MORNINGS", {
     x: RIGHT,
-    y: 76,
-    size: 19,
-    tracking: 3.4,
+    y: 78,
+    size: 18,
+    tracking: 2.2,
     fill: INK_3,
     anchor: "end",
   }),
   rule(98),
 
-  text(serif, "CompetePulse", { y: 168, size: 62 }),
+  text(display, "CompetePulse", { y: 168, size: 58 }),
   rule(196, { height: 2, fill: INK }),
 
-  text(serif, "Every morning in Slack:", { y: 302, size: 78 }),
-  text(serifItalic, "what materially changed", { y: 386, size: 78, fill: SIGNAL }),
-  text(serif, "on your competitors — with links.", { y: 470, size: 78 }),
+  text(display, "Every morning in Slack:", { y: 300, size: 52 }),
+  text(display, "what materially changed", { y: 372, size: 52, fill: SIGNAL }),
+  text(display, "on your competitors — with links.", { y: 444, size: 52 }),
 
-  rule(512),
+  rule(486),
   text(sans, "Pricing and changelog watches, scored for materiality, cited in every line.", {
-    y: 556,
-    size: 25,
+    y: 530,
+    size: 24,
     fill: INK_3,
   }),
 
-  `<rect x="${MARGIN}" y="578" width="12" height="30" fill="${SIGNAL}"/>`,
-  text(mono, "BOOK A 15-MIN DISCOVERY CALL", { x: MARGIN + 30, y: 601, size: 21, tracking: 2.2 }),
+  `<rect x="${MARGIN}" y="562" width="220" height="40" rx="4" fill="${SIGNAL}"/>`,
+  text(mono, "BOOK A 15-MIN CALL", { x: MARGIN + 18, y: 588, size: 18, tracking: 1.4, fill: GROUND }),
   text(mono, "NO KLUE BILL. NO VISUALPING NOISE.", {
     x: RIGHT,
-    y: 601,
-    size: 19,
-    tracking: 1.4,
+    y: 588,
+    size: 17,
+    tracking: 1.2,
     fill: INK_3,
     anchor: "end",
   }),
