@@ -148,13 +148,13 @@ export interface Store {
   getWorkspaceByAccessTokenHash(hash: string): Promise<Workspace | undefined>;
   setDigestChannel(workspaceId: string, channelId: string): Promise<Workspace | undefined>;
 
-  getMonitorByUrl(url: string): Promise<Monitor | undefined>;
+  getMonitorByUrl(url: string, label: WatchLabel): Promise<Monitor | undefined>;
   listMonitors(): Promise<Monitor[]>;
   /** False when the URL already has a monitor (unique per URL across tenants). */
   insertMonitor(monitor: Monitor): Promise<boolean>;
   removeMonitor(id: string): Promise<void>;
   getMonitorByProviderId(providerId: string): Promise<Monitor | undefined>;
-  listWatchesByUrl(url: string): Promise<Watch[]>;
+  listWatchesByUrl(url: string, label: WatchLabel): Promise<Watch[]>;
   /** Atomic first-writer-wins claim on a webhook event; false on replay. */
   claimMonitorEvent(event: {
     id: string;
@@ -324,8 +324,8 @@ export class MemoryStore {
     return true;
   }
 
-  getMonitorByUrl(url: string): Monitor | undefined {
-    return [...this.monitors.values()].find((m) => m.url === url);
+  getMonitorByUrl(url: string, label: WatchLabel): Monitor | undefined {
+    return [...this.monitors.values()].find((m) => m.url === url && m.label === label);
   }
 
   getMonitorByProviderId(providerId: string): Monitor | undefined {
@@ -337,7 +337,7 @@ export class MemoryStore {
   }
 
   insertMonitor(monitor: Monitor): boolean {
-    if (this.getMonitorByUrl(monitor.url)) return false;
+    if (this.getMonitorByUrl(monitor.url, monitor.label)) return false;
     this.monitors.set(monitor.id, monitor);
     return true;
   }
@@ -346,8 +346,8 @@ export class MemoryStore {
     this.monitors.delete(id);
   }
 
-  listWatchesByUrl(url: string): Watch[] {
-    return [...this.watches.values()].filter((w) => w.url === url);
+  listWatchesByUrl(url: string, label: WatchLabel): Watch[] {
+    return [...this.watches.values()].filter((w) => w.url === url && w.label === label);
   }
 
   claimMonitorEvent(event: { id: string }): boolean {
@@ -614,8 +614,8 @@ export class AsyncMemoryStore implements Store {
   claimWebhook(webhookId: string) {
     return Promise.resolve(this.inner.claimWebhook(webhookId));
   }
-  getMonitorByUrl(url: string) {
-    return Promise.resolve(this.inner.getMonitorByUrl(url));
+  getMonitorByUrl(url: string, label: WatchLabel) {
+    return Promise.resolve(this.inner.getMonitorByUrl(url, label));
   }
   getMonitorByProviderId(providerId: string) {
     return Promise.resolve(this.inner.getMonitorByProviderId(providerId));
@@ -629,8 +629,8 @@ export class AsyncMemoryStore implements Store {
   removeMonitor(id: string) {
     return Promise.resolve(this.inner.removeMonitor(id));
   }
-  listWatchesByUrl(url: string) {
-    return Promise.resolve(this.inner.listWatchesByUrl(url));
+  listWatchesByUrl(url: string, label: WatchLabel) {
+    return Promise.resolve(this.inner.listWatchesByUrl(url, label));
   }
   claimMonitorEvent(event: {
     id: string;

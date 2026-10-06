@@ -3,13 +3,16 @@ import { createApp, type Env } from "../src/app.js";
 import { runWorkspaceDigest } from "../src/digest.js";
 import { getStore } from "../src/get-store.js";
 import {
+  ensureMonitor,
   firecrawlMonitors,
   monitorBody,
   reconcileMonitors,
+  releaseMonitor,
   type MonitorProvider,
   type ObservedPage,
 } from "../src/monitor.js";
 import { memorySnapshots } from "../src/r2.js";
+import { processMonitorJob } from "../src/routes/monitor.js";
 import { store, type StoredChange } from "../src/store.js";
 import { FIXTURES } from "../src/scrape.js";
 
@@ -266,5 +269,115 @@ describe("firecrawl provider (v2)", () => {
   it("monitorBody picks the changelog schema for changelog pages", () => {
     const b = monitorBody({ url: "u", label: "changelog", webhookUrl: "w", webhookSecret: "s" });
     expect(JSON.stringify(b.targets[0])).toContain("entries");
+  });
+});
+
+describe("E1 review fixes", () => {
+  beforeEach(() => {
+    store.reset();
+    memorySnapshots.clear();
+    fake = fakeProvider();
+  });
+
+  it("a retry after a partial failure does not meter finished tenants twice", async () => {
+    const aId = ((await (await addWatch("ws-a")).json()) as WatchBody).watch.id;
+    const bId = ((await (await addWatch("ws-b")).json()) as WatchBody).watch.id;
+    const monitor = (await store.listMonitors())[0];
+    fake.pages.set("c1", { extracted: FIXTURES.acme_v1, credits: 2 });
+
+    let failB = true;
+    const flaky = Object.create(getStore()) as ReturnType<typeof getStore>;
+    flaky.addSnapshot = async (snap) => {
+      if (snap.watchId === bId && failB) throw new Error("boom");
+      return getStore().addSnapshot(snap);
+    };
+    const job = {
+      kind: "monitor_page" as const,
+      eventId: "c1:s1",
+      monitorId: monitor.id,
+      payloadR2Key: "k",
+      providerId: monitor.providerId,
+      checkId: "c1",
+      url: monitor.url,
+      label: monitor.label,
+    };
+    const deps = { data: flaky, bucket: memorySnapshots, provider: fake.provider };
+    await expect(processMonitorJob(job, deps)).rejects.toThrow("boom");
+    failB = false;
+    await processMonitorJob(job, deps);
+
+    const wsA = (await store.getWatch(aId))!.workspaceId;
+    const wsB = (await store.getWatch(bId))!.workspaceId;
+    expect((await store.usageSummary(wsA)).byMetric.crawl.quantity).toBe(1);
+    expect((await store.usageSummary(wsB)).byMetric.crawl.quantity).toBe(1);
+    expect(await store.listChanges(aId)).toHaveLength(1);
+    expect(await store.listChanges(bId)).toHaveLength(1);
+  });
+
+  it("the same URL under different labels gets separate monitors and routes events by label", async () => {
+    const pricing = ((await (await addWatch("ws-a")).json()) as WatchBody).watch.id;
+    const changelog = (
+      (await (
+        await addWatch("ws-b", "https://rival.example/pricing", "changelog")
+      ).json()) as WatchBody
+    ).watch.id;
+    expect(fake.live.size).toBe(2);
+
+    const monitors = await store.listMonitors();
+    const pm = monitors.find((m) => m.label === "pricing")!;
+    expect(monitors.find((m) => m.label === "changelog")).toBeDefined();
+    fake.pages.set("c1", { extracted: FIXTURES.acme_v1, credits: 1 });
+    await hook(pm.providerId, "c1", { status: "new" });
+
+    expect(await store.listChanges(pricing)).toHaveLength(1);
+    expect(await store.listChanges(changelog)).toHaveLength(0);
+  });
+
+  it("a watch added while the last one is being removed keeps its monitor", async () => {
+    const aId = ((await (await addWatch("ws-a")).json()) as WatchBody).watch.id;
+    const [mon] = await store.listMonitors();
+    await store.removeWatch(aId);
+
+    const racing = Object.create(getStore()) as ReturnType<typeof getStore>;
+    racing.removeMonitor = async (id) => {
+      await getStore().removeMonitor(id);
+      await getStore().addWatch({
+        competitor: "Rival",
+        url: mon.url,
+        label: mon.label,
+        workspaceId: wid("ws-b"),
+      });
+    };
+    expect(await releaseMonitor(racing, fake.provider, mon.url, mon.label)).toBe(false);
+    expect(await store.getMonitorByUrl(mon.url, mon.label)).toBeDefined();
+    expect(fake.live.has(mon.providerId)).toBe(true);
+  });
+
+  it("when a new monitor was already created mid-release, the old provider monitor is dropped", async () => {
+    const aId = ((await (await addWatch("ws-a")).json()) as WatchBody).watch.id;
+    const [mon] = await store.listMonitors();
+    await store.removeWatch(aId);
+
+    const racing = Object.create(getStore()) as ReturnType<typeof getStore>;
+    racing.removeMonitor = async (id) => {
+      await getStore().removeMonitor(id);
+      await getStore().addWatch({
+        competitor: "Rival",
+        url: mon.url,
+        label: mon.label,
+        workspaceId: wid("ws-b"),
+      });
+      await ensureMonitor(
+        getStore(),
+        fake.provider,
+        { webhookUrl: "u", webhookSecret: "s" },
+        mon.url,
+        mon.label,
+      );
+    };
+    expect(await releaseMonitor(racing, fake.provider, mon.url, mon.label)).toBe(true);
+    expect(fake.live.has(mon.providerId)).toBe(false);
+    expect(fake.live.size).toBe(1);
+    expect(await store.getMonitorByUrl(mon.url, mon.label)).toBeDefined();
   });
 });

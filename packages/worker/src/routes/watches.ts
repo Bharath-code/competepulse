@@ -88,7 +88,7 @@ export function registerWatches(app: Hono<{ Bindings: Env }>) {
     const monitors = resolveMonitors(c.env);
     if (monitors && target) {
       // best-effort: the nightly sweep deletes any monitor left behind
-      await releaseMonitor(data, monitors.provider, target.url).catch(() => false);
+      await releaseMonitor(data, monitors.provider, target.url, target.label).catch(() => false);
     }
     return c.json({ removed: true });
   });
