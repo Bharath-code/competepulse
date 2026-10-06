@@ -87,7 +87,11 @@ function allowBrowserFixtures(env: Env): boolean {
   return true;
 }
 
-function requireAccess(c: { req: { raw: Request }; env: Env; json: Function }) {
+function requireAccess(c: {
+  req: { raw: Request };
+  env: Env;
+  json: (body: unknown, status: 401 | 403 | 503) => Response;
+}) {
   const auth = authorizeRequest(c.req.raw, c.env);
   if (!auth.ok) return c.json({ error: auth.error }, auth.status);
   return null;
@@ -140,7 +144,10 @@ export function createApp() {
     const redirect = `${origin}/slack/oauth/callback`;
     const url = new URL("https://slack.com/oauth/v2/authorize");
     url.searchParams.set("client_id", clientId);
-    url.searchParams.set("scope", "commands,chat:write,channels:history,groups:history,im:history,app_mentions:read");
+    url.searchParams.set(
+      "scope",
+      "commands,chat:write,channels:history,groups:history,im:history,app_mentions:read",
+    );
     url.searchParams.set("redirect_uri", redirect);
     return c.redirect(url.toString());
   });

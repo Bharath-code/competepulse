@@ -22,15 +22,14 @@ Edit talking points and your ownership story in
 
 ## Why it is built this way
 
-
-| Decision                                | Reason                                                                                                                                               |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Astro, `output: "static"`               | Ships HTML and CSS with no framework runtime. The whole page is a few kilobytes of gzipped HTML and under 2 kB of JavaScript.                        |
-| Cool-LED briefing console               | Cool near-white ground, charcoal ink, one alert crimson. The Slack digest is the product face — not a SaaS brochure.                                 |
-| Self-hosted Bricolage + Source Sans 3   | Latin-subset woff2 in `public/fonts/` (see `pnpm fonts`). Preloaded for LCP; metric-matched fallbacks kill layout shift.                             |
-| Stylesheet inlined                      | One page, small CSS — inlining removes a render-blocking round trip.                                                                                 |
-| Calendly loaded lazily                  | The widget bundle is larger than the entire page. It is fetched only when the booking section approaches the viewport, or on a call-to-action click. |
-| Copy centralised in `src/copy.ts`       | The pitch can be reviewed and tested without touching markup, and `test/copy.test.ts` guards the promises the brief requires.                        |
+| Decision                              | Reason                                                                                                                                               |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Astro, `output: "static"`             | Ships HTML and CSS with no framework runtime. The whole page is a few kilobytes of gzipped HTML and under 2 kB of JavaScript.                        |
+| Cool-LED briefing console             | Cool near-white ground, charcoal ink, one alert crimson. The Slack digest is the product face — not a SaaS brochure.                                 |
+| Self-hosted Bricolage + Source Sans 3 | Latin-subset woff2 in `public/fonts/` (see `pnpm fonts`). Preloaded for LCP; metric-matched fallbacks kill layout shift.                             |
+| Stylesheet inlined                    | One page, small CSS — inlining removes a render-blocking round trip.                                                                                 |
+| Calendly loaded lazily                | The widget bundle is larger than the entire page. It is fetched only when the booking section approaches the viewport, or on a call-to-action click. |
+| Copy centralised in `src/copy.ts`     | The pitch can be reviewed and tested without touching markup, and `test/copy.test.ts` guards the promises the brief requires.                        |
 
 ## Commands
 

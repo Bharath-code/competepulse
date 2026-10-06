@@ -28,11 +28,11 @@ Local demo still works without secrets (fixtures + MemoryStore). Production requ
 
 pnpm workspace (`packages/*`):
 
-| Package                 | Description                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `@competepulse/core`    | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
-| `@competepulse/worker`  | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing. |
-| `@competepulse/agent`   | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
+| Package                 | Description                                                                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `@competepulse/core`    | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                                                  |
+| `@competepulse/worker`  | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing.                           |
+| `@competepulse/agent`   | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest.                           |
 | `@competepulse/landing` | Static Astro marketing page + Calendly booking (P0-3). Interview brief at `/interview`. See [its README](packages/landing/README.md). |
 
 ## Requirements

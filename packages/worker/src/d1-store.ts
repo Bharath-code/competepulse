@@ -367,9 +367,7 @@ export class D1Store implements Store {
     if (!watch) return;
     const now = new Date().toISOString();
     await this.db
-      .prepare(
-        `UPDATE watches SET last_crawl_at = ?, last_success_at = ? WHERE id = ?`,
-      )
+      .prepare(`UPDATE watches SET last_crawl_at = ?, last_success_at = ? WHERE id = ?`)
       .bind(now, success ? now : watch.lastSuccessAt, id)
       .run();
   }
@@ -387,9 +385,7 @@ export class D1Store implements Store {
 
   async latestSnapshot(watchId: string): Promise<Snapshot | undefined> {
     const row = await this.db
-      .prepare(
-        "SELECT * FROM snapshots WHERE watch_id = ? ORDER BY created_at DESC LIMIT 1",
-      )
+      .prepare("SELECT * FROM snapshots WHERE watch_id = ? ORDER BY created_at DESC LIMIT 1")
       .bind(watchId)
       .first<SnapshotRow>();
     return row ? snapshotFromRow(row) : undefined;
@@ -532,9 +528,7 @@ export class D1Store implements Store {
     deliveryDate: string,
   ): Promise<DigestDelivery | null> {
     const row = await this.db
-      .prepare(
-        "SELECT * FROM digest_deliveries WHERE workspace_id = ? AND delivery_date = ?",
-      )
+      .prepare("SELECT * FROM digest_deliveries WHERE workspace_id = ? AND delivery_date = ?")
       .bind(workspaceId, deliveryDate)
       .first<DigestRow>();
     return row ? digestFromRow(row) : null;

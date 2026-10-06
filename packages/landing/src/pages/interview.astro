@@ -42,11 +42,7 @@ const categoryFilters = [
 
   <nav class="iv-nav" data-interview-nav aria-label="Briefing sections">
     <div class="container iv-nav__inner">
-      {
-        nav.map((item) => (
-          <a href={`#${item.id}`}>{item.label}</a>
-        ))
-      }
+      {nav.map((item) => <a href={`#${item.id}`}>{item.label}</a>)}
     </div>
   </nav>
 
@@ -84,7 +80,9 @@ const categoryFilters = [
       <div class="container">
         <p class="kicker">01 · Pitch</p>
         <h2 class="section-title">Say it out loud before you open Slack.</h2>
-        <p class="lead">Cover the problem, the wedge, and the anti-positions (not Klue, not Visualping).</p>
+        <p class="lead">
+          Cover the problem, the wedge, and the anti-positions (not Klue, not Visualping).
+        </p>
 
         <div class="iv-pitch-grid">
           {
@@ -96,7 +94,9 @@ const categoryFilters = [
                     Copy
                   </button>
                 </div>
-                <p id={`pitch-text-${i}`} class="iv-panel__body">{pitch.text}</p>
+                <p id={`pitch-text-${i}`} class="iv-panel__body">
+                  {pitch.text}
+                </p>
               </article>
             ))
           }
@@ -124,11 +124,13 @@ const categoryFilters = [
         <p class="kicker">02 · Architecture</p>
         <h2 class="section-title">Draw this on the whiteboard.</h2>
         <p class="lead">
-          One sentence: Eve-shaped agent for Slack UX + HITL; Cloudflare for crawl ops and
-          history; Firecrawl for extract quality; core for materiality + evals.
+          One sentence: Eve-shaped agent for Slack UX + HITL; Cloudflare for crawl ops and history;
+          Firecrawl for extract quality; core for materiality + evals.
         </p>
 
-        <pre class="iv-diagram" aria-label="High-level architecture diagram">
+        <pre
+          class="iv-diagram"
+          aria-label="High-level architecture diagram">
 {`Slack / Dashboard
         │
         ▼
@@ -254,13 +256,16 @@ const categoryFilters = [
           <h3>{qualityStory.example.name}</h3>
           <ul class="iv-bullets">
             <li>
-              <strong>Human:</strong> {qualityStory.example.human}
+              <strong>Human:</strong>
+              {qualityStory.example.human}
             </li>
             <li>
-              <strong>System:</strong> {qualityStory.example.system}
+              <strong>System:</strong>
+              {qualityStory.example.system}
             </li>
             <li>
-              <strong>Counter:</strong> {qualityStory.example.counter}
+              <strong>Counter:</strong>
+              {qualityStory.example.counter}
             </li>
           </ul>
           <p class="iv-mono">CI: pnpm eval · gate precision ≥ 85% · ≥ 20 fixtures</p>
@@ -273,8 +278,7 @@ const categoryFilters = [
         <p class="kicker">06 · Interview drill</p>
         <h2 class="section-title">Answer first. Reveal second.</h2>
         <p class="lead">
-          Filter by category. Say your answer out loud, then reveal the model answer and patch
-          gaps.
+          Filter by category. Say your answer out loud, then reveal the model answer and patch gaps.
         </p>
 
         <div class="iv-filters" role="group" aria-label="Filter drill questions">
