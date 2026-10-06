@@ -4,7 +4,7 @@ import { crawlQueue, shouldRetry, backoffMs } from "../src/queue.js";
 import { memorySnapshots } from "../src/r2.js";
 import { CapError, store } from "../src/store.js";
 
-const env: Env = {};
+const env: Env = { ENVIRONMENT: "local" };
 const app = createApp();
 
 function post(path: string, body: unknown) {

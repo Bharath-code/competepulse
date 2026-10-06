@@ -3,9 +3,10 @@ import { authorizeRequest, planAllowsMutations } from "../src/access.js";
 import { slackPostMessage } from "../src/slack-api.js";
 
 describe("access gate (B5)", () => {
-  it("allows all requests when token unset", () => {
+  it("allows requests when token unset only in local", () => {
     const req = new Request("https://example.com/dashboard");
-    expect(authorizeRequest(req, {})).toEqual({ ok: true });
+    expect(authorizeRequest(req, { ENVIRONMENT: "local" })).toEqual({ ok: true });
+    expect(authorizeRequest(req, {})).toMatchObject({ ok: false, status: 503 });
   });
 
   it("rejects missing bearer when token set", () => {

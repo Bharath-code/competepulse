@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createApp, type Env } from "../src/app.js";
 import { store } from "../src/store.js";
 
-const env: Env = {};
+const env: Env = { ENVIRONMENT: "local" };
 const app = createApp();
 
 function post(path: string, body: unknown) {

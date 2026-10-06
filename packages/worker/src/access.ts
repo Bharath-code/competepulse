@@ -1,13 +1,23 @@
 /**
  * Minimal access gate for dashboard + mutating APIs (Path B5).
  *
- * When `DASHBOARD_ACCESS_TOKEN` is unset (local/tests), requests are allowed.
- * When set, require `Authorization: Bearer <token>` or `?access_token=` /
+ * When `DASHBOARD_ACCESS_TOKEN` is unset, requests are allowed only when
+ * `ENVIRONMENT=local`; otherwise 503 (fail closed). When set, require `Authorization: Bearer <token>` or `?access_token=` /
  * cookie `cp_access`.
  */
 
 export function isLocal(env: { ENVIRONMENT?: string }): boolean {
   return env.ENVIRONMENT === "local";
+}
+
+export function secretMissing(
+  secret: string | undefined,
+  env: { ENVIRONMENT?: string },
+  name: string,
+): boolean {
+  if (secret?.trim() || isLocal(env)) return false;
+  console.error(JSON.stringify({ event: "secret_missing", secret: name }));
+  return true;
 }
 
 export function accessTokenFromEnv(env: { DASHBOARD_ACCESS_TOKEN?: string }): string | undefined {
@@ -30,10 +40,14 @@ export function extractAccessToken(req: Request): string | null {
 
 export function authorizeRequest(
   req: Request,
-  env: { DASHBOARD_ACCESS_TOKEN?: string },
-): { ok: true } | { ok: false; status: 401; error: string } {
+  env: { DASHBOARD_ACCESS_TOKEN?: string; ENVIRONMENT?: string },
+): { ok: true } | { ok: false; status: 401 | 503; error: string } {
   const expected = accessTokenFromEnv(env);
-  if (!expected) return { ok: true };
+  if (!expected) {
+    return secretMissing(expected, env, "DASHBOARD_ACCESS_TOKEN")
+      ? { ok: false, status: 503, error: "secret_missing" }
+      : { ok: true };
+  }
   const got = extractAccessToken(req);
   if (got && got === expected) return { ok: true };
   return { ok: false, status: 401, error: "unauthorized" };

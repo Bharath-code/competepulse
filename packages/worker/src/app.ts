@@ -20,7 +20,7 @@ import {
   type WatchLabel,
 } from "@competepulse/core";
 import { Hono } from "hono";
-import { authorizeRequest, isLocal, planAllowsMutations } from "./access.js";
+import { authorizeRequest, isLocal, planAllowsMutations, secretMissing } from "./access.js";
 import {
   applyDodoWebhookEvent,
   buildMockSubscriptionWebhook,
@@ -593,6 +593,9 @@ export function createApp() {
 
   app.post("/slack/commands", async (c) => {
     const rawBody = await c.req.text();
+    if (secretMissing(c.env.SLACK_SIGNING_SECRET, c.env, "SLACK_SIGNING_SECRET")) {
+      return c.json({ error: "secret_missing" }, 503);
+    }
     const ok = await verifySlackSignature(c.env.SLACK_SIGNING_SECRET, c.req.raw, rawBody);
     if (!ok) return c.json({ error: "invalid signature" }, 401);
 
@@ -620,6 +623,9 @@ export function createApp() {
 
   app.post("/slack/interactions", async (c) => {
     const rawBody = await c.req.text();
+    if (secretMissing(c.env.SLACK_SIGNING_SECRET, c.env, "SLACK_SIGNING_SECRET")) {
+      return c.json({ error: "secret_missing" }, 503);
+    }
     const ok = await verifySlackSignature(c.env.SLACK_SIGNING_SECRET, c.req.raw, rawBody);
     if (!ok) return c.json({ error: "invalid signature" }, 401);
 
@@ -742,6 +748,9 @@ export function createApp() {
   app.post("/billing/webhooks/dodo", async (c) => {
     const rawBody = await c.req.text();
     const config = dodoConfigFromEnv(c.env);
+    if (secretMissing(config.webhookKey, c.env, "DODO_PAYMENTS_WEBHOOK_KEY")) {
+      return c.json({ error: "secret_missing" }, 503);
+    }
     const verified = await verifyDodoWebhook(
       rawBody,
       {

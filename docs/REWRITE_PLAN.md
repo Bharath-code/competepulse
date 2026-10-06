@@ -72,8 +72,8 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 **Goal:** nothing a design partner touches can leak, fake data or grant free access.
 **Story:** As a partner, I trust that my Slack and HubSpot tokens can't be read by anyone else.
 
-- [ ] Delete `GET /billing/mock-complete` outside `ENVIRONMENT=local` (`app.ts:701-727`) — 0.25d
-- [ ] Fail closed on missing secrets: `slack.ts:15`, `billing/dodo.ts:333`, `access.ts:33` — 0.5d
+- [x] Delete `GET /billing/mock-complete` outside `ENVIRONMENT=local` (`app.ts:701-727`) — 0.25d
+- [x] Fail closed on missing secrets: `slack.ts:15`, `billing/dodo.ts:333`, `access.ts:33` — 0.5d
 - [ ] Remove `?access_token=`; constant-time compare; per-workspace tokens instead of the global admin token (`access.ts:21,34`) — 0.75d
 - [ ] `GET /workspaces` never returns bot tokens; encrypt tokens at rest (AES-GCM, key in a secret) (`workspace-store.ts:43`) — 0.5d
 - [ ] OAuth `state` (signed, 10-minute TTL) on Slack install (`app.ts:136-177`) — 0.25d
