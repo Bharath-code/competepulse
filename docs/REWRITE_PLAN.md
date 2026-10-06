@@ -96,13 +96,13 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 **Goal:** stop running our own crawler. Firecrawl watches, diffs and judges; we store and interpret.
 **Story:** As a partner, I get a change alert within hours of a rival's edit, without us polling every page ourselves.
 
-- [ ] Provider interface `MonitorProvider { create, delete, list }` + Firecrawl implementation (v2 API) — 0.75d
-- [ ] `POST /monitor/webhook`: verify signature, dedupe on event id (reuse `processed_webhooks`), enqueue — 0.5d
-- [ ] Queue consumer: event → R2 snapshot → `diffPricing` / changelog → `change_events` with materiality — 0.75d
-- [ ] JSON change tracking with schemas from `core/src/schemas.ts`; `goal` prompt per page type — 0.5d
-- [ ] Screenshot (before/after) stored in R2 and linked in the event — 0.25d
-- [ ] Remove the polling crawl path; keep the cron for digests only — 0.25d
-- [ ] Migration `0005_monitors.sql` (`monitors`, `monitor_events`) — included above
+- [x] Provider interface `MonitorProvider { create, delete, list, getPage }` + Firecrawl implementation (v2 API) — 0.75d
+- [x] `POST /monitor/webhook`: verify shared-secret header (Firecrawl does not sign monitor webhooks), dedupe on `checkId:scrapeId` via `monitor_events`, enqueue — 0.5d
+- [x] Queue consumer: event → R2 snapshot → `diffPricing` / changelog → `change_events` with materiality — 0.75d
+- [x] JSON change tracking with schemas from `core/src/schemas.ts`; `goal` prompt per page type — 0.5d
+- [ ] Screenshot (before/after) stored in R2 and linked in the event — 0.25d _(deferred: Firecrawl monitor docs show no screenshot support; revisit or use a separate scrape)_
+- [x] Remove the polling crawl path; keep the cron for digests only — 0.25d _(cron fan-out removed; manual `POST /watches/:id/crawl` kept for fixtures and on-demand)_
+- [x] Migration `0006_monitors.sql` (`monitors`, `monitor_events`); renumbered because 0005 shipped in E0
 
 **AC**
 - Given a watch is created, when the workspace adds a URL, then exactly one Firecrawl monitor exists for that URL across all tenants (shared fetch).
@@ -275,7 +275,7 @@ See `packages/landing`. Positioning moves from "digest" to "deal-aware response"
 
 | Migration | Tables |
 | --- | --- |
-| `0005_monitors.sql` | `monitors(id, url, provider_id, created_at)`, `monitor_events(id, monitor_id, payload_r2_key, received_at)` |
+| `0006_monitors.sql` | `monitors(id, url, provider_id, created_at)`, `monitor_events(id, monitor_id, payload_r2_key, received_at)` |
 | `0006_hubspot.sql` | `hubspot_connections`, `competitor_map`, `pipeline_stages`, `rep_map` |
 | `0007_deals.sql` | `deal_alerts`, `deal_outcomes` |
 | `0008_responses.sql` | rename `battlecard_drafts` → `responses` + `citations_json`, `version` |

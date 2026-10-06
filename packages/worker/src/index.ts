@@ -4,6 +4,8 @@ import { processCrawlJob } from "./crawl.js";
 import { deliverAllWorkspaceDigests, alertFounder } from "./digest-deliver.js";
 import { getStore } from "./get-store.js";
 import type { CrawlJob } from "./queue.js";
+import { isMonitorPageJob, processMonitorJob } from "./routes/monitor.js";
+import { reconcileMonitors, resolveMonitors } from "./monitor.js";
 import { adaptR2Binding, memorySnapshots } from "./r2.js";
 
 const app = createApp();
@@ -11,25 +13,19 @@ const app = createApp();
 export default {
   fetch: app.fetch.bind(app),
 
-  /** Weekday digest cron (E1-4). Fan-out crawls then post digests. */
+  /** Weekday digest cron. Crawls are Monitor-driven (E1); cron only reconciles monitors and posts digests. */
   async scheduled(
     _controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
     const data = getStore(env);
-    const watches = await data.listWatches();
-    if (env.CRAWL_QUEUE) {
-      for (const w of watches) {
-        ctx.waitUntil(
-          env.CRAWL_QUEUE.send({
-            watchId: w.id,
-            workspaceId: w.workspaceId,
-            url: w.url,
-            attempt: 1,
-            enqueuedAt: new Date().toISOString(),
-          }),
-        );
+    const monitors = resolveMonitors(env);
+    if (monitors) {
+      try {
+        await reconcileMonitors(data, monitors.provider, monitors.cfg);
+      } catch (err) {
+        ctx.waitUntil(alertFounder(env, `Monitor reconcile failed: ${String(err)}`));
       }
     }
 
@@ -44,17 +40,24 @@ export default {
   },
 
   /** Cloudflare Queue consumer (E2-1) with per-message retries. */
-  async queue(batch: MessageBatch<CrawlJob>, env: Env): Promise<void> {
+  async queue(batch: MessageBatch<CrawlJob | unknown>, env: Env): Promise<void> {
     const data = getStore(env);
     const bucket = env.SNAPSHOTS ? adaptR2Binding(env.SNAPSHOTS) : memorySnapshots;
     for (const msg of batch.messages) {
       try {
-        await processCrawlJob(msg.body, {
-          data,
-          bucket,
-          apiKey: env.FIRECRAWL_API_KEY,
-          allowFixtures: isLocal(env),
-        });
+        const body: unknown = msg.body;
+        if (isMonitorPageJob(body)) {
+          const monitors = resolveMonitors(env);
+          if (!monitors) throw new Error("monitor provider not configured");
+          await processMonitorJob(body, { data, bucket, provider: monitors.provider });
+        } else {
+          await processCrawlJob(body as CrawlJob, {
+            data,
+            bucket,
+            apiKey: env.FIRECRAWL_API_KEY,
+            allowFixtures: isLocal(env),
+          });
+        }
         msg.ack();
       } catch {
         msg.retry();

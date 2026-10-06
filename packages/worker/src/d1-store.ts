@@ -7,6 +7,7 @@ import {
   type WatchLabel,
 } from "@competepulse/core";
 import type { SubscriptionStatus } from "./billing/dodo.js";
+import type { Monitor } from "./monitor.js";
 import {
   CapError,
   type BattlecardDraft,
@@ -286,6 +287,79 @@ export class D1Store implements Store {
       .bind(webhookId, new Date().toISOString())
       .run();
     return true;
+  }
+
+  private monitorFromRow(r: {
+    id: string;
+    url: string;
+    provider_id: string;
+    created_at: string;
+  }): Monitor {
+    return { id: r.id, url: r.url, providerId: r.provider_id, createdAt: r.created_at };
+  }
+
+  async getMonitorByUrl(url: string): Promise<Monitor | undefined> {
+    const row = await this.db
+      .prepare("SELECT * FROM monitors WHERE url = ?")
+      .bind(url)
+      .first<{ id: string; url: string; provider_id: string; created_at: string }>();
+    return row ? this.monitorFromRow(row) : undefined;
+  }
+
+  async getMonitorByProviderId(providerId: string): Promise<Monitor | undefined> {
+    const row = await this.db
+      .prepare("SELECT * FROM monitors WHERE provider_id = ?")
+      .bind(providerId)
+      .first<{ id: string; url: string; provider_id: string; created_at: string }>();
+    return row ? this.monitorFromRow(row) : undefined;
+  }
+
+  async listMonitors(): Promise<Monitor[]> {
+    const { results } = await this.db
+      .prepare("SELECT * FROM monitors ORDER BY created_at ASC")
+      .all<{ id: string; url: string; provider_id: string; created_at: string }>();
+    return results.map((r) => this.monitorFromRow(r));
+  }
+
+  async insertMonitor(monitor: Monitor): Promise<boolean> {
+    const res = await this.db
+      .prepare(
+        "INSERT OR IGNORE INTO monitors (id, url, provider_id, created_at) VALUES (?, ?, ?, ?)",
+      )
+      .bind(monitor.id, monitor.url, monitor.providerId, monitor.createdAt)
+      .run();
+    return (res.meta?.changes ?? 0) > 0;
+  }
+
+  async removeMonitor(id: string): Promise<void> {
+    await this.db.prepare("DELETE FROM monitors WHERE id = ?").bind(id).run();
+  }
+
+  async listWatchesByUrl(url: string): Promise<Watch[]> {
+    const { results } = await this.db
+      .prepare("SELECT * FROM watches WHERE url = ? ORDER BY created_at ASC")
+      .bind(url)
+      .all<WatchRow>();
+    return results.map(watchFromRow);
+  }
+
+  async claimMonitorEvent(event: {
+    id: string;
+    monitorId: string;
+    payloadR2Key: string;
+    receivedAt: string;
+  }): Promise<boolean> {
+    const res = await this.db
+      .prepare(
+        "INSERT OR IGNORE INTO monitor_events (id, monitor_id, payload_r2_key, received_at) VALUES (?, ?, ?, ?)",
+      )
+      .bind(event.id, event.monitorId, event.payloadR2Key, event.receivedAt)
+      .run();
+    return (res.meta?.changes ?? 0) > 0;
+  }
+
+  async releaseMonitorEvent(id: string): Promise<void> {
+    await this.db.prepare("DELETE FROM monitor_events WHERE id = ?").bind(id).run();
   }
 
   async setDigestChannel(workspaceId: string, channelId: string): Promise<Workspace | undefined> {
