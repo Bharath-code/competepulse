@@ -33,7 +33,7 @@ PUBLIC_SITE_URL=https://competepulse.com \
 PUBLIC_CALENDLY_URL=https://calendly.com/<your-user>/15min \
   pnpm --filter @competepulse/landing build
 
-pnpm --filter @competepulse/landing deploy
+pnpm --filter @competepulse/landing ship
 ```
 
 4. In Cloudflare dashboard → Workers → `competepulse-landing` → Custom Domains → attach apex + `www`.

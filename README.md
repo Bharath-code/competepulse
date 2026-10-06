@@ -104,7 +104,7 @@ PUBLIC_SITE_URL=https://competepulse.com \
 PUBLIC_CALENDLY_URL=https://calendly.com/<user>/15min \
   pnpm --filter @competepulse/landing build
 
-pnpm --filter @competepulse/landing deploy    # Cloudflare assets-only Worker
+pnpm --filter @competepulse/landing ship    # Cloudflare assets-only Worker
 ```
 
 Config template: [`packages/landing/.env.example`](packages/landing/.env.example).

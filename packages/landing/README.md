@@ -95,7 +95,7 @@ PUBLIC_SITE_URL=https://competepulse.com \
 PUBLIC_CALENDLY_URL=https://calendly.com/<user>/15min \
   pnpm --filter @competepulse/landing build
 
-pnpm --filter @competepulse/landing deploy      # wrangler, assets-only Worker
+pnpm --filter @competepulse/landing ship      # wrangler, assets-only Worker
 ```
 
 [`wrangler.jsonc`](./wrangler.jsonc) declares an assets-only Worker (no `main`).

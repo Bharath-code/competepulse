@@ -12,7 +12,7 @@
     "test": "vitest run",
     "fonts": "node scripts/sync-fonts.mjs",
     "og": "node scripts/generate-og-image.mjs",
-    "deploy": "wrangler deploy",
+    "ship": "astro build && wrangler deploy",
     "icons": "node scripts/generate-icons.mjs"
   },
   "devDependencies": {
