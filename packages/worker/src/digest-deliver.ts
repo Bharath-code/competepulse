@@ -39,9 +39,7 @@ export async function deliverAllWorkspaceDigests(
   const byId = new Map(workspaces.map((w) => [w.id, w]));
   const out: DigestRunResult[] = [];
   for (const result of results) {
-    const ws = result.delivery
-      ? byId.get(result.delivery.workspaceId)
-      : undefined;
+    const ws = result.delivery ? byId.get(result.delivery.workspaceId) : undefined;
     if (result.delivered && !result.skipped) {
       out.push(await postDigestToSlack(result, ws, env));
     } else {
@@ -75,19 +73,13 @@ async function postDigestToSlack(
   });
   if (!posted.ok) {
     console.error("[digest] Slack post failed", posted.error, workspace?.id);
-    await alertFounder(
-      env,
-      `Digest Slack post failed for ${workspace?.id}: ${posted.error}`,
-    );
+    await alertFounder(env, `Digest Slack post failed for ${workspace?.id}: ${posted.error}`);
     return { ...result, slackPosted: false, slackError: posted.error };
   }
   return { ...result, slackPosted: true };
 }
 
-export async function alertFounder(
-  env: DigestDeliverEnv,
-  message: string,
-): Promise<void> {
+export async function alertFounder(env: DigestDeliverEnv, message: string): Promise<void> {
   if (!env.FOUNDER_ALERT_WEBHOOK) {
     console.error("[alert]", message);
     return;

@@ -145,7 +145,13 @@ const body = [
   }),
 
   `<rect x="${MARGIN}" y="562" width="220" height="40" rx="4" fill="${SIGNAL}"/>`,
-  text(mono, "BOOK A 15-MIN CALL", { x: MARGIN + 18, y: 588, size: 18, tracking: 1.4, fill: GROUND }),
+  text(mono, "BOOK A 15-MIN CALL", {
+    x: MARGIN + 18,
+    y: 588,
+    size: 18,
+    tracking: 1.4,
+    fill: GROUND,
+  }),
   text(mono, "NO KLUE BILL. NO VISUALPING NOISE.", {
     x: RIGHT,
     y: 588,

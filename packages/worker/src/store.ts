@@ -543,12 +543,7 @@ export class AsyncMemoryStore implements Store {
   setDigestChannel(workspaceId: string, channelId: string) {
     return Promise.resolve(this.inner.setDigestChannel(workspaceId, channelId));
   }
-  addWatch(input: {
-    competitor: string;
-    url: string;
-    label: WatchLabel;
-    workspaceId?: string;
-  }) {
+  addWatch(input: { competitor: string; url: string; label: WatchLabel; workspaceId?: string }) {
     return Promise.resolve(this.inner.addWatch(input));
   }
   listWatches(workspaceId?: string) {

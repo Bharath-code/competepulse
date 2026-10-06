@@ -144,8 +144,10 @@ export const stackChoices: StackChoice[] = [
     layer: "Crawl ops",
     choice: "Cloudflare Workers + Queues + R2 + D1",
     why: "Cheap fan-out, retries, immutable object history, SQL for watches/workspaces, cron for digests — one vendor for the crawl factory.",
-    against: "D1/Workers constraints (CPU time, SQL surface). Complex analytics may outgrow D1 later.",
-    rejected: "Single Next.js cron scrapers (no durable queue/HITL split); always-on Browser Run (COGS)",
+    against:
+      "D1/Workers constraints (CPU time, SQL surface). Complex analytics may outgrow D1 later.",
+    rejected:
+      "Single Next.js cron scrapers (no durable queue/HITL split); always-on Browser Run (COGS)",
     interviewLine:
       "Responsibility split is non-negotiable: Cloudflare owns jobs and history; the agent owns Slack UX and HITL.",
   },
@@ -164,7 +166,8 @@ export const stackChoices: StackChoice[] = [
     layer: "Classifier",
     choice: "Deterministic diffPricing in @competepulse/core + eval harness",
     why: "Precision is the product. Auditable rules + 20 golden human labels beat opaque LLM 'is this important?' every time for v1.",
-    against: "Rules miss novel change types; later Vectorize/LLM assist can extend, not replace, the gate.",
+    against:
+      "Rules miss novel change types; later Vectorize/LLM assist can extend, not replace, the gate.",
     rejected: "Pixel/DOM monitors; un-evaluated LLM summaries as the alert decision",
     interviewLine:
       "We ship behind an ≥85% precision gate on human-labeled fixtures. False positives mute Slack channels — so precision beats recall.",

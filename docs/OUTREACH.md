@@ -5,7 +5,7 @@ Track discovery toward 3 design partners. Copy this into a spreadsheet or keep t
 ## Goals (acceptance)
 
 - ≥100 ICP rows (PMM / Enablement / competitive roles at mid-market B2B SaaS)
-- ≥10 discovery calls with notes (PRD Appendix C script)
+- ≥20 discovery calls with notes ([DISCOVERY_CALLS.md](DISCOVERY_CALLS.md))
 - ≥3 design-partner commitments
 - Each partner: ≥3 competitor pricing/changelog URLs + Slack channel for digests
 
@@ -14,22 +14,15 @@ Track discovery toward 3 design partners. Copy this into a spreadsheet or keep t
 Save as `docs/data/icp-list.csv` (gitignored if it contains personal emails) or a private sheet.
 
 ```csv
-company,role,name,email_or_linkedin,source,outreach_date,call_date,pain_1_to_5,competitor_urls,slack_ok,outcome,notes
-Acme SaaS,PMM,Jane Doe,linkedin.com/in/jane,warm-intro,,,,https://acme.com/pricing|https://rival.com/pricing,,pending,
+company,role,name,email_or_linkedin,source,outreach_date,call_date,competitor_urls,crm,story,rank_c,comp_field,fill_pct,lost_reason_names_rival,notes_in_crm,same_email,commitment,outcome,quote,notes
+Example SaaS,PMM,Jane Doe,linkedin.com/in/jane,warm-intro,,,https://rival.com/pricing,,,,,,,,,,pending,,
 ```
 
 `outcome` values: `pending` | `no-reply` | `called` | `yes` | `maybe` | `no`
 
-## Discovery call script (summary)
+## Discovery call script
 
-From PRD Appendix C — keep calls to 15 minutes:
-
-1. Confirm role and who owns competitive intel today.
-2. Ask what broke last time a competitor changed pricing.
-3. Ask how they hear about changes now (Slack? Google Alerts? Nothing?).
-4. Collect three competitor URLs they care about this quarter.
-5. Offer concierge weekday digests for 2 weeks at no charge.
-6. Ask for a Slack channel invite if they say yes/maybe.
+Use [DISCOVERY_CALLS.md](DISCOVERY_CALLS.md) (deal-aware pivot, 25 min). The PRD Appendix C script is retired.
 
 ## Design-partner tracker
 

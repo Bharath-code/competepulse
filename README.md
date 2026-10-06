@@ -4,6 +4,8 @@ Slack-native competitive change agent — CI without a CI team.
 
 ## Docs
 
+- [Strategy (Oct 2026)](docs/STRATEGY.md)
+- [Field audit (Oct 2026)](docs/FIELD_AUDIT_2026-10.md)
 - [Product Requirements (PRD)](docs/PRD.md)
 - [Product Roadmap](docs/PRODUCT_ROADMAP.md)
 - [Go-live checklist (landing)](docs/GO_LIVE_CHECKLIST.md)
@@ -26,11 +28,11 @@ Local demo still works without secrets (fixtures + MemoryStore). Production requ
 
 pnpm workspace (`packages/*`):
 
-| Package                 | Description                                                                                                 |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `@competepulse/core`    | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                        |
-| `@competepulse/worker`  | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing. |
-| `@competepulse/agent`   | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest. |
+| Package                 | Description                                                                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `@competepulse/core`    | Domain types + the materiality diff classifier (`diffPricing`) and the eval harness.                                                  |
+| `@competepulse/worker`  | Cloudflare Worker (Hono): watchlist, crawl/diff, Slack, digests, HITL battlecards, dashboard, Dodo billing.                           |
+| `@competepulse/agent`   | Eve agent tools, `/compete` parser, digest schedule helpers, skills, `instructions.md`, Slack app manifest.                           |
 | `@competepulse/landing` | Static Astro marketing page + Calendly booking (P0-3). Interview brief at `/interview`. See [its README](packages/landing/README.md). |
 
 ## Requirements

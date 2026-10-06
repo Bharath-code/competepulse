@@ -1,134 +1,112 @@
 /**
- * All page copy in one place (PRD §2 job-to-be-done, §3 positioning, §6
- * battlecards). Editing the pitch should never require touching markup, and the
- * tests in `test/copy.test.ts` guard the promises the brief requires.
+ * All page copy in one place. Positioning follows docs/STRATEGY.md (Oct 2026
+ * pivot): deal-aware competitive response for HubSpot + Slack teams. The tests
+ * in `test/copy.test.ts` guard the promises the page makes.
  */
 
 export const brand = {
   name: "CompetePulse",
-  tagline: "Slack-native competitive change agent",
-  /** Sits under the nameplate. */
-  strapline: "Competitive intelligence for teams without a competitive-intel team",
-  /** Runs in the sticky bar under the wordmark. */
-  runningHead: "Pricing and changelog watches · Cited digests · Slack-native",
+  tagline: "Deal-aware competitive intelligence for HubSpot and Slack",
+  strapline: "Competitive response for teams without a competitive-intel team",
+  runningHead: "Rival moves, matched to your open HubSpot deals, in Slack",
 } as const;
 
 export const meta = {
-  title: "CompetePulse — what materially changed on your competitors, every morning in Slack",
+  title: "CompetePulse: when a rival moves, the rep on the deal hears first",
   description:
-    "CompetePulse watches your competitors' pricing and changelog pages, then posts a cited digest to Slack every weekday morning. No Klue bill, no Visualping noise.",
+    "CompetePulse finds the open HubSpot deals a competitor's change touches and messages each owner in Slack with proof and a line to use.",
   ogAlt:
-    "CompetePulse: every morning in Slack, what materially changed on your competitors — with links.",
+    "CompetePulse: when a rival changes pricing, the rep on the affected deal gets a Slack message with proof and a talk track.",
 } as const;
 
 export const hero = {
-  eyebrow: "Now taking 3 design partners",
-  dateline: "Issue No. 1",
-  /** The JTBD headline, verbatim from PRD §2. */
-  headline: {
-    lead: "Every morning in Slack:",
-    emphasis: "what materially changed",
-    trail: "on your competitors — with links.",
-  },
-  /** The one sentence: watches → cited digest → not Klue, not Visualping. */
+  eyebrow: "Taking 5 design partners",
+  headline: ["When a rival moves,", "the rep on the deal", "hears first."],
   subhead:
-    "CompetePulse watches your competitors' pricing and changelog pages, keeps only the changes that move deals, and posts a cited digest to your channel. No Klue bill. No Visualping noise.",
-  ctaLabel: "Book a 15-min discovery call",
-  ctaNote: "15 minutes, no demo theatre. Bring three competitor URLs and leave with a digest.",
-  facts: [
-    { label: "When", text: "Weekday mornings, in the channel your team already reads." },
-    { label: "Proof", text: "Every line cites the page and the snapshot it came from." },
-    { label: "Noise", text: "Footer edits, cookie banners and CSS churn never reach you." },
+    "CompetePulse watches your competitors, finds the open HubSpot deals each change touches, and messages the deal owner in Slack with proof and a line to use. Then it tracks whether you won.",
+  ctaLabel: "Book a discovery call",
+  ctaNote: "25 minutes. Bring your three closest competitors.",
+  figure: {
+    rival: "Rival raised Pro $49 → $79",
+    deals: [
+      { name: "Northwind", amount: "$18k" },
+      { name: "Kestrel", amount: "$26k" },
+    ],
+    dm: "DM → deal owners",
+    caption:
+      "One rival move, drawn live. Deals facing that rival light up as the change reaches them.",
+  },
+} as const;
+
+export const story = {
+  title: "Four beats, from their price page to your win column.",
+  intro: "Every message carries the evidence. Nobody gets pinged about a deal they don't own.",
+  caption: "Example data. Rival, Northwind, Kestrel and the people are placeholders.",
+  beats: [
+    {
+      id: "change",
+      title: "Rival raises Pro from $49 to $79.",
+      body: "We watch their pricing, changelog and docs pages. Cosmetic edits are dropped. Price and packaging moves are kept, with a before-and-after screenshot.",
+    },
+    {
+      id: "deals",
+      title: "Two of your open deals are up against them.",
+      body: "We read your open HubSpot deals, read-only, and match the ones where Rival is the named competitor. Closed deals stay quiet.",
+    },
+    {
+      id: "dm",
+      title: "Sam hears about Northwind before the buyer brings it up.",
+      body: "The deal owner gets a direct message: what changed, the screenshot, and one line to use. Your PMM approves the line once, and every rep facing Rival gets it.",
+    },
+    {
+      id: "result",
+      title: "You see which replies win.",
+      body: "When deals close, we log the outcome next to the reply that went out. Over a quarter you learn what actually beats each rival.",
+    },
   ],
 } as const;
 
-export const digestPreview = {
-  kicker: "Fig. 1 — The 8:30am digest",
-  title: "The whole product is one message.",
-  body: "Grouped by competitor, ranked by materiality, every line citing the page and snapshot it came from. Quiet competitors still get a line, so you know the watch ran.",
-  caption:
-    "Example digest. Acme and Northwind are placeholders — your watchlist is your competitors.",
-  slack: {
-    channel: "#competitive",
-    appName: "CompetePulse",
-    timestamp: "8:30 AM",
-    digestTitle: "CompetePulse digest",
-    digestDate: "2026-08-06",
-    sections: [
-      {
-        competitor: "Acme",
-        entries: [
-          {
-            materiality: "high" as const,
-            summary: "Team plan moved $50 → $99 per seat/mo; SSO shifted from Team to Enterprise.",
-            citation: "acme.com/pricing",
-            why: "Why it matters: price moves change deal math and talk tracks.",
-          },
-        ],
-      },
-      {
-        competitor: "Northwind",
-        entries: [
-          {
-            materiality: "low" as const,
-            summary: "Changelog: bulk CSV import shipped, Enterprise-only.",
-            citation: "northwind.io/changelog",
-            why: "Why it matters: minor, but worth a glance before the next enablement pass.",
-          },
-        ],
-      },
-    ],
-    quiet: {
-      competitors: ["Globex", "Initech", "Umbrella"],
-      label: "All quiet — no material changes.",
-    },
-    threadPrompt: "Did Acme change SSO packaging?",
-    threadReply:
-      "Yes — SSO left the Team tier on Aug 6. Cited: acme.com/pricing, snapshot 08:12 UTC.",
-  },
-} as const;
-
 export const howItWorks = {
-  kicker: "Method",
-  title: "Three steps, then it runs itself.",
+  kicker: "Setup",
+  title: "Running in one afternoon.",
   steps: [
     {
-      number: "01",
-      title: "Point it at the pages you already check",
-      body: "Pricing, changelog, careers. Add them from Slack — no admin, no CSV, no onboarding call.",
-      command: "/compete watch add acme.com/pricing",
-    },
-    {
-      number: "02",
-      title: "Every change gets judged, not just detected",
-      body: "We snapshot each page, diff the structured extract, and score it against a materiality rubric. Price, packaging, positioning and hiring signals survive. CSS churn does not.",
+      number: "1",
+      title: "Connect HubSpot and Slack",
+      body: "Read-only access to open deals and their owners. We never change a deal unless you turn on write-back.",
       command: null,
     },
     {
-      number: "03",
-      title: "One cited digest, weekday mornings",
-      body: "Posted to your channel with source links. Ask follow-ups in the thread — answers are grounded in the stored snapshots, or we say we don't know.",
+      number: "2",
+      title: "Name your rivals",
+      body: "Type a domain. We find their pricing, changelog and docs pages and show you a dossier of their last 90 days.",
+      command: "/compete add rival.ai",
+    },
+    {
+      number: "3",
+      title: "Tell us where the competitor lives",
+      body: "Point us at your competitor field on deals. No field? We add one and ask reps in Slack, one tap per deal.",
       command: null,
     },
   ],
 } as const;
 
 export const alternatives = {
-  kicker: "The options on the table",
-  title: "You have already priced the alternatives.",
+  kicker: "Compared",
+  title: "Alerts tell you something changed. We tell you which deal it hits.",
   columns: ["Option", "What it costs", "What it tells you", "What it leaves you doing"],
   rows: [
     {
-      name: "Visualping, Distill",
-      price: "$14–100 / mo",
-      tells: "Something on the page changed.",
-      leaves: "Reading diffs of cookie banners to find the one that mattered.",
+      name: "Page-change alerts (Visualping, Unkover)",
+      price: "$25–100 / mo",
+      tells: "A page you watch changed.",
+      leaves: "Guessing which deals it affects, and who should hear.",
     },
     {
-      name: "Klue, Crayon",
-      price: "$15k–40k+ / yr",
-      tells: "Everything — if you staff someone to run it.",
-      leaves: "Hiring a competitive-intel owner you did not budget for.",
+      name: "Enterprise CI (Klue, Crayon)",
+      price: "$20k–40k / yr",
+      tells: "Deal-level intel, once someone runs it.",
+      leaves: "Hiring the competitive-intel owner you didn't budget for.",
     },
     {
       name: "Pasting URLs into ChatGPT",
@@ -139,51 +117,56 @@ export const alternatives = {
   ],
   ours: {
     name: "CompetePulse",
-    price: "$149–399 / mo",
-    tells: "What materially changed, cited, in Slack.",
-    leaves: "Reading one message and updating the talk track.",
+    price: "$99–299 / mo",
+    tells: "Which open deal a rival's move hits, with proof and a line to use.",
+    leaves: "Approving the reply, then seeing whether it won.",
   },
 } as const;
 
 export const concierge = {
   kicker: "Design partners",
-  badge: "Free 14-day concierge",
-  title: "Free 14-day concierge for 3 design partners.",
-  body: "We run the watches by hand for your three closest competitors and deliver the digest every weekday morning. No install, no card, no contract — reply “stop” and it ends.",
-  asksLabel: "Who this is for",
+  badge: "2 weeks free, run by hand",
+  title: "Five design-partner seats.",
+  body: "For two weeks we run it by hand: we watch your three closest rivals and match their moves to a CSV of your open deals. If it earns its keep, it's $49 a month, locked for a year, in return for honest weekly feedback.",
+  asksLabel: "A good fit if",
   asks: [
-    "You sell B2B SaaS and your team lives in Slack",
-    "Someone already keeps a competitor page nobody trusts",
-    "You will tell us honestly when a digest was useless",
+    "You sell B2B software and track deals in HubSpot",
+    "Your sellers live in Slack",
+    "Your rivals change pricing or packaging every few months",
   ],
-  ctaLabel: "Book a 15-min discovery call",
+  ctaLabel: "Book a discovery call",
   couponLabel: "Pick a time",
-  couponNote: "Fifteen minutes. Three competitors. One digest.",
-  bookingFallbackNote: "Prefer email? Send us the three competitors you care about.",
+  couponNote: "25 minutes. Three rivals. One honest answer.",
+  bookingFallbackNote: "Prefer email? Send us your three closest competitors.",
 } as const;
 
 export const faq = [
   {
+    question: "What if we don't record competitors on deals?",
+    answer:
+      "Most teams don't, consistently. We can add a Competitors field and ask reps in Slack, one tap per deal. If neither works for your team, we'll tell you on the first call.",
+  },
+  {
+    question: "What do you read from HubSpot?",
+    answer:
+      "Open deals with their stage, amount, owner and competitor field, read-only. We don't touch contacts, emails or notes, and we never change a deal unless you turn on write-back.",
+  },
+  {
     question: "What counts as a material change?",
     answer:
-      "Anything that touches price, packaging, positioning, feature availability, or hiring signal. Footer edits, cookie banners and CSS churn are scored as non-material and never reach your channel.",
+      "Price, packaging, plan limits, positioning and feature availability. Footer edits, cookie banners and CSS churn are dropped and never reach a rep.",
   },
   {
-    question: "Do I need to install anything to try it?",
+    question: "Do you support Salesforce?",
     answer:
-      "No. The 14-day concierge is run by hand: you send three competitor URLs, we deliver the digest every weekday morning.",
-  },
-  {
-    question: "Where does the data come from?",
-    answer:
-      "Public web pages you nominate — typically pricing, changelog and careers pages. Every digest line links to the stored snapshot it was derived from.",
+      "Not yet. HubSpot comes first. If you're on Salesforce, tell us on the call: it decides what we build next.",
   },
 ] as const;
 
 export const footer = {
   kicker: "Colophon",
-  note: "We monitor public web pages you choose. No logins, no paywalls, no claims about non-public data.",
+  note: "We watch public web pages and read the HubSpot deals you allow. No logins to rival products, no paywalls, no claims about non-public data.",
   colophon:
-    "Set in Bricolage Grotesque, Source Sans 3, and JetBrains Mono. Built on Cloudflare. No cookies, no trackers.",
+    "Set in Bricolage Grotesque, Source Sans 3 and JetBrains Mono. 3D with three.js, motion with GSAP. Built on Cloudflare. No cookies, no trackers.",
   copyright: `© ${new Date().getUTCFullYear()} ${brand.name}`,
 } as const;
