@@ -50,10 +50,9 @@ async function loadFonts(files) {
   return fonts;
 }
 
-const [display, sans, mono] = await loadFonts([
+const [display, sans] = await loadFonts([
   "bricolage-grotesque-700.woff2",
   "source-sans-3-400.woff2",
-  "jetbrains-mono-400.woff2",
 ]);
 
 /**
@@ -90,7 +89,7 @@ function serialize(commands) {
 
 /**
  * Lay out one string as SVG path data. opentype's own `getPath` cannot letter-space,
- * and the mono labels on this card are heavily tracked, so glyphs are advanced by hand.
+ * and labels may be tracked, so glyphs are advanced by hand.
  */
 function layout(font, text, size, tracking) {
   const scale = size / font.unitsPerEm;
