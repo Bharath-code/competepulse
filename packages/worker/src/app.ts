@@ -69,7 +69,6 @@ export interface Env {
   DB?: D1Database;
   FIRECRAWL_API_KEY?: string;
   SLACK_SIGNING_SECRET?: string;
-  SLACK_BOT_TOKEN?: string;
   /** Base64 32-byte AES-GCM key for Slack bot tokens at rest. */
   TOKEN_ENCRYPTION_KEY?: string;
   SLACK_CLIENT_ID?: string;
@@ -675,7 +674,7 @@ export function createApp() {
       const published = publishBattlecard(draft);
       const saved = await data.updateBattlecard(published);
       const workspace = await data.getWorkspace(saved.workspaceId);
-      const token = (await workspaceBotToken(workspace, c.env)) || c.env.SLACK_BOT_TOKEN;
+      const token = await workspaceBotToken(workspace, c.env);
       const channel = workspace?.digestChannelId;
       let slackPosted = false;
       let slackError: string | undefined;
@@ -776,6 +775,12 @@ export function createApp() {
     const draft = await data.getBattlecard(action.value);
     if (!draft) {
       return slackTextResponse("Battlecard draft not found.");
+    }
+    const teamId = payload.team?.id;
+    const callerWorkspace = teamId ? await data.ensureWorkspace(teamId) : undefined;
+    if (!callerWorkspace || callerWorkspace.id !== draft.workspaceId) {
+      console.error(JSON.stringify({ event: "interaction_team_mismatch", teamId }));
+      return c.json({ error: "forbidden" }, 403);
     }
 
     if (action.action_id === "battlecard_approve") {
