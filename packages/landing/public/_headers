@@ -8,7 +8,7 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://assets.calendly.com; style-src 'self' 'unsafe-inline' https://assets.calendly.com; img-src 'self' data: https://*.calendly.com; font-src 'self'; connect-src 'self' https://calendly.com https://*.calendly.com; frame-src https://calendly.com; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://assets.calendly.com; style-src 'self' 'unsafe-inline' https://assets.calendly.com; img-src 'self' data: https://*.calendly.com; font-src 'self'; connect-src 'self' https://us.i.posthog.com https://calendly.com https://*.calendly.com; frame-src https://calendly.com; upgrade-insecure-requests
 
 # Fingerprinted bundles: safe to cache forever.
 /_astro/*

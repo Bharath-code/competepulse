@@ -127,9 +127,9 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 
 ### E12 · Analytics — S3 · 1d
 
-- [ ] PostHog (server-side events from the Worker; landing page view + CTA)
-- [ ] Funnel: `install → first_alert → first_approved_response → paid`
-- [ ] North-star query: deals touched by an approved response, per week
+- [x] PostHog (server-side events from the Worker; landing page view + CTA)
+- [x] Funnel (see docs/ANALYTICS.md): `install → first_alert → first_approved_response → paid`
+- [~] North-star query: interim = approved responses per week (deals_touched needs E5) — see docs/ANALYTICS.md
 
 **AC:** each funnel event fires once per occurrence (test with mocked client); the dashboard shows the north star by week.
 

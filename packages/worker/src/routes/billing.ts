@@ -1,3 +1,4 @@
+import { track } from "../analytics.js";
 import type { Hono } from "hono";
 import { isPaidPlan, planLimits, type PaidPlanId, type PlanId } from "@competepulse/core";
 import { isLocal, secretMissing } from "../access.js";
@@ -129,6 +130,9 @@ export function registerBilling(app: Hono<{ Bindings: Env }>) {
     }
 
     const applied = await applyBillingEvent(data, config, event);
+    if (applied.handled && applied.status === "active" && applied.workspaceId) {
+      await track(c.env, "paid", applied.workspaceId, { plan: applied.plan });
+    }
     return c.json({ received: true, ...applied });
   });
 

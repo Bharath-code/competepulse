@@ -1,3 +1,4 @@
+import { track } from "../analytics.js";
 import type { Hono } from "hono";
 import {
   approveBattlecard,
@@ -79,6 +80,7 @@ export function registerSlack(app: Hono<{ Bindings: Env }>) {
     await data.updateWorkspace(workspace.id, {
       slackBotToken: await sealBotToken(exchanged.botToken, c.env),
     });
+    await track(c.env, "install", workspace.id);
     const accessToken = generateWorkspaceToken();
     await data.setAccessTokenHash(workspace.id, await hashToken(accessToken));
     return c.html(
@@ -155,6 +157,8 @@ export function registerSlack(app: Hono<{ Bindings: Env }>) {
     if (action.action_id === "battlecard_approve") {
       const next = approveBattlecard(draft, payload.user.id);
       await data.updateBattlecard(next);
+      if (draft.status !== "approved" && next.status === "approved")
+        await track(c.env, "response_approved", next.workspaceId);
       return slackTextResponse(
         next.status === "approved"
           ? `Approved battlecard \`${next.id}\` — use publish to pin (HITL complete).`

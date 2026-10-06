@@ -14,6 +14,8 @@ interface ImportMetaEnv {
   readonly PUBLIC_CONTACT_EMAIL?: string;
   /** Worker origin, when the dashboard should be linked from the footer. */
   readonly PUBLIC_APP_URL?: string;
+  /** PostHog public project key; blank disables landing analytics. */
+  readonly PUBLIC_POSTHOG_KEY?: string;
 }
 
 interface ImportMeta {

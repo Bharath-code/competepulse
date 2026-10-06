@@ -38,3 +38,33 @@ if (!calm) {
     io.observe(near);
   }
 }
+
+// Cookieless PostHog capture (no SDK): page view + CTA clicks. Off without a key or under DNT.
+const phKey = import.meta.env.PUBLIC_POSTHOG_KEY;
+if (phKey && navigator.doNotTrack !== "1") {
+  const id = crypto.randomUUID();
+  const send = (event: string, properties: Record<string, string> = {}) =>
+    navigator.sendBeacon(
+      "https://us.i.posthog.com/capture/",
+      new Blob(
+        [
+          JSON.stringify({
+            api_key: phKey,
+            event,
+            distinct_id: id,
+            properties: {
+              ...properties,
+              $process_person_profile: false,
+              $current_url: location.href,
+            },
+          }),
+        ],
+        { type: "text/plain" },
+      ),
+    );
+  send("landing_view");
+  addEventListener("click", (e) => {
+    const cta = (e.target as Element).closest<HTMLElement>("[data-cta-placement]");
+    if (cta) send("landing_cta", { placement: cta.dataset.ctaPlacement ?? "" });
+  });
+}
