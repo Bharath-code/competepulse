@@ -1,0 +1,133 @@
+---
+import { problem } from "../copy";
+---
+
+<section class="section problem" aria-labelledby="problem-heading" data-problem>
+  <div class="container">
+    <h2 class="h-display" id="problem-heading">{problem.title}</h2>
+    <p class="lead">{problem.lead}</p>
+
+    <div class="week">
+      <span class="week__track" aria-hidden="true"><i data-track></i></span>
+      <ol class="week__list">
+        {
+          problem.week.map((e) => (
+            <li class="week__item">
+              <i class="week__dot" aria-hidden="true" data-dot />
+              <time class="week__when">{e.when}</time>
+              <p>{e.what}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="week__fix" data-fix>
+        <time class="week__when">{problem.fix.when}</time>
+        <span>{problem.fix.what}</span>
+      </p>
+    </div>
+    <p class="fine problem__note">{problem.footnote}</p>
+  </div>
+</section>
+
+<style>
+  .week {
+    position: relative;
+    margin-block-start: var(--s-6);
+  }
+
+  .week__list {
+    display: grid;
+    gap: var(--s-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .week__item {
+    display: grid;
+    gap: 0.35rem;
+    padding-inline-start: var(--s-4);
+    border-inline-start: 2px solid var(--hairline);
+    font-size: 1.0625rem;
+  }
+
+  .week__when {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    color: var(--ink-mute);
+  }
+
+  .week__track,
+  .week__dot {
+    display: none;
+  }
+
+  .week__fix {
+    display: grid;
+    gap: 0.35rem;
+    margin-block-start: var(--s-5);
+    padding: var(--s-4);
+    border-radius: var(--r-card);
+    background: var(--indigo);
+    color: var(--on-dark);
+    font-size: 1.0625rem;
+    font-weight: 540;
+  }
+
+  .week__fix .week__when {
+    color: var(--violet);
+  }
+
+  .problem__note {
+    margin-block-start: var(--s-4);
+  }
+
+  @media (width >= 56rem) {
+    .week__list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      padding-block-start: var(--s-4);
+    }
+
+    .week__item {
+      padding-inline-start: 0;
+      border-inline-start: 0;
+      padding-block-start: var(--s-4);
+    }
+
+    .week__track {
+      display: block;
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 2px;
+      background: var(--hairline);
+    }
+
+    .week__item {
+      position: relative;
+    }
+
+    .week__dot {
+      display: block;
+      position: absolute;
+      inset: calc(-1 * var(--s-4) - 5px) auto auto 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--ink);
+      box-shadow: 0 0 0 4px var(--canvas);
+    }
+
+    .week__track i {
+      display: block;
+      height: 100%;
+      background: var(--ink);
+      transform-origin: left;
+    }
+
+    .week__fix {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: baseline;
+      gap: var(--s-4);
+      max-width: 40rem;
+    }
+  }
+</style>

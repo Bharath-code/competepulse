@@ -1,0 +1,57 @@
+---
+import { founder } from "../copy";
+---
+
+<section class="section founder" aria-label="A note from the founder">
+  <figure class="container founder__inner">
+    <blockquote>
+      <p>{founder.quote}</p>
+    </blockquote>
+    <figcaption>
+      <span class="founder__mark" aria-hidden="true">{founder.name.charAt(0)}</span>
+      <span><b>{founder.name}</b><br />{founder.role}</span>
+    </figcaption>
+  </figure>
+</section>
+
+<style>
+  .founder__inner {
+    display: grid;
+    gap: var(--s-5);
+    max-width: 52rem;
+  }
+
+  blockquote p {
+    font-family: var(--display);
+    font-size: clamp(1.5rem, 1.2rem + 1.3vw, 2.25rem);
+    font-weight: 460;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    text-wrap: pretty;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    font-size: var(--t-small);
+    color: var(--ink-mute);
+  }
+
+  figcaption b {
+    color: var(--ink);
+  }
+
+  .founder__mark {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--indigo);
+    color: var(--violet);
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+</style>

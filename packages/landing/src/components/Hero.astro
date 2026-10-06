@@ -1,340 +1,240 @@
 ---
-import { hero } from "../copy";
-import { BEAM_TOP, DEALS, RIVAL, VIEW, distXZ, gridPoints, project, type Vec3 } from "../lib/pulse";
+import { cta, hero } from "../copy";
 import BookingCta from "./BookingCta.astro";
 
-const r1 = (n: number) => Math.round(n * 10) / 10;
-const pt = (p: Vec3) => project(p).map(r1) as [number, number];
-
-const dots = gridPoints(1).map((p) => {
-  const d = distXZ(p, RIVAL);
-  const hot = Math.exp(-(((d - 11.8) / 0.9) ** 2));
-  const [x, y] = pt([p[0], hot * 0.55, p[2]]);
-  return { x: Math.round(x), y: Math.round(y), hot: hot > 0.35 };
-});
-// Zero-length round-capped segments: one path per dot size keeps the HTML small.
-const dotPath = (hot: boolean) =>
-  dots
-    .filter((d) => d.hot === hot)
-    .map((d) => `M${d.x} ${d.y}h0`)
-    .join("");
-
-const ring = (radius: number) =>
-  Array.from({ length: 73 }, (_, i) => {
-    const a = (i / 72) * Math.PI * 2;
-    return pt([RIVAL[0] + Math.cos(a) * radius, 0, RIVAL[2] + Math.sin(a) * radius]).join(",");
-  }).join(" ");
-
-const pct = (p: Vec3) => {
-  const [x, y] = project(p);
-  const left = Math.min(Math.max((x / VIEW.w) * 100, 22), 78);
-  return `left:${r1(left)}%;top:${r1(Math.max((y / VIEW.h) * 100, 12))}%`;
-};
-
-const deals = DEALS.map((d) => ({ ...d, xy: pt(d.pos) }));
-const top = pt(BEAM_TOP);
-const rival = pt(RIVAL);
-const labelFor = (key?: string) => hero.figure.deals.find((d) => d.name.toLowerCase() === key);
+const s = hero.scene;
 ---
 
-<section class="hero" aria-labelledby="hero-heading">
+<section class="hero on-dark" aria-labelledby="hero-heading">
+  <div class="hero__sky" aria-hidden="true"></div>
   <div class="container hero__grid">
     <div class="hero__copy">
-      <p class="hero__status"><span class="hero__dot" aria-hidden="true"></span>{hero.eyebrow}</p>
-      <h1 class="hero__headline" id="hero-heading">
-        {hero.headline.map((line) => <span class="hero__line">{line}</span>)}
-      </h1>
-      <p class="hero__standfirst">{hero.subhead}</p>
+      <p class="hero__pill">{hero.pill}</p>
+      <h1 id="hero-heading">{hero.headline}</h1>
+      <p class="hero__lead">{hero.lead}</p>
       <div class="hero__act">
-        <BookingCta label={hero.ctaLabel} placement="hero" size="lg" />
-        <p class="hero__note">{hero.ctaNote}</p>
+        <BookingCta placement="hero" variant="pill" />
+        <p class="hero__assure">{cta.reassurance}</p>
       </div>
     </div>
 
-    <figure class="field" data-pulse-field>
-      <div class="field__stage">
+    <figure class="hero__scene" data-scene>
+      <div class="scene">
         <svg
-          class="field__poster"
-          viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
-          role="img"
-          aria-label="A field of dots. A crimson ring spreads out from one rival; the two deals it reaches glow and send a line up to a Slack message."
+          class="scene__wires"
+          viewBox="0 0 560 600"
+          preserveAspectRatio="none"
+          aria-hidden="true"
         >
-          <polyline class="field__ring field__ring--faint" points={ring(6.5)}></polyline>
-          <polyline class="field__ring" points={ring(11.8)}></polyline>
-          <path class="field__dots" d={dotPath(false)}></path>
-          <path class="field__dots is-hot" d={dotPath(true)}></path>
-          {
-            deals
-              .filter((d) => d.target)
-              .map((d) => (
-                <line class="field__beam" x1={d.xy[0]} y1={d.xy[1]} x2={top[0]} y2={top[1]} />
-              ))
-          }
-          {
-            deals.map((d) => (
-              <circle
-                class={d.target ? "field__deal is-target" : "field__deal"}
-                cx={d.xy[0]}
-                cy={d.xy[1]}
-                r={d.target ? 7 : 5}
-              />
-            ))
-          }
-          <circle class="field__rival" cx={rival[0]} cy={rival[1]} r="9"></circle>
-          <circle class="field__top" cx={top[0]} cy={top[1]} r="6"></circle>
+          <path data-wire d="M120 222 C 120 262, 190 266, 268 266"></path>
         </svg>
-        <canvas class="field__canvas" aria-hidden="true"></canvas>
-        <span
-          class="field__tag field__tag--rival"
-          data-anchor="rival"
-          style={pct([RIVAL[0], 0.3, RIVAL[2]])}
-        >
-          {hero.figure.rival}
-        </span>
-        {
-          deals
-            .filter((d) => d.target)
-            .map((d) => {
-              const l = labelFor(d.label);
-              return (
-                <span
-                  class="field__tag field__tag--deal"
-                  data-anchor={d.label}
-                  style={pct([d.pos[0], 0.3, d.pos[2]])}
+
+        <div class="mock mock--price scene__price">
+          <p class="mock__chrome"><span class="mock__dots" aria-hidden="true"></span>{s.url}</p>
+          <div class="mock__body">
+            <p class="mock__label">{s.plan}</p>
+            <p class="price">
+              <span class="price__before">{s.before}<i data-strike></i></span>
+              <span class="price__after" data-after>{s.after}</span>
+            </p>
+            <p class="badge" data-badge>Changed 09:12</p>
+          </div>
+        </div>
+
+        <p class="scene__counter" aria-hidden="true">
+          <span>{s.counter.label}</span>
+          <b data-counter={s.counter.value}>{s.counter.value}</b>
+        </p>
+
+        <div class="mock scene__deals">
+          <p class="mock__head">Open deals <span>HubSpot</span></p>
+          <ul class="deals">
+            {
+              s.deals.map((d) => (
+                <li
+                  class:list={["deals__row", d.rival && "is-hit"]}
+                  data-row={d.rival ? "hit" : "miss"}
                 >
-                  <b>{l?.name}</b> {l?.amount} · vs Rival
-                </span>
-              );
-            })
-        }
-        <span class="field__tag field__tag--dm" data-anchor="dm" style={pct(BEAM_TOP)}
-          >{hero.figure.dm}</span
-        >
+                  <span>{d.name}</span>
+                  <span class="deals__amt">{d.amount}</span>
+                  <span class="chip">{d.rival ? "Rival" : "Other"}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="mock mock--dm scene__dm" data-dm>
+          <p class="dm__head">
+            <span class="dm__avatar" aria-hidden="true">CP</span><b>CompetePulse</b><span
+              class="dm__time">09:40</span
+            >
+          </p>
+          <p class="dm__text"><span class="dm__at">{s.dm.to}</span> {s.dm.text}</p>
+          <p class="dm__line">{s.dm.line}</p>
+          <p class="dm__ok">
+            <svg viewBox="0 0 20 20" aria-hidden="true"
+              ><circle cx="10" cy="10" r="8.5"></circle><path data-tick d="M6 10.4l2.6 2.6L14 7.6"
+              ></path></svg
+            >
+            {s.dm.approved}
+          </p>
+        </div>
       </div>
-      <figcaption class="field__caption">{hero.figure.caption}</figcaption>
+      <figcaption class="hero__caption">{hero.caption}</figcaption>
     </figure>
   </div>
 </section>
 
 <style>
   .hero {
-    padding-block: clamp(1.5rem, 4vw, 3.5rem) var(--space-2xl);
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(3rem, 7vw, 6rem) clamp(4rem, 8vw, 7rem);
+    background: var(--indigo);
+    color: var(--on-dark);
+  }
+
+  /* DESIGN.md "violet-sky atmospheric backdrop", drawn with gradients, no image. */
+  .hero__sky {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 70% at 85% 30%, rgba(201, 180, 250, 0.32), transparent 65%),
+      radial-gradient(45% 55% at 70% 85%, rgba(122, 170, 230, 0.22), transparent 70%),
+      linear-gradient(180deg, var(--indigo) 0%, var(--indigo-deep) 100%);
   }
 
   .hero__grid {
+    position: relative;
     display: grid;
-    gap: var(--space-lg);
+    gap: clamp(2.5rem, 5vw, 4rem);
     align-items: center;
   }
 
   .hero__copy {
     display: grid;
     justify-items: start;
-    gap: var(--space-md);
+    gap: var(--s-4);
   }
 
-  .hero__status {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
+  .hero__pill {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--hairline-dark);
+    border-radius: 999px;
     font-size: var(--t-small);
-    font-weight: 600;
-    color: var(--ink-2);
+    font-weight: 540;
+    color: var(--on-dark-mute);
   }
 
-  .hero__dot {
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background: var(--signal);
-    box-shadow: 0 0 0 0 oklch(0.55 0.195 28 / 0.5);
-    animation: beacon 2.4s var(--ease-out) infinite;
-  }
-
-  @keyframes beacon {
-    70%,
-    100% {
-      box-shadow: 0 0 0 0.6rem oklch(0.55 0.195 28 / 0);
-    }
-  }
-
-  .hero__headline {
-    display: grid;
-    font-size: clamp(2.5rem, 1.4rem + 4.2vw, 4.6rem);
-    letter-spacing: -0.045em;
+  h1 {
+    max-width: 13ch;
+    font-size: var(--t-hero);
     line-height: 0.96;
+    letter-spacing: -0.03em;
   }
 
-  .hero__line {
-    display: block;
-  }
-
-  .hero__line:nth-child(2) {
-    padding-inline-start: 0.6em;
-  }
-
-  .hero__standfirst {
-    max-width: 46ch;
+  .hero__lead {
+    max-width: 44ch;
     font-size: var(--t-lead);
-    line-height: 1.45;
-    color: var(--ink-2);
+    line-height: 1.5;
+    color: var(--on-dark-mute);
   }
 
   .hero__act {
     display: grid;
     justify-items: start;
-    gap: var(--space-xs);
+    gap: var(--s-2);
   }
 
-  .hero__note {
+  .hero__assure,
+  .hero__caption {
     font-size: var(--t-small);
-    color: var(--ink-3);
+    color: var(--on-dark-mute);
   }
 
-  /* --- the instrument --- */
-  .field {
-    display: grid;
-    gap: var(--space-xs);
+  .hero__caption {
+    margin-block-start: var(--s-3);
+    max-width: 48ch;
   }
 
-  .field__stage {
+  .scene {
     position: relative;
-    aspect-ratio: 600 / 560;
-    max-width: 100%;
-    overflow: hidden;
-    border-radius: 0.6rem;
-    background:
-      radial-gradient(90% 70% at 30% 35%, oklch(0.27 0.03 250), transparent 70%), var(--console);
-    box-shadow:
-      0 1px 0 oklch(1 0 0 / 0.06) inset,
-      0 30px 60px -30px oklch(0.22 0.025 250 / 0.55);
+    display: grid;
+    gap: var(--s-3);
+    color: var(--ink);
   }
 
-  .field__poster,
-  .field__canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+  .scene__wires,
+  .scene__counter {
+    display: none;
   }
 
-  .field__canvas {
-    opacity: 0;
-    transition: opacity 700ms var(--ease-out);
-  }
-
-  .field.is-live .field__canvas {
-    opacity: 1;
-  }
-
-  .field.is-live .field__poster {
-    opacity: 0;
-    transition: opacity 700ms var(--ease-out);
-  }
-
-  .field__dots {
-    fill: none;
-    stroke: var(--console-muted);
-    stroke-width: 2.6;
-    stroke-linecap: round;
-    opacity: 0.45;
-  }
-
-  .field__dots.is-hot {
-    stroke: var(--console-high);
-    stroke-width: 5.5;
-    opacity: 0.9;
-  }
-
-  .field__ring {
-    fill: none;
-    stroke: var(--console-high);
-    stroke-width: 1.4;
-    opacity: 0.8;
-  }
-
-  .field__ring--faint {
-    opacity: 0.25;
-  }
-
-  .field__beam {
-    stroke: var(--console-high);
-    stroke-width: 1.5;
-    stroke-dasharray: 4 5;
-  }
-
-  .field__poster .field__deal {
-    fill: var(--console-link);
-    opacity: 0.85;
-  }
-
-  .field__poster .field__deal.is-target,
-  .field__poster .field__rival {
-    fill: var(--console-high);
-    opacity: 1;
-  }
-
-  .field__poster .field__top {
-    fill: var(--console-text);
-    opacity: 1;
-  }
-
-  .field__tag {
-    position: absolute;
-    transform: translate(-50%, calc(-100% - 0.8rem));
-    padding: 0.3rem 0.55rem;
-    border-radius: 0.3rem;
-    border: 1px solid var(--console-rule);
-    background: oklch(0.2 0.02 250 / 0.85);
-    backdrop-filter: blur(4px);
-    color: var(--console-text);
-    font-family: var(--font-mono);
-    font-size: clamp(0.62rem, 0.55rem + 0.25vw, 0.74rem);
-    white-space: nowrap;
-    pointer-events: none;
-    transition: opacity 300ms;
-  }
-
-  .field__tag b {
-    font-weight: 400;
-    color: var(--console-high);
-  }
-
-  /* The rival sits near the left edge: hang its label to the right. */
-  .field__tag--rival {
-    transform: translate(-14%, calc(-100% - 0.8rem));
-    border-color: oklch(0.72 0.16 28 / 0.6);
-  }
-
-  .field__tag--dm {
-    transform: translate(-50%, calc(-100% - 0.7rem));
-  }
-
-  .field__caption {
-    font-size: var(--t-small);
-    color: var(--ink-3);
-    max-width: 52ch;
-  }
-
-  @media (width >= 60rem) {
+  @media (width >= 64rem) {
     .hero__grid {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-      column-gap: clamp(2rem, 4vw, 4rem);
     }
-  }
 
-  @media (width < 30rem) {
-    .field__tag {
-      font-size: 0.6rem;
+    .scene {
+      display: block;
+      aspect-ratio: 560 / 600;
     }
-    .field__tag--dm {
-      display: none;
-    }
-  }
 
-  @media (prefers-reduced-motion: reduce) {
-    .hero__dot {
-      animation: none;
+    .scene > .mock,
+    .scene__counter {
+      position: absolute;
+    }
+
+    .scene__price {
+      inset: 5% auto auto 0;
+      width: 43%;
+    }
+
+    .scene__deals {
+      inset: 25% 0 auto auto;
+      width: 52%;
+    }
+
+    .scene__dm {
+      inset: auto auto 0 3%;
+      width: 60%;
+    }
+
+    .scene__counter {
+      inset: 0 0 auto auto;
+      display: flex;
+      align-items: baseline;
+      gap: var(--s-2);
+      padding: 0.45rem 0.8rem;
+      border: 1px solid var(--hairline-dark);
+      border-radius: 999px;
+      color: var(--on-dark-mute);
+      font-size: var(--t-small);
+    }
+
+    .scene__counter b {
+      font-family: var(--display);
+      font-size: 1.25rem;
+      font-weight: 540;
+      color: var(--on-dark);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .scene__wires {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .scene__wires path {
+      fill: none;
+      stroke: var(--violet);
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
     }
   }
 </style>

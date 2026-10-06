@@ -23,3 +23,9 @@
 
 /og.png
   Cache-Control: public, max-age=604800
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=604800
+
+/favicon-32.png
+  Cache-Control: public, max-age=604800

@@ -1,0 +1,115 @@
+---
+import { compare } from "../copy";
+
+const rows = [...compare.rows, compare.ours];
+const last = rows.length - 1;
+---
+
+<section class="section" aria-labelledby="compare-heading">
+  <div class="container">
+    <h2 class="h-display" id="compare-heading">{compare.title}</h2>
+
+    <div class="cmp" role="table" aria-label="Who hears about a competitor's change">
+      <div class="cmp__row cmp__row--head" role="row">
+        {compare.columns.map((c) => <span role="columnheader">{c}</span>)}
+      </div>
+      {
+        rows.map((r, i) => (
+          <div class:list={["cmp__row", i === last && "is-ours"]} role="row">
+            <span class="cmp__name" role="rowheader">
+              <b>{r.name}</b>
+              <small>{r.examples}</small>
+            </span>
+            <span class="cmp__price" role="cell">
+              {r.price}
+            </span>
+            <span class="cmp__who" role="cell">
+              {r.who}
+            </span>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cmp {
+    display: grid;
+    margin-block-start: var(--s-5);
+    border-block-start: 1px solid var(--ink);
+  }
+
+  .cmp__row {
+    display: grid;
+    gap: 0.25rem var(--s-4);
+    padding: var(--s-4) var(--s-3);
+    border-block-end: 1px solid var(--hairline);
+  }
+
+  .cmp__row--head {
+    display: none;
+  }
+
+  .cmp__name {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .cmp__name b {
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 540;
+    letter-spacing: -0.015em;
+  }
+
+  .cmp__name small,
+  .cmp__price {
+    font-size: var(--t-small);
+    color: var(--ink-mute);
+  }
+
+  .cmp__price {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cmp__who {
+    font-size: 1.125rem;
+  }
+
+  .is-ours {
+    border: 0;
+    border-radius: var(--r-card);
+    background: var(--indigo);
+    color: var(--on-dark);
+  }
+
+  .is-ours .cmp__name small,
+  .is-ours .cmp__price {
+    color: var(--on-dark-mute);
+  }
+
+  .is-ours .cmp__who {
+    font-weight: 700;
+    color: var(--violet);
+  }
+
+  @media (width >= 48rem) {
+    .cmp__row {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.7fr) minmax(0, 1.2fr);
+      align-items: center;
+    }
+
+    .cmp__row--head {
+      display: grid;
+      padding-block: var(--s-2);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--ink-mute);
+    }
+
+    .is-ours {
+      margin-block-start: var(--s-2);
+    }
+  }
+</style>

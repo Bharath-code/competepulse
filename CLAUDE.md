@@ -24,11 +24,18 @@ Full plan: [docs/STRATEGY.md](docs/STRATEGY.md) — [artifact](https://claude.ai
 
 ## Landing (`packages/landing`)
 
-- Copy lives only in `src/copy.ts`; `test/copy.test.ts` guards the pivot promises.
-- Hero = three.js pulse field (`src/scripts/pulse-field.ts`), with a static SVG poster that shares geometry in `src/lib/pulse.ts`. Story = GSAP sticky stage (`src/scripts/story.ts`).
-- Budgets (enforced in `test/build.test.ts`): entry JS < 4KB, HTML < 16KB gz, lazy three+GSAP < 240KB gz. Three.js loads only on ≥60rem, no reduced-motion, no Save-Data.
+@DESIGN.md
+
+- Visual system: [DESIGN.md](DESIGN.md) (Superhuman-inspired, adapted at the top of the file). Design doc and copy deck: [docs/LANDING_DESIGN.md](docs/LANDING_DESIGN.md).
+
+- Copy lives only in `src/copy.ts` (mirrors the copy deck in `docs/LANDING_DESIGN.md`); `test/copy.test.ts` guards the promises.
+- Sections: Hero (signature GSAP scene) → Problem (scrubbed week) → Product (native radio tabs) → Compare → Pricing → Founder → FAQ → teal close with Calendly.
+- Motion lives in one lazy chunk, `src/scripts/motion.ts`. The entry `landing.ts` loads it at idle on ≥64rem, or when the product steps near the viewport; never under reduced motion or Save-Data. Server HTML always shows each scene's finished frame.
+- Styles: `src/styles/landing.css` (tokens + mock-ups) and scoped component styles. `global.css` is only for `/interview`. `BaseLayout` imports no CSS.
+- Fonts: Bricolage Grotesque and Source Sans 3 **variable** (weights 460/540); only the display face is preloaded. Run `pnpm --filter @competepulse/landing fonts` after changing faces.
+- Budgets (enforced in `test/build.test.ts`): entry JS < 4KB, HTML < 18KB gz, lazy JS < 60KB gz. Lighthouse mobile is 100/100/100/100 as of v2; keep it there.
 - CSP is `script-src 'self'`: no CDNs, no inline scripts.
-- Last self-score against Awwwards criteria: 7.8/10 (`.claudedocs/landing-awwwards-score-2026-10-06.md`).
+- Last self-score against Awwwards criteria: 8.3/10 (`.claudedocs/landing-awwwards-score-2026-10-06-v2.md`).
 
 ## Fix before any design partner touches prod
 

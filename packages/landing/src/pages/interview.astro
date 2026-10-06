@@ -16,6 +16,7 @@ import {
   yourStoryTemplate,
 } from "../interview/content";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import "../styles/global.css";
 
 const categoryFilters = [
   { id: "all", label: "All" },
@@ -27,6 +28,12 @@ const categoryFilters = [
 ---
 
 <BaseLayout
+  preloadFonts={[
+    "bricolage-grotesque-700.woff2",
+    "source-sans-3-400.woff2",
+    "source-sans-3-600.woff2",
+  ]}
+  themeColor="#f0f6f9"
   title={interviewMeta.title}
   description={interviewMeta.description}
   robots="noindex, nofollow"

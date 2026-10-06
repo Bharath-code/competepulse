@@ -1,36 +1,40 @@
 /**
- * Landing entry. Stays tiny: three.js and GSAP load only when they'll be seen,
- * never under reduced motion or Save-Data, so the static page carries LCP.
+ * Landing entry: stays tiny. GSAP loads only when a moving scene is about to be
+ * seen (the desktop hero at idle, or the product steps nearing the viewport),
+ * never under reduced motion or Save-Data. Until then, and without JS, every
+ * scene shows its finished state.
  */
 const calm =
   matchMedia("(prefers-reduced-motion: reduce)").matches ||
   (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
 
-const idle = (fn: () => void) =>
-  "requestIdleCallback" in window
-    ? requestIdleCallback(fn, { timeout: 2500 })
-    : setTimeout(fn, 1200);
-
 if (!calm) {
-  const field = document.querySelector<HTMLElement>("[data-pulse-field]");
-  if (field && matchMedia("(min-width: 60rem)").matches) {
-    // No WebGL: WebGLRenderer throws, the catch keeps the static poster.
-    const boot = () =>
-      idle(() => import("./pulse-field").then((m) => m.mount(field)).catch(() => {}));
-    if (document.readyState === "complete") boot();
-    else addEventListener("load", boot, { once: true });
+  let started = false;
+  const run = () => {
+    if (started) return;
+    started = true;
+    import("./motion").then((m) => m.init()).catch(() => {});
+  };
+
+  if (matchMedia("(min-width: 64rem)").matches) {
+    const idle = () =>
+      "requestIdleCallback" in window
+        ? requestIdleCallback(run, { timeout: 2000 })
+        : setTimeout(run, 600);
+    if (document.readyState === "complete") idle();
+    else addEventListener("load", idle, { once: true });
   }
 
-  const story = document.querySelector<HTMLElement>("[data-story]");
-  if (story) {
+  const near = document.querySelector("[data-steps]");
+  if (near) {
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry?.isIntersecting) return;
         io.disconnect();
-        import("./story").then((m) => m.init(story)).catch(() => {});
+        run();
       },
-      { rootMargin: "600px 0px" },
+      { rootMargin: "200px 0px" },
     );
-    io.observe(story);
+    io.observe(near);
   }
 }

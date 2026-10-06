@@ -1,5 +1,6 @@
 ---
 import { brand } from "../copy";
+import { MARK_24 } from "../lib/mark.js";
 
 interface Props {
   /** Nameplate scale for the hero brand, running size in chrome. */
@@ -9,17 +10,14 @@ interface Props {
 
 const { size = "running", href = "/" } = Astro.props;
 const Tag = href ? "a" : "span";
+const { dot } = MARK_24;
 ---
 
 <Tag class:list={["wordmark", `wordmark--${size}`]} href={href ?? undefined}>
-  <svg class="wordmark__mark" viewBox="0 0 26 16" aria-hidden="true" focusable="false">
-    <path
-      d="M0.9 9.4h3.3l2-6 3.3 12.1 2.4-8.4 1.6 2.3h11.6"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6"
-      stroke-linecap="square"
-      stroke-linejoin="miter"></path>
+  <svg class="wordmark__mark" viewBox={MARK_24.viewBox} aria-hidden="true" focusable="false">
+    <path class="wordmark__ring" d={MARK_24.ring}></path>
+    <circle class="wordmark__ping" cx={dot.cx} cy={dot.cy} r={dot.r}></circle>
+    <circle class="wordmark__dot" cx={dot.cx} cy={dot.cy} r={dot.r}></circle>
   </svg>
   <span class="wordmark__text">{brand.name}</span>
 </Tag>
@@ -27,19 +25,58 @@ const Tag = href ? "a" : "span";
 <style>
   .wordmark {
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.4em;
-    color: var(--ink);
-    font-family: var(--font-display);
+    align-items: center;
+    gap: 0.32em;
+    color: var(--wm-ink, var(--ink));
+    font-family: var(--font-display, var(--display));
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
   }
 
+  /* Optically sized to the cap height of the word, nudged down to its baseline. */
   .wordmark__mark {
-    width: 1.05em;
-    align-self: center;
-    color: var(--signal);
+    width: 1.12em;
+    height: 1.12em;
+    overflow: visible;
+    translate: 0 0.04em;
+  }
+
+  .wordmark__ring {
+    fill: currentColor;
+  }
+
+  .wordmark__dot,
+  .wordmark__ping {
+    fill: var(--wm-dot, #7b5cf0);
+  }
+
+  .wordmark__ping {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* One ping on hover: the signal reaching the deal. */
+  a.wordmark:hover .wordmark__ping {
+    animation: wordmark-ping 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes wordmark-ping {
+    from {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(3.2);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.wordmark:hover .wordmark__ping {
+      animation: none;
+    }
   }
 
   .wordmark--nameplate {

@@ -16,18 +16,34 @@ import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(here, "../public/fonts");
-const modules = resolve(here, "../node_modules/@fontsource");
+const modules = resolve(here, "../node_modules");
 
 /** [package, source file, destination] — latin subsets only. */
 const FONTS = [
+  // Landing v2: variable weight axes for the 460 / 540 scale in DESIGN.md.
   [
-    "bricolage-grotesque",
+    "@fontsource-variable/bricolage-grotesque",
+    "bricolage-grotesque-latin-wght-normal.woff2",
+    "bricolage-grotesque-var.woff2",
+  ],
+  [
+    "@fontsource-variable/source-sans-3",
+    "source-sans-3-latin-wght-normal.woff2",
+    "source-sans-3-var.woff2",
+  ],
+  // /interview still uses the static cuts.
+  [
+    "@fontsource/bricolage-grotesque",
     "bricolage-grotesque-latin-700-normal.woff2",
     "bricolage-grotesque-700.woff2",
   ],
-  ["source-sans-3", "source-sans-3-latin-400-normal.woff2", "source-sans-3-400.woff2"],
-  ["source-sans-3", "source-sans-3-latin-600-normal.woff2", "source-sans-3-600.woff2"],
-  ["jetbrains-mono", "jetbrains-mono-latin-400-normal.woff2", "jetbrains-mono-400.woff2"],
+  ["@fontsource/source-sans-3", "source-sans-3-latin-400-normal.woff2", "source-sans-3-400.woff2"],
+  ["@fontsource/source-sans-3", "source-sans-3-latin-600-normal.woff2", "source-sans-3-600.woff2"],
+  [
+    "@fontsource/jetbrains-mono",
+    "jetbrains-mono-latin-400-normal.woff2",
+    "jetbrains-mono-400.woff2",
+  ],
 ];
 
 await mkdir(outDir, { recursive: true });
