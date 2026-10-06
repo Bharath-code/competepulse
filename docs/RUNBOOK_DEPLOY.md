@@ -36,7 +36,7 @@ pnpm exec wrangler secret put FOUNDER_ALERT_WEBHOOK   # Slack incoming webhook f
 Wrangler vars (non-secret) in dashboard or `wrangler.jsonc`:
 
 - `DODO_PAYMENTS_ENVIRONMENT=live_mode` (or `test_mode` for staging)
-- `ALLOW_BROWSER_FIXTURES=0`
+- (no fixture flag: fixtures run only when `ENVIRONMENT=local`; anywhere else a thin or keyless scrape errors)
 - `PUBLIC_WORKER_URL=https://api.competepulse.com`
 
 ## 3. Deploy

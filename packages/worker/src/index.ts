@@ -1,3 +1,4 @@
+import { isLocal } from "./access.js";
 import { createApp, type Env } from "./app.js";
 import { processCrawlJob } from "./crawl.js";
 import { deliverAllWorkspaceDigests, alertFounder } from "./digest-deliver.js";
@@ -52,6 +53,7 @@ export default {
           data,
           bucket,
           apiKey: env.FIRECRAWL_API_KEY,
+          allowFixtures: isLocal(env),
         });
         msg.ack();
       } catch {

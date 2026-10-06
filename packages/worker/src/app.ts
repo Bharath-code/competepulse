@@ -83,8 +83,6 @@ export interface Env {
   DODO_PAYMENTS_RETURN_URL?: string;
   DASHBOARD_ACCESS_TOKEN?: string;
   FOUNDER_ALERT_WEBHOOK?: string;
-  /** When "0"/"false", thin scrapes error instead of fixture browser (prod). */
-  ALLOW_BROWSER_FIXTURES?: string;
   PUBLIC_WORKER_URL?: string;
 }
 
@@ -93,12 +91,6 @@ const PLAN_IDS: PlanId[] = ["trial", "starter", "pro"];
 
 function bucket(env: Env): SnapshotBucket {
   return env.SNAPSHOTS ? adaptR2Binding(env.SNAPSHOTS) : memorySnapshots;
-}
-
-function allowBrowserFixtures(env: Env): boolean {
-  const v = env.ALLOW_BROWSER_FIXTURES?.toLowerCase();
-  if (v === "0" || v === "false") return false;
-  return true;
 }
 
 type GateCtx = {
@@ -162,7 +154,8 @@ export function createApp() {
   const app = new Hono<{ Bindings: Env }>();
 
   crawlQueue.setHandler(async (job) => {
-    await processCrawlJob(job, { data: getStore(), bucket: memorySnapshots });
+    // ponytail: in-memory queue is local-only (fanout route 503s elsewhere), so fixtures are safe here
+    await processCrawlJob(job, { data: getStore(), bucket: memorySnapshots, allowFixtures: true });
   });
   crawlQueue.setDelay(async () => {});
 
@@ -455,6 +448,7 @@ export function createApp() {
           data,
           bucket: bucket(c.env),
           apiKey: c.env.FIRECRAWL_API_KEY,
+          allowFixtures: isLocal(c.env),
         },
       );
       return c.json({
@@ -491,6 +485,8 @@ export function createApp() {
       }
       return c.json({ queued: jobs.length, watches: watches.length, transport: "cf_queue" });
     }
+
+    if (!isLocal(c.env)) return c.json({ error: "crawl queue not configured" }, 503);
 
     const result = await crawlQueue.sendBatch(
       jobs.map(({ attempt: _a, enqueuedAt: _e, ...rest }) => rest),
@@ -944,8 +940,6 @@ export function createApp() {
     });
   });
 
-  // silence unused in hermetic builds
-  void allowBrowserFixtures;
   void store;
 
   return app;
@@ -1026,6 +1020,7 @@ class StoreBackedClient implements CompetePulseClient {
         data: this.data,
         bucket: bucket(this.env),
         apiKey: this.env.FIRECRAWL_API_KEY,
+        allowFixtures: isLocal(this.env),
       },
     );
     return outcome.change;
