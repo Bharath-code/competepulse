@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authorizeRequest, planAllowsMutations } from "../src/access.js";
+import { authorizeRequest, constantTimeEqual, planAllowsMutations } from "../src/access.js";
 import { slackPostMessage } from "../src/slack-api.js";
 
 describe("access gate (B5)", () => {
@@ -59,5 +59,20 @@ describe("slackPostMessage (B2)", () => {
         }),
     });
     expect(result).toEqual({ ok: false, error: "channel_not_found" });
+  });
+
+  it("rejects ?access_token= even when the token is valid", () => {
+    const req = new Request("https://example.com/dashboard?access_token=secret");
+    expect(authorizeRequest(req, { DASHBOARD_ACCESS_TOKEN: "secret" })).toMatchObject({
+      ok: false,
+      status: 401,
+    });
+  });
+
+  it("constantTimeEqual handles equal, differing and different-length inputs", () => {
+    expect(constantTimeEqual("abc", "abc")).toBe(true);
+    expect(constantTimeEqual("abc", "abd")).toBe(false);
+    expect(constantTimeEqual("abc", "abcd")).toBe(false);
+    expect(constantTimeEqual("", "")).toBe(true);
   });
 });
