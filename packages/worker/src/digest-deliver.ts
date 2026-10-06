@@ -1,3 +1,4 @@
+import { track } from "./analytics.js";
 import type { DigestRunResult } from "./digest.js";
 import { runAllWorkspaceDigests, runWorkspaceDigest } from "./digest.js";
 import { slackPostMessage } from "./slack-api.js";
@@ -6,6 +7,8 @@ import type { Store, Workspace } from "./store.js";
 
 export interface DigestDeliverEnv {
   TOKEN_ENCRYPTION_KEY?: string;
+  POSTHOG_API_KEY?: string;
+  POSTHOG_HOST?: string;
   FOUNDER_ALERT_WEBHOOK?: string;
 }
 
@@ -77,6 +80,7 @@ async function postDigestToSlack(
     await alertFounder(env, `Digest Slack post failed for ${workspace?.id}: ${posted.error}`);
     return { ...result, slackPosted: false, slackError: posted.error };
   }
+  if (workspace) await track(env, "alert_delivered", workspace.id);
   return { ...result, slackPosted: true };
 }
 

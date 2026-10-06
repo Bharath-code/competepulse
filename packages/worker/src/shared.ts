@@ -1,3 +1,4 @@
+import type { AnalyticsEnv } from "./analytics.js";
 import type { MonitorProvider } from "./monitor.js";
 import {
   answerFromSnapshots,
@@ -20,7 +21,7 @@ import { encryptSecret } from "./secrets.js";
 import { CapError, type Store, type WorkspacePatch } from "./store.js";
 import type { WorkspaceStore } from "./workspace-store.js";
 
-export interface Env {
+export interface Env extends AnalyticsEnv {
   /** "local" enables mock billing and open auth; anything else fails closed. */
   ENVIRONMENT?: string;
   DB?: D1Database;

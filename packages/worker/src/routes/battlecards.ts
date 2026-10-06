@@ -1,3 +1,4 @@
+import { track } from "../analytics.js";
 import type { Hono } from "hono";
 import {
   approveBattlecard,
@@ -84,7 +85,15 @@ export function registerBattlecards(app: Hono<{ Bindings: Env }>) {
       body.decision === "approved"
         ? approveBattlecard(draft, actor)
         : rejectBattlecard(draft, actor);
-    return c.json({ battlecard: await data.updateBattlecard(next) });
+    const saved = await data.updateBattlecard(next);
+    if (
+      body.decision === "approved" &&
+      draft.status !== "approved" &&
+      saved.status === "approved"
+    ) {
+      await track(c.env, "response_approved", saved.workspaceId);
+    }
+    return c.json({ battlecard: saved });
   });
 
   app.post("/battlecards/:id/publish", async (c) => {

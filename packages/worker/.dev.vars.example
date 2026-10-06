@@ -30,3 +30,7 @@ DODO_PAYMENTS_ENVIRONMENT=test_mode
 DODO_PRODUCT_STARTER=
 DODO_PRODUCT_PRO=
 DODO_PAYMENTS_RETURN_URL=
+
+# PostHog server-side funnel events (install, alert_delivered, response_approved, paid). Blank = off.
+POSTHOG_API_KEY=
+POSTHOG_HOST=
