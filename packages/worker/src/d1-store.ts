@@ -259,6 +259,22 @@ export class D1Store implements Store {
     return row ? workspaceFromRow(row) : undefined;
   }
 
+  async setAccessTokenHash(workspaceId: string, hash: string): Promise<boolean> {
+    const res = await this.db
+      .prepare("UPDATE workspaces SET access_token_hash = ? WHERE id = ?")
+      .bind(hash, workspaceId)
+      .run();
+    return (res.meta?.changes ?? 0) > 0;
+  }
+
+  async getWorkspaceByAccessTokenHash(hash: string): Promise<Workspace | undefined> {
+    const row = await this.db
+      .prepare("SELECT * FROM workspaces WHERE access_token_hash = ?")
+      .bind(hash)
+      .first<WorkspaceRow>();
+    return row ? workspaceFromRow(row) : undefined;
+  }
+
   async claimWebhook(webhookId: string): Promise<boolean> {
     const existing = await this.db
       .prepare("SELECT webhook_id FROM processed_webhooks WHERE webhook_id = ?")

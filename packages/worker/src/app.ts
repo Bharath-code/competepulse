@@ -20,7 +20,15 @@ import {
   type WatchLabel,
 } from "@competepulse/core";
 import { Hono } from "hono";
-import { authorizeRequest, isLocal, planAllowsMutations, secretMissing } from "./access.js";
+import {
+  authorizeRequest,
+  generateWorkspaceToken,
+  hashToken,
+  isLocal,
+  planAllowsMutations,
+  secretMissing,
+  type Principal,
+} from "./access.js";
 import {
   applyDodoWebhookEvent,
   buildMockSubscriptionWebhook,
@@ -89,13 +97,42 @@ function allowBrowserFixtures(env: Env): boolean {
   return true;
 }
 
-function requireAccess(c: {
+type GateCtx = {
   req: { raw: Request };
   env: Env;
-  json: (body: unknown, status: 401 | 403 | 503) => Response;
-}) {
-  const auth = authorizeRequest(c.req.raw, c.env);
+  json: (body: unknown, status: 401 | 403 | 404 | 503) => Response;
+};
+
+const principals = new WeakMap<Request, Principal>();
+
+async function requireAccess(c: GateCtx, only?: "admin") {
+  const auth = await authorizeRequest(c.req.raw, c.env, (h) =>
+    getStore(c.env).getWorkspaceByAccessTokenHash(h),
+  );
   if (!auth.ok) return c.json({ error: auth.error }, auth.status);
+  principals.set(c.req.raw, auth.principal);
+  if (only === "admin" && auth.principal.role !== "admin") {
+    return c.json({ error: "forbidden" }, 403);
+  }
+  return null;
+}
+
+function isAdmin(c: GateCtx): boolean {
+  return principals.get(c.req.raw)?.role === "admin";
+}
+
+/** The caller's own workspace, or the requested one for admins. */
+function scopedWorkspaceId(c: GateCtx, requested?: string): string | undefined {
+  const p = principals.get(c.req.raw);
+  return p?.role === "workspace" ? (requested ?? p.workspaceId) : requested;
+}
+
+/** 404 (not 403) so a token can't probe which ids exist in other workspaces. */
+function outOfScope(c: GateCtx, workspaceId: string | undefined) {
+  const p = principals.get(c.req.raw);
+  if (p?.role === "workspace" && p.workspaceId !== workspaceId) {
+    return c.json({ error: "not found" }, 404);
+  }
   return null;
 }
 
@@ -131,8 +168,8 @@ export function createApp() {
     });
   });
 
-  app.get("/dashboard", (c) => {
-    const denied = requireAccess(c);
+  app.get("/dashboard", async (c) => {
+    const denied = await requireAccess(c);
     if (denied) return denied;
     return c.html(dashboardHtml());
   });
@@ -175,10 +212,13 @@ export function createApp() {
     const data = getStore(c.env);
     const workspace = await data.ensureWorkspace(exchanged.teamId, "trial");
     await data.updateWorkspace(workspace.id, { slackBotToken: exchanged.botToken });
+    const accessToken = generateWorkspaceToken();
+    await data.setAccessTokenHash(workspace.id, await hashToken(accessToken));
     return c.html(
       `<!doctype html><html><body style="font-family:sans-serif;padding:2rem">
         <h1>CompetePulse installed</h1>
         <p>Workspace <code>${workspace.id}</code> linked to Slack team <code>${exchanged.teamId}</code>.</p>
+        <p>Your API token (shown once, store it now): <code>${accessToken}</code></p>
         <p>Invite the bot to your digest channel, then run <code>/compete watch add …</code>.</p>
         <p><a href="/dashboard">Open dashboard</a></p>
       </body></html>`,
@@ -186,7 +226,7 @@ export function createApp() {
   });
 
   app.post("/workspaces", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c, "admin");
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => null);
@@ -205,14 +245,25 @@ export function createApp() {
   });
 
   app.get("/workspaces", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c, "admin");
     if (denied) return denied;
     return c.json({ workspaces: await getStore(c.env).listWorkspaces() });
   });
 
-  app.patch("/workspaces/:id", async (c) => {
-    const denied = requireAccess(c);
+  app.post("/workspaces/:id/token", async (c) => {
+    const denied = await requireAccess(c, "admin");
     if (denied) return denied;
+    const token = generateWorkspaceToken();
+    const ok = await getStore(c.env).setAccessTokenHash(c.req.param("id"), await hashToken(token));
+    if (!ok) return c.json({ error: "workspace not found" }, 404);
+    return c.json({ workspaceId: c.req.param("id"), token }, 201);
+  });
+
+  app.patch("/workspaces/:id", async (c) => {
+    const denied = await requireAccess(c);
+    if (denied) return denied;
+    const scoped = outOfScope(c, c.req.param("id"));
+    if (scoped) return scoped;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => null);
     if (!body) return c.json({ error: "JSON body required" }, 400);
@@ -220,16 +271,20 @@ export function createApp() {
     if (typeof body.digestChannelId === "string") patch.digestChannelId = body.digestChannelId;
     if (body.quietMode === "all_quiet" || body.quietMode === "skip")
       patch.quietMode = body.quietMode;
-    if (PLAN_IDS.includes(body.plan)) patch.plan = body.plan;
-    if (typeof body.slackBotToken === "string") patch.slackBotToken = body.slackBotToken;
+    if (isAdmin(c) && PLAN_IDS.includes(body.plan)) patch.plan = body.plan;
+    if (isAdmin(c) && typeof body.slackBotToken === "string") {
+      patch.slackBotToken = body.slackBotToken;
+    }
     const updated = await data.updateWorkspace(c.req.param("id"), patch);
     if (!updated) return c.json({ error: "workspace not found" }, 404);
     return c.json({ workspace: updated });
   });
 
   app.get("/workspaces/:id/usage", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
+    const scoped = outOfScope(c, c.req.param("id"));
+    if (scoped) return scoped;
     const data = getStore(c.env);
     const ws = await data.getWorkspace(c.req.param("id"));
     if (!ws) return c.json({ error: "workspace not found" }, 404);
@@ -237,8 +292,10 @@ export function createApp() {
   });
 
   app.get("/workspaces/:id/changes", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
+    const scoped = outOfScope(c, c.req.param("id"));
+    if (scoped) return scoped;
     const data = getStore(c.env);
     const ws = await data.getWorkspace(c.req.param("id"));
     if (!ws) return c.json({ error: "workspace not found" }, 404);
@@ -255,11 +312,14 @@ export function createApp() {
   });
 
   app.get("/changes/:id", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const change = await data.getChange(c.req.param("id"));
     if (!change) return c.json({ error: "change not found" }, 404);
+    const owner = await data.getWatch(change.watchId);
+    const scoped = outOfScope(c, owner?.workspaceId);
+    if (scoped) return scoped;
     const snap = change.toSnapshotId ? await data.getSnapshot(change.toSnapshotId) : undefined;
     return c.json({
       change,
@@ -268,7 +328,7 @@ export function createApp() {
   });
 
   app.post("/watches", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => null);
@@ -277,9 +337,10 @@ export function createApp() {
     }
     const label: WatchLabel = WATCH_LABELS.includes(body.label) ? body.label : "other";
     const workspaceId =
-      typeof body.workspaceId === "string"
-        ? body.workspaceId
-        : (await data.ensureWorkspace("local")).id;
+      scopedWorkspaceId(c, typeof body.workspaceId === "string" ? body.workspaceId : undefined) ??
+      (await data.ensureWorkspace("local")).id;
+    const scoped = outOfScope(c, workspaceId);
+    if (scoped) return scoped;
     const gate = await assertPlanAllows(data, workspaceId);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
     try {
@@ -299,17 +360,22 @@ export function createApp() {
   });
 
   app.get("/watches", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
-    const workspaceId = c.req.query("workspaceId") ?? undefined;
+    const workspaceId = scopedWorkspaceId(c, c.req.query("workspaceId") ?? undefined);
+    const scoped = workspaceId ? outOfScope(c, workspaceId) : null;
+    if (scoped) return scoped;
     return c.json({ watches: await getStore(c.env).listWatches(workspaceId) });
   });
 
   app.delete("/watches/:id", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
-    const workspaceId = c.req.query("workspaceId") ?? undefined;
+    const workspaceId = scopedWorkspaceId(c, c.req.query("workspaceId") ?? undefined);
+    const target = await data.getWatch(c.req.param("id"));
+    const scoped = outOfScope(c, target?.workspaceId);
+    if (scoped) return scoped;
     if (workspaceId) {
       const gate = await assertPlanAllows(data, workspaceId);
       if (!gate.ok) return c.json({ error: gate.error }, gate.status);
@@ -320,11 +386,13 @@ export function createApp() {
   });
 
   app.post("/watches/:id/crawl", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const watch = await data.getWatch(c.req.param("id"));
     if (!watch) return c.json({ error: "watch not found" }, 404);
+    const scoped = outOfScope(c, watch.workspaceId);
+    if (scoped) return scoped;
     const gate = await assertPlanAllows(data, watch.workspaceId);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
 
@@ -366,7 +434,7 @@ export function createApp() {
   });
 
   app.post("/queues/crawl/fanout", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c, "admin");
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => ({}) as Record<string, unknown>);
@@ -395,11 +463,13 @@ export function createApp() {
   });
 
   app.get("/watches/:id/changes", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const watch = await data.getWatch(c.req.param("id"));
     if (!watch) return c.json({ error: "watch not found" }, 404);
+    const scoped = outOfScope(c, watch.workspaceId);
+    if (scoped) return scoped;
     const changes = await data.listChanges(watch.id);
     const mapped = [];
     for (const change of changes) {
@@ -413,11 +483,13 @@ export function createApp() {
   });
 
   app.get("/watches/:id/snapshots", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const watch = await data.getWatch(c.req.param("id"));
     if (!watch) return c.json({ error: "watch not found" }, 404);
+    const scoped = outOfScope(c, watch.workspaceId);
+    if (scoped) return scoped;
     const snapshots = (await data.listSnapshots(watch.id)).map((s) => ({
       ...s,
       snapshotUrl: snapshotPublicPath(s.r2Key),
@@ -426,9 +498,12 @@ export function createApp() {
   });
 
   app.get("/snapshots/:key", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const key = decodeURIComponent(c.req.param("key"));
+    const owner = await getStore(c.env).getWatch(/^watches\/([^/]+)\//.exec(key)?.[1] ?? "");
+    const scoped = outOfScope(c, owner?.workspaceId);
+    if (scoped) return scoped;
     const obj = await bucket(c.env).get(key);
     if (!obj) return c.json({ error: "snapshot not found" }, 404);
     return c.json(JSON.parse(obj.body));
@@ -445,7 +520,7 @@ export function createApp() {
   });
 
   app.post("/qa", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => null);
@@ -453,9 +528,10 @@ export function createApp() {
       return c.json({ error: "question is required" }, 400);
     }
     const workspaceId =
-      typeof body.workspaceId === "string"
-        ? body.workspaceId
-        : (await data.ensureWorkspace("local")).id;
+      scopedWorkspaceId(c, typeof body.workspaceId === "string" ? body.workspaceId : undefined) ??
+      (await data.ensureWorkspace("local")).id;
+    const scoped = outOfScope(c, workspaceId);
+    if (scoped) return scoped;
     const watches = await data.listWatches(workspaceId);
     const changes = (await data.listWorkspaceChanges(workspaceId)).filter(
       (ch) => ch.materiality !== "none",
@@ -479,13 +555,15 @@ export function createApp() {
   });
 
   app.post("/battlecards", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => null);
     if (!body || typeof body.changeId !== "string" || typeof body.workspaceId !== "string") {
       return c.json({ error: "workspaceId and changeId are required" }, 400);
     }
+    const scoped = outOfScope(c, body.workspaceId);
+    if (scoped) return scoped;
     const draft: AgentBattlecard =
       typeof body.body === "string" && typeof body.id === "string"
         ? {
@@ -513,19 +591,23 @@ export function createApp() {
   });
 
   app.get("/battlecards/:id", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const draft = await getStore(c.env).getBattlecard(c.req.param("id"));
     if (!draft) return c.json({ error: "battlecard not found" }, 404);
+    const scoped = outOfScope(c, draft.workspaceId);
+    if (scoped) return scoped;
     return c.json({ battlecard: draft });
   });
 
   app.post("/battlecards/:id/decision", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const draft = await data.getBattlecard(c.req.param("id"));
     if (!draft) return c.json({ error: "battlecard not found" }, 404);
+    const scoped = outOfScope(c, draft.workspaceId);
+    if (scoped) return scoped;
     const body = await c.req.json().catch(() => null);
     if (!body || (body.decision !== "approved" && body.decision !== "rejected")) {
       return c.json({ error: "decision must be approved or rejected" }, 400);
@@ -539,11 +621,13 @@ export function createApp() {
   });
 
   app.post("/battlecards/:id/publish", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const draft = await data.getBattlecard(c.req.param("id"));
     if (!draft) return c.json({ error: "battlecard not found" }, 404);
+    const scoped = outOfScope(c, draft.workspaceId);
+    if (scoped) return scoped;
     try {
       const published = publishBattlecard(draft);
       const saved = await data.updateBattlecard(published);
@@ -570,7 +654,7 @@ export function createApp() {
   });
 
   app.post("/digests/run", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => ({}) as Record<string, unknown>);
@@ -579,10 +663,16 @@ export function createApp() {
         ? new Date(body.now)
         : new Date();
     const post = body.post !== false;
-    if (typeof body.workspaceId === "string") {
+    const digestWorkspaceId = scopedWorkspaceId(
+      c,
+      typeof body.workspaceId === "string" ? body.workspaceId : undefined,
+    );
+    if (digestWorkspaceId) {
+      const scoped = outOfScope(c, digestWorkspaceId);
+      if (scoped) return scoped;
       const result = post
-        ? await deliverWorkspaceDigest(data, body.workspaceId, c.env, now)
-        : await runWorkspaceDigest(data, body.workspaceId, now);
+        ? await deliverWorkspaceDigest(data, digestWorkspaceId, c.env, now)
+        : await runWorkspaceDigest(data, digestWorkspaceId, now);
       return c.json({ result });
     }
     const results = post
@@ -676,13 +766,15 @@ export function createApp() {
   );
 
   app.post("/billing/checkout", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
     const data = getStore(c.env);
     const body = await c.req.json().catch(() => null);
     if (!body || typeof body.workspaceId !== "string") {
       return c.json({ error: "workspaceId is required" }, 400);
     }
+    const scoped = outOfScope(c, body.workspaceId);
+    if (scoped) return scoped;
     if (typeof body.plan !== "string" || !isPaidPlan(body.plan)) {
       return c.json({ error: "plan must be 'starter' or 'pro'" }, 400);
     }
@@ -782,8 +874,10 @@ export function createApp() {
   });
 
   app.get("/billing/status/:workspaceId", async (c) => {
-    const denied = requireAccess(c);
+    const denied = await requireAccess(c);
     if (denied) return denied;
+    const scoped = outOfScope(c, c.req.param("workspaceId"));
+    if (scoped) return scoped;
     const workspace = await getStore(c.env).getWorkspace(c.req.param("workspaceId"));
     if (!workspace) return c.json({ error: "workspace not found" }, 404);
     return c.json({

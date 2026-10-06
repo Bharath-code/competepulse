@@ -43,18 +43,45 @@ export function constantTimeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-export function authorizeRequest(
+export type Principal = { role: "admin" } | { role: "workspace"; workspaceId: string };
+
+export type AuthResult =
+  { ok: true; principal: Principal } | { ok: false; status: 401 | 503; error: string };
+
+export async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** 256 bits of entropy; shown once, only its hash is stored. */
+export function generateWorkspaceToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return `cpw_${[...bytes].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * Admin token (`DASHBOARD_ACCESS_TOKEN`) → admin. A workspace token → that
+ * workspace only. No credentials: admin in `ENVIRONMENT=local`, else 503/401.
+ */
+export async function authorizeRequest(
   req: Request,
   env: { DASHBOARD_ACCESS_TOKEN?: string; ENVIRONMENT?: string },
-): { ok: true } | { ok: false; status: 401 | 503; error: string } {
+  findWorkspaceByTokenHash: (hash: string) => Promise<{ id: string } | undefined>,
+): Promise<AuthResult> {
   const expected = accessTokenFromEnv(env);
+  const got = extractAccessToken(req);
+  if (expected && got && constantTimeEqual(got, expected)) {
+    return { ok: true, principal: { role: "admin" } };
+  }
+  if (got) {
+    const ws = await findWorkspaceByTokenHash(await hashToken(got));
+    if (ws) return { ok: true, principal: { role: "workspace", workspaceId: ws.id } };
+  }
   if (!expected) {
     return secretMissing(expected, env, "DASHBOARD_ACCESS_TOKEN")
       ? { ok: false, status: 503, error: "secret_missing" }
-      : { ok: true };
+      : { ok: true, principal: { role: "admin" } };
   }
-  const got = extractAccessToken(req);
-  if (got && constantTimeEqual(got, expected)) return { ok: true };
   return { ok: false, status: 401, error: "unauthorized" };
 }
 
