@@ -23,6 +23,14 @@ import {
 } from "./store.js";
 import { workspaceFromRow, buildWorkspaceUpdateSql, type WorkspaceRow } from "./workspace-store.js";
 
+type MonitorRow = {
+  id: string;
+  url: string;
+  label: string;
+  provider_id: string;
+  created_at: string;
+};
+
 type WatchRow = {
   id: string;
   workspace_id: string;
@@ -289,20 +297,21 @@ export class D1Store implements Store {
     return true;
   }
 
-  private monitorFromRow(r: {
-    id: string;
-    url: string;
-    provider_id: string;
-    created_at: string;
-  }): Monitor {
-    return { id: r.id, url: r.url, providerId: r.provider_id, createdAt: r.created_at };
+  private monitorFromRow(r: MonitorRow): Monitor {
+    return {
+      id: r.id,
+      url: r.url,
+      label: r.label as WatchLabel,
+      providerId: r.provider_id,
+      createdAt: r.created_at,
+    };
   }
 
-  async getMonitorByUrl(url: string): Promise<Monitor | undefined> {
+  async getMonitorByUrl(url: string, label: WatchLabel): Promise<Monitor | undefined> {
     const row = await this.db
-      .prepare("SELECT * FROM monitors WHERE url = ?")
-      .bind(url)
-      .first<{ id: string; url: string; provider_id: string; created_at: string }>();
+      .prepare("SELECT * FROM monitors WHERE url = ? AND label = ?")
+      .bind(url, label)
+      .first<MonitorRow>();
     return row ? this.monitorFromRow(row) : undefined;
   }
 
@@ -310,23 +319,23 @@ export class D1Store implements Store {
     const row = await this.db
       .prepare("SELECT * FROM monitors WHERE provider_id = ?")
       .bind(providerId)
-      .first<{ id: string; url: string; provider_id: string; created_at: string }>();
+      .first<MonitorRow>();
     return row ? this.monitorFromRow(row) : undefined;
   }
 
   async listMonitors(): Promise<Monitor[]> {
     const { results } = await this.db
       .prepare("SELECT * FROM monitors ORDER BY created_at ASC")
-      .all<{ id: string; url: string; provider_id: string; created_at: string }>();
+      .all<MonitorRow>();
     return results.map((r) => this.monitorFromRow(r));
   }
 
   async insertMonitor(monitor: Monitor): Promise<boolean> {
     const res = await this.db
       .prepare(
-        "INSERT OR IGNORE INTO monitors (id, url, provider_id, created_at) VALUES (?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO monitors (id, url, label, provider_id, created_at) VALUES (?, ?, ?, ?, ?)",
       )
-      .bind(monitor.id, monitor.url, monitor.providerId, monitor.createdAt)
+      .bind(monitor.id, monitor.url, monitor.label, monitor.providerId, monitor.createdAt)
       .run();
     return (res.meta?.changes ?? 0) > 0;
   }
@@ -335,10 +344,10 @@ export class D1Store implements Store {
     await this.db.prepare("DELETE FROM monitors WHERE id = ?").bind(id).run();
   }
 
-  async listWatchesByUrl(url: string): Promise<Watch[]> {
+  async listWatchesByUrl(url: string, label: WatchLabel): Promise<Watch[]> {
     const { results } = await this.db
-      .prepare("SELECT * FROM watches WHERE url = ? ORDER BY created_at ASC")
-      .bind(url)
+      .prepare("SELECT * FROM watches WHERE url = ? AND label = ? ORDER BY created_at ASC")
+      .bind(url, label)
       .all<WatchRow>();
     return results.map(watchFromRow);
   }

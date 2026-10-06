@@ -1,5 +1,5 @@
 import type { Hono } from "hono";
-import { planLimits } from "@competepulse/core";
+import { planLimits, type WatchLabel } from "@competepulse/core";
 import { constantTimeEqual, secretMissing } from "../access.js";
 import { ingestObservation } from "../crawl.js";
 import { getStore } from "../get-store.js";
@@ -12,9 +12,12 @@ import { type Env, bucket } from "../shared.js";
 export interface MonitorPageJob {
   kind: "monitor_page";
   eventId: string;
+  monitorId: string;
+  payloadR2Key: string;
   providerId: string;
   checkId: string;
   url: string;
+  label: WatchLabel;
 }
 
 export function isMonitorPageJob(body: unknown): body is MonitorPageJob {
@@ -22,15 +25,17 @@ export function isMonitorPageJob(body: unknown): body is MonitorPageJob {
 }
 
 /**
- * Queue consumer body: check page → every tenant watching the URL gets its own
- * snapshot + change event. Credits are split evenly across subscribers.
+ * Queue consumer body: check page → every tenant watching the (URL, label) gets
+ * its own snapshot + change event. Credits are split evenly across subscribers.
+ * Each tenant's slice is claimed atomically first, so a retry after a partial
+ * failure skips tenants already done instead of metering them twice.
  */
 export async function processMonitorJob(
   job: MonitorPageJob,
   deps: { data: Store; bucket: SnapshotBucket; provider: MonitorProvider },
 ): Promise<number> {
   const { data, bucket, provider } = deps;
-  const watches = await data.listWatchesByUrl(job.url);
+  const watches = await data.listWatchesByUrl(job.url, job.label);
   if (watches.length === 0) return 0;
 
   const page = await provider.getPage(job.providerId, job.checkId, job.url);
@@ -38,22 +43,35 @@ export async function processMonitorJob(
 
   const share = page.credits / watches.length;
   for (const watch of watches) {
-    const ws = await data.getWorkspace(watch.workspaceId);
-    const limits = planLimits(ws?.plan ?? "starter");
-    await ingestObservation(
-      watch,
-      {
-        extracted: page.extracted,
-        markdown: "",
-        provider: "firecrawl",
-        crawlRunId: null,
-        usageMetric: "crawl",
-        usageQuantity: share,
-        costCents: Math.round(share * limits.crawlCostCents),
-      },
-      { data, bucket },
-    );
-    await data.touchWatch(watch.id, true);
+    const sliceId = `${job.eventId}#${watch.id}`;
+    const claimed = await data.claimMonitorEvent({
+      id: sliceId,
+      monitorId: job.monitorId,
+      payloadR2Key: job.payloadR2Key,
+      receivedAt: new Date().toISOString(),
+    });
+    if (!claimed) continue;
+    try {
+      const ws = await data.getWorkspace(watch.workspaceId);
+      const limits = planLimits(ws?.plan ?? "starter");
+      await ingestObservation(
+        watch,
+        {
+          extracted: page.extracted,
+          markdown: "",
+          provider: "firecrawl",
+          crawlRunId: null,
+          usageMetric: "crawl",
+          usageQuantity: share,
+          costCents: Math.round(share * limits.crawlCostCents),
+        },
+        { data, bucket },
+      );
+      await data.touchWatch(watch.id, true);
+    } catch (err) {
+      await data.releaseMonitorEvent(sliceId);
+      throw err;
+    }
   }
   return watches.length;
 }
@@ -111,9 +129,12 @@ export function registerMonitor(app: Hono<{ Bindings: Env }>) {
       const job: MonitorPageJob = {
         kind: "monitor_page",
         eventId,
+        monitorId: monitor.id,
+        payloadR2Key,
         providerId: monitor.providerId,
         checkId: entry.checkId,
         url: monitor.url,
+        label: monitor.label,
       };
       try {
         if (c.env.CRAWL_QUEUE) await c.env.CRAWL_QUEUE.send(job);

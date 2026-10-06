@@ -10,6 +10,7 @@ import type { Store } from "./store.js";
 export interface Monitor {
   id: string;
   url: string;
+  label: WatchLabel;
   providerId: string;
   createdAt: string;
 }
@@ -217,7 +218,7 @@ export function resolveMonitors(
   return cfg ? { provider: firecrawlMonitors(cfg.apiKey), cfg } : null;
 }
 
-/** Exactly one provider monitor per URL: reuse if present, else create (race-safe). */
+/** Exactly one provider monitor per (URL, label): reuse if present, else create (race-safe). */
 export async function ensureMonitor(
   data: Store,
   provider: MonitorProvider,
@@ -225,32 +226,41 @@ export async function ensureMonitor(
   url: string,
   label: WatchLabel,
 ): Promise<Monitor> {
-  const existing = await data.getMonitorByUrl(url);
+  const existing = await data.getMonitorByUrl(url, label);
   if (existing) return existing;
   const { providerId } = await provider.create({ url, label, ...cfg });
   const monitor: Monitor = {
     id: crypto.randomUUID(),
     url,
+    label,
     providerId,
     createdAt: new Date().toISOString(),
   };
   if (await data.insertMonitor(monitor)) return monitor;
   // lost the race for this URL: drop our duplicate, use the winner
   await provider.delete(providerId);
-  return (await data.getMonitorByUrl(url))!;
+  return (await data.getMonitorByUrl(url, label))!;
 }
 
-/** Delete the provider monitor once no tenant watches the URL any more. */
+/**
+ * Delete the provider monitor once no tenant watches (URL, label) any more.
+ * The row goes first, then watches are re-checked: a watch added in between
+ * either sees no row (and creates a fresh monitor) or we put the row back.
+ */
 export async function releaseMonitor(
   data: Store,
   provider: MonitorProvider,
   url: string,
+  label: WatchLabel,
 ): Promise<boolean> {
-  if ((await data.listWatchesByUrl(url)).length > 0) return false;
-  const monitor = await data.getMonitorByUrl(url);
+  if ((await data.listWatchesByUrl(url, label)).length > 0) return false;
+  const monitor = await data.getMonitorByUrl(url, label);
   if (!monitor) return false;
-  await provider.delete(monitor.providerId);
   await data.removeMonitor(monitor.id);
+  if ((await data.listWatchesByUrl(url, label)).length > 0 && (await data.insertMonitor(monitor))) {
+    return false;
+  }
+  await provider.delete(monitor.providerId);
   return true;
 }
 
@@ -264,18 +274,23 @@ export async function reconcileMonitors(
   cfg: { webhookUrl: string; webhookSecret: string },
 ): Promise<{ created: number; released: number }> {
   const watches = await data.listWatches();
-  const byUrl = new Map<string, WatchLabel>();
-  for (const w of watches) if (!byUrl.has(w.url)) byUrl.set(w.url, w.label);
+  const wanted = new Map<string, { url: string; label: WatchLabel }>();
+  for (const w of watches) wanted.set(`${w.url}\n${w.label}`, { url: w.url, label: w.label });
   let created = 0;
   let released = 0;
-  for (const [url, label] of byUrl) {
-    if (!(await data.getMonitorByUrl(url))) {
+  for (const { url, label } of wanted.values()) {
+    if (!(await data.getMonitorByUrl(url, label))) {
       await ensureMonitor(data, provider, cfg, url, label);
       created += 1;
     }
   }
   for (const m of await data.listMonitors()) {
-    if (!byUrl.has(m.url) && (await releaseMonitor(data, provider, m.url))) released += 1;
+    if (
+      !wanted.has(`${m.url}\n${m.label}`) &&
+      (await releaseMonitor(data, provider, m.url, m.label))
+    ) {
+      released += 1;
+    }
   }
   return { created, released };
 }
