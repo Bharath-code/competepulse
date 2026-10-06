@@ -1,6 +1,6 @@
 {
   // Static-assets-only Worker: no `main`, Cloudflare serves ./dist directly.
-  // Deploy with `pnpm --filter @competepulse/landing deploy` (build first).
+  // Deploy with `pnpm --filter @competepulse/landing ship` (builds, then deploys; `pnpm deploy` is a pnpm builtin, hence `ship`).
   "name": "competepulse-landing",
   "compatibility_date": "2025-01-01",
   "assets": {
