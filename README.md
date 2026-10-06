@@ -4,6 +4,8 @@ Slack-native competitive change agent — CI without a CI team.
 
 ## Docs
 
+- [Strategy (Oct 2026)](docs/STRATEGY.md)
+- [Field audit (Oct 2026)](docs/FIELD_AUDIT_2026-10.md)
 - [Product Requirements (PRD)](docs/PRD.md)
 - [Product Roadmap](docs/PRODUCT_ROADMAP.md)
 - [Go-live checklist (landing)](docs/GO_LIVE_CHECKLIST.md)

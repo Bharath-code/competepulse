@@ -87,6 +87,11 @@ const oursIndex = rows.length - 1;
     color: var(--ink-3);
   }
 
+  /* ink-3 on the tinted row is 4.48:1; step up to stay AA. */
+  .is-ours .compare__leaves {
+    color: var(--ink-2);
+  }
+
   @media (width >= 58rem) {
     tbody tr {
       border-block-end: 1px solid var(--rule);

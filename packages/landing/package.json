@@ -20,6 +20,7 @@
     "@fontsource/bricolage-grotesque": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/source-sans-3": "^5.3.0",
+    "@types/three": "^0.186.0",
     "astro": "^7.2.0",
     "opentype.js": "^2.0.0",
     "sharp": "^0.35.3",
@@ -27,5 +28,9 @@
     "vitest": "^4.1.10",
     "wawoff2": "^2.0.1",
     "wrangler": "^4.119.0"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "three": "^0.186.1"
   }
 }

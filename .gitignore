@@ -15,3 +15,8 @@ dist/
 .dev.vars
 *.tsbuildinfo
 .pnpm-store/
+.firecrawl/
+
+# lead lists contain personal data
+docs/data/
+.playwright-mcp/

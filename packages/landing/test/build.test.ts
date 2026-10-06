@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
@@ -38,18 +38,24 @@ describe("built page (booking link configured)", () => {
     const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/g) ?? [];
     expect(h1).toHaveLength(1);
     const text = textOf(h1[0]!);
-    expect(text).toMatch(/Every morning in Slack/);
-    expect(text).toMatch(/materially changed on your competitors/);
-    expect(text).toMatch(/with links/);
+    expect(text).toMatch(/When a rival moves/);
+    expect(text).toMatch(/the rep on the deal/);
+    expect(text).toMatch(/hears first/);
   });
 
-  it("states the pitch sentence and both anti-positions", () => {
+  it("states the deal-aware pitch, the alternatives and the partner offer", () => {
     const text = textOf(html);
-    expect(text).toMatch(/pricing and changelog pages/);
-    expect(text).toMatch(/cited digest/);
-    expect(text).toMatch(/No Klue bill/);
-    expect(text).toMatch(/No Visualping noise/);
-    expect(text).toMatch(/Free 14-day concierge/);
+    expect(text).toMatch(/open HubSpot deals/);
+    expect(text).toMatch(/deal owner in Slack/);
+    expect(text).toMatch(/Klue, Crayon/);
+    expect(text).toMatch(/Visualping/);
+    expect(text).toMatch(/Five design-partner seats/);
+  });
+
+  it("renders the hero figure as a static poster before any script runs", () => {
+    expect(html).toMatch(/<svg[^>]*class="field__poster"/);
+    expect(html).toMatch(/data-pulse-field/);
+    expect(textOf(html)).toMatch(/Northwind/);
   });
 
   it("routes every call-to-action to the single booking section", () => {
@@ -57,7 +63,7 @@ describe("built page (booking link configured)", () => {
     expect(ctas.length).toBeGreaterThanOrEqual(2);
     for (const [tag] of ctas) expect(tag).toMatch(/href="#book"/);
     expect(html).toMatch(/id="book"/);
-    expect(textOf(html)).toContain("Book a 15-min discovery call");
+    expect(textOf(html)).toContain("Book a discovery call");
   });
 
   it("hands the themed, attributed Calendly URL to the embed", () => {
@@ -102,8 +108,8 @@ describe("built page (booking link configured)", () => {
 
   it("renders the FAQ answers that the FAQPage schema claims", () => {
     const text = textOf(html);
-    expect(text).toMatch(/What counts as a material change\?/);
-    expect(text).toMatch(/Do I need to install anything to try it\?/);
+    expect(text).toMatch(/What if we don't record competitors on deals\?/);
+    expect(text).toMatch(/What do you read from HubSpot\?/);
   });
 
   it("self-hosts the type and preloads the faces the headline needs", () => {
@@ -157,6 +163,12 @@ describe("built page (booking link configured)", () => {
       return total + (existsSync(path) ? statSync(path).size : 0);
     }, 0);
     expect(js, "client JavaScript on index").toBeLessThan(4_000);
+
+    // three.js and GSAP are lazy chunks: never referenced by the HTML, and capped.
+    const lazy = readdirSync(assets)
+      .filter((file) => file.endsWith(".js") && !referenced.has(file))
+      .reduce((total, file) => total + gzipSync(readFileSync(join(assets, file))).length, 0);
+    expect(lazy, "gzipped lazy chunks (three.js + GSAP)").toBeLessThan(240_000);
   });
 
   it("ships a noindex interview brief with reveal drills", () => {

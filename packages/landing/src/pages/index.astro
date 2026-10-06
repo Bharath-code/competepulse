@@ -1,11 +1,11 @@
 ---
 import Alternatives from "../components/Alternatives.astro";
 import BookingSection from "../components/BookingSection.astro";
-import DigestPreview from "../components/DigestPreview.astro";
 import Faq from "../components/Faq.astro";
 import Hero from "../components/Hero.astro";
 import HowItWorks from "../components/HowItWorks.astro";
 import Masthead from "../components/Masthead.astro";
+import Story from "../components/Story.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
@@ -14,7 +14,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   <Masthead />
   <main id="main">
     <Hero />
-    <DigestPreview />
+    <Story />
     <HowItWorks />
     <Alternatives />
     <BookingSection />
@@ -22,3 +22,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   </main>
   <SiteFooter />
 </BaseLayout>
+
+<script>
+  import "../scripts/landing";
+</script>
