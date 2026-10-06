@@ -1,3 +1,4 @@
+import type { MonitorProvider } from "./monitor.js";
 import {
   answerFromSnapshots,
   type CompetePulseClient,
@@ -24,6 +25,10 @@ export interface Env {
   ENVIRONMENT?: string;
   DB?: D1Database;
   FIRECRAWL_API_KEY?: string;
+  /** Shared secret Firecrawl echoes back as `Authorization: Bearer` on monitor webhooks. */
+  FIRECRAWL_WEBHOOK_SECRET?: string;
+  /** Local-only seam: stands in for the Firecrawl monitor API in tests. */
+  monitorProvider?: MonitorProvider;
   SLACK_SIGNING_SECRET?: string;
   /** Base64 32-byte AES-GCM key for Slack bot tokens at rest. */
   TOKEN_ENCRYPTION_KEY?: string;

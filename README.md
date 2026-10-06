@@ -56,6 +56,25 @@ unset, the crawl pipeline uses deterministic mock fixtures. Slack signature
 checks are skipped when `SLACK_SIGNING_SECRET` is unset. Dodo checkout uses a
 local mock activator when `DODO_PAYMENTS_API_KEY` is unset.
 
+### Firecrawl Monitor (E1)
+
+Production crawling is Monitor-driven: one Firecrawl v2 monitor per URL (shared
+across tenants, daily, JSON change tracking) calls `POST /monitor/webhook`.
+Firecrawl does not sign monitor webhooks, so we set a shared secret as the
+monitor's `Authorization: Bearer` header and compare it in constant time.
+
+```bash
+cd packages/worker
+pnpm db:migrate:remote                      # applies 0006_monitors.sql
+wrangler secret put FIRECRAWL_API_KEY
+wrangler secret put FIRECRAWL_WEBHOOK_SECRET # any long random string
+wrangler secret put PUBLIC_WORKER_URL        # e.g. https://competepulse-worker.<acct>.workers.dev
+```
+
+`POST /watches` returns 503 in production until all three are set. The weekday
+cron reconciles monitors (backfills missing, deletes unwatched) and posts
+digests; it no longer crawls.
+
 ### Secrets hygiene (E0-2)
 
 | File                                | Purpose                                                    |

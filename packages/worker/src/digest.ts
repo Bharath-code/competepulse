@@ -57,7 +57,13 @@ export async function runWorkspaceDigest(
   const sections = [];
   for (const watch of watches) {
     const changes = await data.listChanges(watch.id);
-    const todays = changes.filter((c) => c.createdAt.slice(0, 10) === deliveryDate);
+    const todays = [];
+    for (const c of changes) {
+      if (c.createdAt.slice(0, 10) !== deliveryDate) continue;
+      // a change is digestible only once its snapshot is durable (audit #6)
+      if (c.toSnapshotId && !(await data.getSnapshot(c.toSnapshotId))) continue;
+      todays.push(c);
+    }
     sections.push({ competitor: watch.competitor, changes: todays });
   }
 

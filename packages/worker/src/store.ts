@@ -8,6 +8,7 @@ import {
   type WatchLabel,
 } from "@competepulse/core";
 import type { SubscriptionStatus } from "./billing/dodo.js";
+import type { Monitor } from "./monitor.js";
 
 export type QuietMode = "all_quiet" | "skip";
 
@@ -147,6 +148,22 @@ export interface Store {
   getWorkspaceByAccessTokenHash(hash: string): Promise<Workspace | undefined>;
   setDigestChannel(workspaceId: string, channelId: string): Promise<Workspace | undefined>;
 
+  getMonitorByUrl(url: string): Promise<Monitor | undefined>;
+  listMonitors(): Promise<Monitor[]>;
+  /** False when the URL already has a monitor (unique per URL across tenants). */
+  insertMonitor(monitor: Monitor): Promise<boolean>;
+  removeMonitor(id: string): Promise<void>;
+  getMonitorByProviderId(providerId: string): Promise<Monitor | undefined>;
+  listWatchesByUrl(url: string): Promise<Watch[]>;
+  /** Atomic first-writer-wins claim on a webhook event; false on replay. */
+  claimMonitorEvent(event: {
+    id: string;
+    monitorId: string;
+    payloadR2Key: string;
+    receivedAt: string;
+  }): Promise<boolean>;
+  releaseMonitorEvent(id: string): Promise<void>;
+
   addWatch(input: {
     competitor: string;
     url: string;
@@ -222,8 +239,12 @@ export class MemoryStore {
   private usage: UsageEntry[] = [];
   private processedWebhooks = new Set<string>();
   private accessTokenHashes = new Map<string, string>();
+  private monitors = new Map<string, Monitor>();
+  private monitorEvents = new Set<string>();
 
   reset(): void {
+    this.monitors.clear();
+    this.monitorEvents.clear();
     this.workspaces.clear();
     this.workspacesByTeam.clear();
     this.watches.clear();
@@ -301,6 +322,42 @@ export class MemoryStore {
     if (this.processedWebhooks.has(webhookId)) return false;
     this.processedWebhooks.add(webhookId);
     return true;
+  }
+
+  getMonitorByUrl(url: string): Monitor | undefined {
+    return [...this.monitors.values()].find((m) => m.url === url);
+  }
+
+  getMonitorByProviderId(providerId: string): Monitor | undefined {
+    return [...this.monitors.values()].find((m) => m.providerId === providerId);
+  }
+
+  listMonitors(): Monitor[] {
+    return [...this.monitors.values()];
+  }
+
+  insertMonitor(monitor: Monitor): boolean {
+    if (this.getMonitorByUrl(monitor.url)) return false;
+    this.monitors.set(monitor.id, monitor);
+    return true;
+  }
+
+  removeMonitor(id: string): void {
+    this.monitors.delete(id);
+  }
+
+  listWatchesByUrl(url: string): Watch[] {
+    return [...this.watches.values()].filter((w) => w.url === url);
+  }
+
+  claimMonitorEvent(event: { id: string }): boolean {
+    if (this.monitorEvents.has(event.id)) return false;
+    this.monitorEvents.add(event.id);
+    return true;
+  }
+
+  releaseMonitorEvent(id: string): void {
+    this.monitorEvents.delete(id);
   }
 
   setDigestChannel(workspaceId: string, channelId: string): Workspace | undefined {
@@ -556,6 +613,35 @@ export class AsyncMemoryStore implements Store {
   }
   claimWebhook(webhookId: string) {
     return Promise.resolve(this.inner.claimWebhook(webhookId));
+  }
+  getMonitorByUrl(url: string) {
+    return Promise.resolve(this.inner.getMonitorByUrl(url));
+  }
+  getMonitorByProviderId(providerId: string) {
+    return Promise.resolve(this.inner.getMonitorByProviderId(providerId));
+  }
+  listMonitors() {
+    return Promise.resolve(this.inner.listMonitors());
+  }
+  insertMonitor(monitor: Monitor) {
+    return Promise.resolve(this.inner.insertMonitor(monitor));
+  }
+  removeMonitor(id: string) {
+    return Promise.resolve(this.inner.removeMonitor(id));
+  }
+  listWatchesByUrl(url: string) {
+    return Promise.resolve(this.inner.listWatchesByUrl(url));
+  }
+  claimMonitorEvent(event: {
+    id: string;
+    monitorId: string;
+    payloadR2Key: string;
+    receivedAt: string;
+  }) {
+    return Promise.resolve(this.inner.claimMonitorEvent(event));
+  }
+  releaseMonitorEvent(id: string) {
+    return Promise.resolve(this.inner.releaseMonitorEvent(id));
   }
   setAccessTokenHash(workspaceId: string, hash: string) {
     return Promise.resolve(this.inner.setAccessTokenHash(workspaceId, hash));

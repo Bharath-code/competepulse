@@ -1,8 +1,19 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp, type Env } from "../src/app.js";
 import { store } from "../src/store.js";
 
-const env: Env = { ENVIRONMENT: "production", DASHBOARD_ACCESS_TOKEN: "admin-secret" };
+const env: Env = {
+  ENVIRONMENT: "production",
+  DASHBOARD_ACCESS_TOKEN: "admin-secret",
+  FIRECRAWL_API_KEY: "fc-test",
+  FIRECRAWL_WEBHOOK_SECRET: "wh-test",
+  PUBLIC_WORKER_URL: "https://worker.test",
+};
+let monitorSeq = 0;
+vi.stubGlobal(
+  "fetch",
+  async () => new Response(JSON.stringify({ data: { id: `mon-${(monitorSeq += 1)}` } })),
+);
 const app = createApp();
 
 function call(path: string, token: string, init: RequestInit = {}) {

@@ -6,6 +6,7 @@ import { crawlQueue } from "./queue.js";
 import { memorySnapshots } from "./r2.js";
 import { registerBattlecards } from "./routes/battlecards.js";
 import { registerBilling } from "./routes/billing.js";
+import { registerMonitor } from "./routes/monitor.js";
 import { registerSlack } from "./routes/slack.js";
 import { registerWatches } from "./routes/watches.js";
 import { registerWorkspaces } from "./routes/workspaces.js";
@@ -43,6 +44,7 @@ export function createApp() {
   registerSlack(app);
   registerWorkspaces(app);
   registerWatches(app);
+  registerMonitor(app);
   registerBattlecards(app);
   registerBilling(app);
 

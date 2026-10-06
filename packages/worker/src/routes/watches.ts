@@ -4,6 +4,7 @@ import { diffPricing, type WatchLabel } from "@competepulse/core";
 import { isLocal } from "../access.js";
 import { processCrawlJob } from "../crawl.js";
 import { getStore } from "../get-store.js";
+import { ensureMonitor, monitorsRequired, releaseMonitor, resolveMonitors } from "../monitor.js";
 import { crawlQueue } from "../queue.js";
 import { snapshotPublicPath } from "../r2.js";
 import { CapError } from "../store.js";
@@ -34,6 +35,8 @@ export function registerWatches(app: Hono<{ Bindings: Env }>) {
     if (scoped) return scoped;
     const gate = await assertPlanAllows(data, workspaceId);
     if (!gate.ok) return c.json({ error: gate.error }, gate.status);
+    const monitors = resolveMonitors(c.env);
+    if (!monitors && monitorsRequired(c.env)) return c.json({ error: "secret_missing" }, 503);
     try {
       const watch = await data.addWatch({
         competitor: body.competitor,
@@ -41,6 +44,15 @@ export function registerWatches(app: Hono<{ Bindings: Env }>) {
         label,
         workspaceId,
       });
+      if (monitors) {
+        try {
+          await ensureMonitor(data, monitors.provider, monitors.cfg, watch.url, watch.label);
+        } catch {
+          await data.removeWatch(watch.id, workspaceId);
+          console.error(JSON.stringify({ event: "monitor_create_failed", watchId: watch.id }));
+          return c.json({ error: "monitor_create_failed" }, 502);
+        }
+      }
       return c.json({ watch }, 201);
     } catch (err) {
       if (err instanceof CapError) {
@@ -73,6 +85,11 @@ export function registerWatches(app: Hono<{ Bindings: Env }>) {
     }
     const removed = await data.removeWatch(c.req.param("id"), workspaceId);
     if (!removed) return c.json({ error: "watch not found" }, 404);
+    const monitors = resolveMonitors(c.env);
+    if (monitors && target) {
+      // best-effort: the nightly sweep deletes any monitor left behind
+      await releaseMonitor(data, monitors.provider, target.url).catch(() => false);
+    }
     return c.json({ removed: true });
   });
 

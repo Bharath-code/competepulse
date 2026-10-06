@@ -16,6 +16,7 @@ import {
   type Snapshot,
   type Store,
   type StoredChange,
+  type Watch,
 } from "./store.js";
 
 export interface CrawlDeps {
@@ -34,9 +35,107 @@ export interface CrawlOutcome {
   snapshotUrl: string;
 }
 
+export interface Observation {
+  extracted: ExtractSnapshot;
+  markdown: string;
+  provider: "mock" | "firecrawl" | "browser";
+  crawlRunId: string | null;
+  usageMetric: "crawl" | "browser";
+  usageQuantity: number;
+  costCents: number;
+}
+
 /**
- * Process one crawl job: scrape → R2 snapshot → diff → usage ledger.
- * Shared by the sync HTTP path and the queue consumer (E2-1…E2-5, E5-3).
+ * Persist one observation of a watch: R2 snapshot → snapshot row → diff →
+ * change event → usage. The snapshot is always written before its change
+ * event, so a digest never sees a change without its snapshot (audit #6).
+ * Shared by the polling path and the Monitor webhook consumer.
+ */
+export async function ingestObservation(
+  watch: Watch,
+  obs: Observation,
+  deps: { data: Store; bucket: SnapshotBucket },
+): Promise<{ snapshot: Snapshot; change: StoredChange; snapshotUrl: string }> {
+  const { data, bucket } = deps;
+  const createdAt = new Date().toISOString();
+  const hash = contentHash(obs.extracted);
+  const previous = await data.latestSnapshot(watch.id);
+
+  const usage = () =>
+    data.recordUsage({
+      workspaceId: watch.workspaceId,
+      metric: obs.usageMetric,
+      quantity: obs.usageQuantity,
+      costCents: obs.costCents,
+      at: createdAt,
+      meta: watch.id,
+    });
+
+  // Dedupe: identical content hash → reuse latest snapshot row (B4).
+  // Still meter the attempt — COGS was spent even if content was unchanged.
+  if (previous && previous.contentHash === hash) {
+    await usage();
+    const noopChange: StoredChange = {
+      id: crypto.randomUUID(),
+      watchId: watch.id,
+      materiality: "none",
+      summary: "No content change (identical hash).",
+      findings: [],
+      citations: [watch.url],
+      fromSnapshotId: previous.id,
+      toSnapshotId: previous.id,
+      createdAt,
+    };
+    await data.addChange(noopChange);
+    return {
+      snapshot: previous,
+      change: noopChange,
+      snapshotUrl: snapshotPublicPath(previous.r2Key),
+    };
+  }
+
+  const r2Key = snapshotR2Key(watch.id, createdAt, hash);
+  await bucket.put(
+    r2Key,
+    JSON.stringify({
+      url: watch.url,
+      markdown: obs.markdown,
+      extracted: obs.extracted,
+      provider: obs.provider,
+      contentHash: hash,
+      createdAt,
+    }),
+  );
+
+  const snapshot: Snapshot = {
+    id: crypto.randomUUID(),
+    watchId: watch.id,
+    crawlRunId: obs.crawlRunId,
+    contentHash: hash,
+    r2Key,
+    extracted: obs.extracted,
+    markdown: obs.markdown,
+    createdAt,
+  };
+  await data.addSnapshot(snapshot);
+
+  const change: StoredChange = {
+    ...classify(previous?.extracted ?? null, obs.extracted, watch.url),
+    id: crypto.randomUUID(),
+    watchId: watch.id,
+    fromSnapshotId: previous?.id,
+    toSnapshotId: snapshot.id,
+    createdAt,
+  };
+  await data.addChange(change);
+  await usage();
+
+  return { snapshot, change, snapshotUrl: snapshotPublicPath(r2Key) };
+}
+
+/**
+ * Process one crawl job: scrape → ingest. Manual/on-demand path; scheduled
+ * fan-out is gone (E1-6), Monitor webhooks feed {@link ingestObservation}.
  */
 export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Promise<CrawlOutcome> {
   const data = deps.data ?? getStore();
@@ -69,115 +168,34 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
       fixture: job.fixture,
       label: watch.label,
     });
+    const isBrowser = result.provider === "browser";
+    const costCents = isBrowser ? limits.browserCostCents : limits.crawlCostCents;
 
-    const createdAt = new Date().toISOString();
-    const hash = contentHash(result.extracted);
-
-    // Dedupe: identical content hash → reuse latest snapshot row (B4).
-    // Still meter the scrape attempt — COGS was spent even if content was unchanged.
-    const previous = await data.latestSnapshot(watch.id);
-    if (previous && previous.contentHash === hash) {
-      const costCents =
-        result.provider === "browser" ? limits.browserCostCents : limits.crawlCostCents;
-      const finished: CrawlRun = {
-        ...run,
-        status: "succeeded",
+    const { snapshot, change, snapshotUrl } = await ingestObservation(
+      watch,
+      {
+        extracted: result.extracted,
+        markdown: result.markdown,
         provider: result.provider,
+        crawlRunId: run.id,
+        usageMetric: isBrowser ? "browser" : "crawl",
+        usageQuantity: 1,
         costCents,
-        finishedAt: createdAt,
-      };
-      await data.updateCrawlRun(finished);
-      await data.touchWatch(watch.id, true);
-      await data.recordUsage({
-        workspaceId: watch.workspaceId,
-        metric: result.provider === "browser" ? "browser" : "crawl",
-        quantity: 1,
-        costCents,
-        at: createdAt,
-        meta: watch.id,
-      });
-      const noopChange: StoredChange = {
-        id: crypto.randomUUID(),
-        watchId: watch.id,
-        materiality: "none",
-        summary: "No content change (identical hash).",
-        findings: [],
-        citations: [watch.url],
-        fromSnapshotId: previous.id,
-        toSnapshotId: previous.id,
-        createdAt,
-      };
-      await data.addChange(noopChange);
-      return {
-        run: finished,
-        snapshot: previous,
-        change: noopChange,
-        provider: result.provider,
-        snapshotUrl: snapshotPublicPath(previous.r2Key),
-      };
-    }
+      },
+      { data, bucket },
+    );
 
-    const r2Key = snapshotR2Key(watch.id, createdAt, hash);
-    const payload = JSON.stringify({
-      url: watch.url,
-      markdown: result.markdown,
-      extracted: result.extracted,
-      provider: result.provider,
-      contentHash: hash,
-      createdAt,
-    });
-    await bucket.put(r2Key, payload);
-
-    const snapshot: Snapshot = {
-      id: crypto.randomUUID(),
-      watchId: watch.id,
-      crawlRunId: run.id,
-      contentHash: hash,
-      r2Key,
-      extracted: result.extracted,
-      markdown: result.markdown,
-      createdAt,
-    };
-    await data.addSnapshot(snapshot);
-
-    const event = classify(previous?.extracted ?? null, result.extracted, watch.url);
-    const change: StoredChange = {
-      ...event,
-      id: crypto.randomUUID(),
-      watchId: watch.id,
-      fromSnapshotId: previous?.id,
-      toSnapshotId: snapshot.id,
-      createdAt,
-    };
-    await data.addChange(change);
-
-    const costCents =
-      result.provider === "browser" ? limits.browserCostCents : limits.crawlCostCents;
     const finished: CrawlRun = {
       ...run,
       status: "succeeded",
       provider: result.provider,
       costCents,
-      finishedAt: createdAt,
+      finishedAt: new Date().toISOString(),
     };
     await data.updateCrawlRun(finished);
     await data.touchWatch(watch.id, true);
-    await data.recordUsage({
-      workspaceId: watch.workspaceId,
-      metric: result.provider === "browser" ? "browser" : "crawl",
-      quantity: 1,
-      costCents,
-      at: createdAt,
-      meta: watch.id,
-    });
 
-    return {
-      run: finished,
-      snapshot,
-      change,
-      provider: result.provider,
-      snapshotUrl: snapshotPublicPath(r2Key),
-    };
+    return { run: finished, snapshot, change, provider: result.provider, snapshotUrl };
   } catch (err) {
     const finished: CrawlRun = {
       ...run,
