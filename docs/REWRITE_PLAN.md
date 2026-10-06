@@ -79,7 +79,7 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 - [x] OAuth `state` (signed, 10-minute TTL) on Slack install (`app.ts:136-177`) — 0.25d
 - [x] Check Slack interactions against `payload.team.id`; delete the global token fallback (`app.ts:628,542`, `digest-deliver.ts:60`) — 0.5d
 - [x] Fixtures never reach prod storage: `thin` → error and retry, never Acme (`scrape.ts:149-155`, `browser.ts:37`) — 0.25d
-- [ ] CI green (ESLint `app.ts:90`, Prettier); branch protection on `main` — 0.25d
+- [x] CI green (ESLint `app.ts:90`, Prettier); branch protection on `main` — 0.25d
 - [x] Split `app.ts` into `routes/*` (no behavior change, tests stay green) — 0.25d (mechanical)
 
 **AC**
@@ -116,9 +116,9 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 **Goal:** run the full loop by hand for 5 prospects **before** building HubSpot code.
 **Story:** As the founder, I can turn a partner's deal CSV plus a real rival change into ready-to-send DMs in under 10 minutes.
 
-- [ ] `scripts/concierge-match.ts`: input `deals.csv` (name, owner_email, stage, amount, competitor) + `change_event` id → markdown DMs grouped by owner — 0.75d
-- [ ] Talk-track prompt v0 (cites the change, one paragraph, one line to say) — 0.5d
-- [ ] Log every concierge alert to `docs/data/concierge-log.csv` (gitignored): deal, sent, reply, outcome — 0.25d
+- [x] `scripts/concierge-match.ts`: input `deals.csv` (name, owner_email, stage, amount, competitor) + `change_event` id → markdown DMs grouped by owner — 0.75d
+- [x] Talk-track v0 (template in `core/src/concierge.ts`, no LLM; edit before sending) — 0.5d
+- [x] Log every concierge alert (`--log`) to `docs/data/concierge-log.csv` (gitignored): deal, sent, reply, outcome — 0.25d
 
 **AC**
 - Given a 50-row CSV with 6 deals against Rival, then the script outputs 6 DMs grouped by owner, each with the change summary, a screenshot link and one suggested line.
