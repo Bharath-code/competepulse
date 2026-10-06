@@ -18,8 +18,11 @@ Full plan: [docs/STRATEGY.md](docs/STRATEGY.md) — [artifact](https://claude.ai
 
 - **Build plan:** [docs/REWRITE_PLAN.md](docs/REWRITE_PLAN.md): 13 weekly sprints (6 Oct → 4 Jan), epics E0–E13 with acceptance criteria. 🔒 work waits for its gate (G1 day 21 · G2 day 45 · G3 day 90). One epic in progress at a time; E0 security first.
 - **Discovery calls:** [docs/DISCOVERY_CALLS.md](docs/DISCOVERY_CALLS.md): 25-min script; measures pain rank and the HubSpot **competitor-field fill rate** (decides options A–D for deal matching). Tracker columns in [docs/OUTREACH.md](docs/OUTREACH.md).
-- **Leads:** `docs/data/` (gitignored, personal data). `leads-2026-10.csv` = 66 HubSpot-tagged dev-tools SaaS from treg/CompanyEnrich; no emails yet. "HubSpot on site" ≠ HubSpot CRM, so confirm it on the call.
+- **Leads:** `docs/data/` (gitignored, personal data). `leads-2026-10.csv` = 66 HubSpot-tagged dev-tools SaaS from treg/CompanyEnrich; 11 tier-A rows have a named contact + LinkedIn (1 email: Botpress); no other emails yet. "HubSpot on site" ≠ HubSpot CRM, so confirm it on the call.
+- **Revenue and company vision:** [one-pager](https://claude.ai/artifact/MvQE5Z77r6UhyFbxZgMqNY): bootstrap-first; scenarios assume ~$250/mo blended (modest ~$6K MRR at month 12, strong ~$15K); pure-alerts niche likely caps at $0.5–2M ARR; raise only if deal-outcome data becomes a moat (~$30K MRR checkpoint). Figures are assumptions, not data.
 - **Explainers:** [pivot in plain words](https://claude.ai/artifact/97iX8iHMc8QS7caFgtCmeS) · [HubSpot deal match feasibility](https://claude.ai/artifact/Q9tUeWB2fWd7NMRrt6wfYA).
+- **Founder GTM guide:** [The Quiet Founder's Field Guide](https://claude.ai/artifact/4ztJn6Gbt2NZUCESuBtzko) (interactive artifact): pipeline calculator, 25-min call trainer, closing ladder, 12-week skills tracker, reading shelf. Its funnel rates are placeholder assumptions until real send/accept/call numbers exist. No local source file; update it by republishing to that URL.
+- **Outreach (Notion, CompetePulse GTM):** Leads DB (tier-A contacts filled: 11 named, 13 with LinkedIn search links) and the "Outreach messages: first 11 named leads" page (connection notes + follow-ups).
 - Claude reports and scratch output go to `.claudedocs/`; project docs go to `docs/`.
 
 ## Landing (`packages/landing`)
@@ -37,17 +40,14 @@ Full plan: [docs/STRATEGY.md](docs/STRATEGY.md) — [artifact](https://claude.ai
 - CSP is `script-src 'self'`: no CDNs, no inline scripts.
 - Last self-score against Awwwards criteria: 8.3/10 (`.claudedocs/landing-awwwards-score-2026-10-06-v2.md`).
 
-## Fix before any design partner touches prod
+## Build status (as of 6 Oct 2026)
 
-1. `GET /billing/mock-complete` grants free Pro — `worker/src/app.ts:701-727`
-2. Thin real scrapes fall back to "Acme" fixture and enter history — `worker/src/scrape.ts:149-155`, `browser.ts:37`
-3. Auth fails open when secrets unset — `slack.ts:15`, `billing/dodo.ts:333`, `access.ts:33`
-4. `GET /workspaces` leaks plaintext Slack bot tokens — `workspace-store.ts:43`
-5. Global admin token, `?access_token=`, `===` compare — `access.ts:21,34`
-6. Digest runs before queued crawls finish — `worker/src/index.ts:20-41`
-7. OAuth install lacks `state` — `app.ts:136-177`
-8. Slack actions not checked against `payload.team.id`; global token fallback — `app.ts:628`, `app.ts:542`, `digest-deliver.ts:60`
-9. CI red: ESLint `app.ts:90` + Prettier drift; enable branch protection
+- **E0 security: done** (G0 closed, PR #10, branch protection on). All 9 audit blockers fixed: mock-complete gated to `ENVIRONMENT=local`, fail-closed secrets, per-workspace encrypted tokens, signed OAuth `state`, Slack `team.id` checks, fixtures local-only, CI green. `app.ts` split into `routes/*`.
+- **E1 Firecrawl v2 monitors: done and deployed** (PR #12, #13; migrations 0004–0007 applied remotely). Worker: https://competepulse-worker.kumarbharath63.workers.dev
+- **E2 concierge kit** (PR #14) and **E12 PostHog funnel events + landing beacon** (PR #15): merged.
+- **Landing deployed:** https://competepulse-landing.kumarbharath63.workers.dev
+- **Still blocked on secrets before a partner can use prod:** `FIRECRAWL_API_KEY`, `PUBLIC_WORKER_URL`, `DASHBOARD_ACCESS_TOKEN`, `TOKEN_ENCRYPTION_KEY`, Slack app creds, `POSTHOG_API_KEY`, `PUBLIC_POSTHOG_KEY`. Worker redeploy pending after E12.
+- **Next:** 🔒 epics wait for G1 (day 21). Until then the work is discovery calls, not code.
 
 ## Working rules
 
