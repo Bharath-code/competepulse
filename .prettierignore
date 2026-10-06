@@ -4,3 +4,4 @@
 **/.astro/**
 pnpm-lock.yaml
 docs/**
+DESIGN.md

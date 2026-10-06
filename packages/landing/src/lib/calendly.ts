@@ -12,11 +12,11 @@ export interface CalendlyEmbedTheme {
   primaryColor: string;
 }
 
-/** Matches the booking panel the embed is mounted inside. */
+/** Matches the white booking card inside the teal closing band (DESIGN.md). */
 export const CALENDLY_THEME: CalendlyEmbedTheme = {
-  backgroundColor: "f0f6f9",
-  textColor: "121c26",
-  primaryColor: "cb2d26",
+  backgroundColor: "ffffff",
+  textColor: "292827",
+  primaryColor: "1b1938",
 };
 
 export interface CalendlyLinkOptions {

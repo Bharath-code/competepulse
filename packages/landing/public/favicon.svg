@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="CompetePulse">
-  <rect width="32" height="32" fill="#f0f6f9" />
-  <rect x="0" y="0" width="32" height="3" fill="#121c26" />
-  <path
-    d="M2 19h5l3.4-9.5 5 18 3.6-12.5 2.4 4H30"
-    fill="none"
-    stroke="#cb2d26"
-    stroke-width="2.6"
-    stroke-linecap="square"
-    stroke-linejoin="miter"
-  />
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1b1938"/><g transform="translate(4.5 4.5) scale(1.4375)"><path d="M12.66 3.76A6.6 6.6 0 1 0 12.66 12.24L11.22 11.04A4.15 4.15 0 1 1 11.22 4.96Z" fill="#ffffff"/><circle cx="13.35" cy="8" r="1.6" fill="#c9b4fa"/></g></svg>

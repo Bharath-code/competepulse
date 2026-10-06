@@ -1,77 +1,63 @@
 ---
-import { brand } from "../copy";
+import { cta, nav } from "../copy";
 import BookingCta from "./BookingCta.astro";
 import Wordmark from "./Wordmark.astro";
 ---
 
-<header class="masthead">
-  <div class="container masthead__inner">
+<header class="nav on-dark">
+  <div class="container nav__inner">
     <Wordmark size="running" href="/" />
-    <p class="masthead__meta">{brand.runningHead}</p>
-    <BookingCta label="Book a call" placement="running-head" size="sm" />
+    <nav class="nav__links" aria-label="Sections">
+      {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <BookingCta placement="nav" label={cta.short} variant="pill" size="sm" />
   </div>
 </header>
 
 <style>
-  .masthead {
+  .nav {
     position: sticky;
     inset-block-start: 0;
-    z-index: var(--z-sticky);
-    border-block-end: 1px solid transparent;
-    background: var(--ground);
-    animation: masthead-state linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 0 6rem;
+    z-index: 20;
+    background: color-mix(in srgb, var(--indigo) 92%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-block-end: 1px solid var(--hairline-dark);
+    color: var(--on-dark);
+    --wm-ink: var(--on-dark);
+    --wm-dot: var(--violet);
   }
 
-  @keyframes masthead-state {
-    to {
-      border-block-end-color: var(--rule);
-      box-shadow: 0 8px 24px oklch(0.22 0.025 250 / 0.06);
-    }
-  }
-
-  @supports not (animation-timeline: scroll()) {
-    .masthead {
-      border-block-end-color: var(--rule);
-    }
-  }
-
-  .masthead__inner {
+  .nav__inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
-    min-height: 3.15rem;
+    gap: var(--s-5);
+    min-height: 3.75rem;
   }
 
-  .masthead__meta {
-    flex: 1;
-    padding-inline: var(--space-md);
-    border-inline-start: 1px solid var(--rule);
-    font-family: var(--font-mono);
-    font-size: var(--t-kicker);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--ink-3);
+  .nav__links {
+    display: flex;
+    gap: var(--s-4);
+    margin-inline-start: auto;
+    font-size: 0.9375rem;
   }
 
-  @media (width <= 52rem) {
-    .masthead__meta {
+  .nav__links a {
+    color: var(--on-dark-mute);
+    text-decoration: none;
+    transition: color 180ms;
+  }
+
+  .nav__links a:hover {
+    color: var(--on-dark);
+  }
+
+  @media (width < 48rem) {
+    .nav__links {
       display: none;
     }
-  }
 
-  @media (width <= 20rem) {
-    .masthead :global(.btn) {
-      display: none;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .masthead {
-      animation: none;
-      border-block-end-color: var(--rule);
+    .nav__inner > :global(.btn) {
+      margin-inline-start: auto;
     }
   }
 </style>

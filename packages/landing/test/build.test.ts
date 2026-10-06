@@ -38,24 +38,30 @@ describe("built page (booking link configured)", () => {
     const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/g) ?? [];
     expect(h1).toHaveLength(1);
     const text = textOf(h1[0]!);
-    expect(text).toMatch(/When a rival moves/);
-    expect(text).toMatch(/the rep on the deal/);
-    expect(text).toMatch(/hears first/);
+    expect(text).toMatch(/When a rival moves, the rep on the deal hears first\./);
   });
 
-  it("states the deal-aware pitch, the alternatives and the partner offer", () => {
+  it("states the pitch, the alternatives, pricing and the partner offer", () => {
     const text = textOf(html);
-    expect(text).toMatch(/open HubSpot deals/);
-    expect(text).toMatch(/deal owner in Slack/);
+    expect(text).toMatch(/open HubSpot deals each change touches/);
+    expect(text).toMatch(/messages the deal owner in Slack/);
     expect(text).toMatch(/Klue, Crayon/);
     expect(text).toMatch(/Visualping/);
-    expect(text).toMatch(/Five design-partner seats/);
+    expect(text).toMatch(/5 design-partner seats/);
+    expect(text).toMatch(/\$299/);
   });
 
-  it("renders the hero figure as a static poster before any script runs", () => {
-    expect(html).toMatch(/<svg[^>]*class="field__poster"/);
-    expect(html).toMatch(/data-pulse-field/);
-    expect(textOf(html)).toMatch(/Northwind/);
+  it("renders the hero scene in its finished state before any script runs", () => {
+    expect(html).toMatch(/data-scene/);
+    const text = textOf(html);
+    expect(text).toMatch(/\$49\s*\$79/);
+    expect(text).toMatch(/Approved by Priya/);
+  });
+
+  it("keeps product steps operable without JavaScript", () => {
+    const radios = html.match(/<input[^>]*type="radio"[^>]*name="step"/g) ?? [];
+    expect(radios).toHaveLength(4);
+    expect(html.match(/<label[^>]*for="step-/g) ?? []).toHaveLength(4);
   });
 
   it("routes every call-to-action to the single booking section", () => {
@@ -63,7 +69,7 @@ describe("built page (booking link configured)", () => {
     expect(ctas.length).toBeGreaterThanOrEqual(2);
     for (const [tag] of ctas) expect(tag).toMatch(/href="#book"/);
     expect(html).toMatch(/id="book"/);
-    expect(textOf(html)).toContain("Book a discovery call");
+    expect(textOf(html)).toContain("Book a 25-min call");
   });
 
   it("hands the themed, attributed Calendly URL to the embed", () => {
@@ -73,7 +79,7 @@ describe("built page (booking link configured)", () => {
     expect(url.origin + url.pathname).toBe(CALENDLY_URL);
     expect(url.searchParams.get("hide_gdpr_banner")).toBe("1");
     expect(url.searchParams.get("utm_medium")).toBe("embed");
-    expect(url.searchParams.get("background_color")).toBe("f0f6f9");
+    expect(url.searchParams.get("background_color")).toBe("ffffff");
   });
 
   it("keeps a working booking link for visitors the embed never reaches", () => {
@@ -109,14 +115,13 @@ describe("built page (booking link configured)", () => {
   it("renders the FAQ answers that the FAQPage schema claims", () => {
     const text = textOf(html);
     expect(text).toMatch(/What if we don't record competitors on deals\?/);
-    expect(text).toMatch(/What do you read from HubSpot\?/);
+    expect(text).toMatch(/What happens after the two weeks\?/);
   });
 
-  it("self-hosts the type and preloads the faces the headline needs", () => {
+  it("self-hosts the type and preloads the variable faces the headline needs", () => {
     for (const file of [
-      "bricolage-grotesque-700.woff2",
-      "source-sans-3-400.woff2",
-      "source-sans-3-600.woff2",
+      "bricolage-grotesque-var.woff2",
+      "source-sans-3-var.woff2",
       "jetbrains-mono-400.woff2",
     ]) {
       expect(existsSync(join(outDir, "fonts", file)), `${file} missing from build`).toBe(true);
@@ -124,7 +129,7 @@ describe("built page (booking link configured)", () => {
 
     // Preloaded faces must be crossorigin or the browser fetches them twice.
     const preloads = [...html.matchAll(/<link rel="preload"[^>]*>/g)].map(([tag]) => tag);
-    expect(preloads).toHaveLength(3);
+    expect(preloads).toHaveLength(1);
     for (const tag of preloads) {
       expect(tag).toMatch(/as="font"/);
       expect(tag).toMatch(/crossorigin/);
@@ -135,7 +140,14 @@ describe("built page (booking link configured)", () => {
   it("publishes robots, sitemap, icon and social card", () => {
     const robots = readFileSync(join(outDir, "robots.txt"), "utf8");
     expect(robots).toContain(`Sitemap: ${SITE_URL}/sitemap-index.xml`);
-    for (const file of ["sitemap-index.xml", "favicon.svg", "og.png", "_headers"]) {
+    for (const file of [
+      "sitemap-index.xml",
+      "favicon.svg",
+      "favicon-32.png",
+      "apple-touch-icon.png",
+      "og.png",
+      "_headers",
+    ]) {
       expect(existsSync(join(outDir, file)), `${file} missing from build`).toBe(true);
     }
   });
@@ -150,7 +162,7 @@ describe("built page (booking link configured)", () => {
 
   it("stays inside its performance budget", () => {
     const htmlGzip = gzipSync(readFileSync(join(outDir, "index.html"))).length;
-    expect(htmlGzip, "gzipped HTML (styles are inlined)").toBeLessThan(16_000);
+    expect(htmlGzip, "gzipped HTML (styles are inlined)").toBeLessThan(18_000);
 
     // Budget the marketing page only — /interview ships its own drill script and
     // must not inflate the outbound landing's JS ceiling.
@@ -164,11 +176,11 @@ describe("built page (booking link configured)", () => {
     }, 0);
     expect(js, "client JavaScript on index").toBeLessThan(4_000);
 
-    // three.js and GSAP are lazy chunks: never referenced by the HTML, and capped.
+    // GSAP is a lazy chunk: never referenced by the HTML, and capped.
     const lazy = readdirSync(assets)
       .filter((file) => file.endsWith(".js") && !referenced.has(file))
       .reduce((total, file) => total + gzipSync(readFileSync(join(assets, file))).length, 0);
-    expect(lazy, "gzipped lazy chunks (three.js + GSAP)").toBeLessThan(240_000);
+    expect(lazy, "gzipped lazy chunks (GSAP + motion)").toBeLessThan(60_000);
   });
 
   it("ships a noindex interview brief with reveal drills", () => {

@@ -1,0 +1,164 @@
+---
+import { cta, pricing } from "../copy";
+import BookingCta from "./BookingCta.astro";
+---
+
+<section class="section section--soft" id="pricing" aria-labelledby="pricing-heading">
+  <div class="container">
+    <h2 class="h-display" id="pricing-heading">{pricing.title}</h2>
+    <p class="lead">{pricing.lead}</p>
+
+    <div class="partner">
+      <div>
+        <h3>{pricing.partner.title}</h3>
+        <p>{pricing.partner.body}</p>
+      </div>
+      <div class="partner__act">
+        <BookingCta placement="pricing" />
+        <p class="fine">{cta.reassurance}</p>
+      </div>
+    </div>
+
+    <ul class="plans">
+      {
+        pricing.plans.map((plan) => (
+          <li class:list={["plan", plan.featured && "plan--featured"]}>
+            <h3 class="plan__name">{plan.name}</h3>
+            <p class="plan__price">
+              {plan.price}
+              {plan.unit && <span>{plan.unit}</span>}
+            </p>
+            <ul class="plan__features">
+              {plan.features.map((f) => (
+                <li>{f}</li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .partner {
+    display: grid;
+    gap: var(--s-4);
+    margin-block-start: var(--s-5);
+    padding: var(--s-5);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-panel);
+    background: var(--canvas);
+  }
+
+  .partner h3 {
+    font-size: var(--t-title);
+  }
+
+  .partner p {
+    max-width: 52ch;
+    margin-block-start: var(--s-1);
+    color: var(--ink-mute);
+  }
+
+  .partner__act {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-1);
+    align-content: center;
+  }
+
+  .plans {
+    display: grid;
+    gap: var(--s-3);
+    margin-block-start: var(--s-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .plan {
+    display: grid;
+    align-content: start;
+    gap: var(--s-2);
+    padding: var(--s-5);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-card);
+    background: var(--canvas);
+  }
+
+  .plan__name {
+    font-size: 1.125rem;
+  }
+
+  .plan__price {
+    font-family: var(--display);
+    font-size: 2.5rem;
+    font-weight: 540;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .plan__price span {
+    margin-inline-start: 0.25rem;
+    font-family: var(--text);
+    font-size: 1rem;
+    letter-spacing: 0;
+    color: var(--ink-mute);
+  }
+
+  .plan__features {
+    display: grid;
+    gap: 0.4rem;
+    margin-block-start: var(--s-2);
+    padding: var(--s-3) 0 0;
+    border-block-start: 1px solid var(--hairline);
+    list-style: none;
+    font-size: 0.9375rem;
+  }
+
+  .plan__features li::before {
+    content: "";
+    display: inline-block;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-inline-end: 0.55rem;
+    border-radius: 50%;
+    background: var(--ink-mute);
+    vertical-align: middle;
+  }
+
+  .plan--featured {
+    border-color: var(--indigo);
+    background: var(--indigo);
+    color: var(--on-dark);
+  }
+
+  .plan--featured .plan__price span {
+    color: var(--on-dark-mute);
+  }
+
+  .plan--featured .plan__features {
+    border-color: var(--hairline-dark);
+  }
+
+  .plan--featured .plan__features li::before {
+    background: var(--violet);
+  }
+
+  @media (width >= 48rem) {
+    .partner {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+
+    .plans {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (width >= 64rem) {
+    .plans {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>

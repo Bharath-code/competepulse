@@ -1,14 +1,11 @@
 /**
- * All page copy in one place. Positioning follows docs/STRATEGY.md (Oct 2026
- * pivot): deal-aware competitive response for HubSpot + Slack teams. The tests
- * in `test/copy.test.ts` guard the promises the page makes.
+ * All page copy in one place, mirroring the copy deck in docs/LANDING_DESIGN.md.
+ * `test/copy.test.ts` guards the promises the page makes.
  */
 
 export const brand = {
   name: "CompetePulse",
   tagline: "Deal-aware competitive intelligence for HubSpot and Slack",
-  strapline: "Competitive response for teams without a competitive-intel team",
-  runningHead: "Rival moves, matched to your open HubSpot deals, in Slack",
 } as const;
 
 export const meta = {
@@ -16,128 +13,177 @@ export const meta = {
   description:
     "CompetePulse finds the open HubSpot deals a competitor's change touches and messages each owner in Slack with proof and a line to use.",
   ogAlt:
-    "CompetePulse: when a rival changes pricing, the rep on the affected deal gets a Slack message with proof and a talk track.",
+    "CompetePulse: a rival raises its price, two open deals light up, and the rep gets a Slack message with proof and a line to use.",
 } as const;
 
+export const cta = {
+  label: "Book a 25-min call",
+  short: "Book a call",
+  reassurance: "2 weeks free, run by hand. No install, no card.",
+  mailSubject: "CompetePulse: 25-min discovery call",
+} as const;
+
+export const nav = [
+  { href: "#how", label: "How it works" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
+] as const;
+
 export const hero = {
-  eyebrow: "Taking 5 design partners",
-  headline: ["When a rival moves,", "the rep on the deal", "hears first."],
-  subhead:
-    "CompetePulse watches your competitors, finds the open HubSpot deals each change touches, and messages the deal owner in Slack with proof and a line to use. Then it tracks whether you won.",
-  ctaLabel: "Book a discovery call",
-  ctaNote: "25 minutes. Bring your three closest competitors.",
-  figure: {
-    rival: "Rival raised Pro $49 → $79",
+  pill: "For HubSpot + Slack sales teams",
+  headline: "When a rival moves, the rep on the deal hears first.",
+  lead: "CompetePulse watches your competitors' pricing, packaging and launches, finds the open HubSpot deals each change touches, and messages the deal owner in Slack with proof and a line to use.",
+  caption: "Example: Rival raises Pro to $79. Two open deals name Rival. Sam gets the message.",
+  scene: {
+    url: "rival.ai/pricing",
+    plan: "Pro",
+    before: "$49",
+    after: "$79",
     deals: [
-      { name: "Northwind", amount: "$18k" },
-      { name: "Kestrel", amount: "$26k" },
+      { name: "Northwind", amount: "$18,000", stage: "Proposal", rival: true },
+      { name: "Bluefin", amount: "$9,000", stage: "Demo", rival: false },
+      { name: "Kestrel", amount: "$26,000", stage: "Negotiation", rival: true },
     ],
-    dm: "DM → deal owners",
-    caption:
-      "One rival move, drawn live. Deals facing that rival light up as the change reaches them.",
+    dm: {
+      to: "@sam",
+      text: "Rival raised Pro to $79 this morning. Northwind ($18k) is up against them.",
+      line: "“Same features, and our price didn’t move.”",
+      approved: "Approved by Priya, PMM",
+    },
+    counter: { label: "Deals touched this week", value: 2 },
   },
 } as const;
 
-export const story = {
-  title: "Four beats, from their price page to your win column.",
-  intro: "Every message carries the evidence. Nobody gets pinged about a deal they don't own.",
-  caption: "Example data. Rival, Northwind, Kestrel and the people are placeholders.",
-  beats: [
-    {
-      id: "change",
-      title: "Rival raises Pro from $49 to $79.",
-      body: "We watch their pricing, changelog and docs pages. Cosmetic edits are dropped. Price and packaging moves are kept, with a before-and-after screenshot.",
-    },
-    {
-      id: "deals",
-      title: "Two of your open deals are up against them.",
-      body: "We read your open HubSpot deals, read-only, and match the ones where Rival is the named competitor. Closed deals stay quiet.",
-    },
-    {
-      id: "dm",
-      title: "Sam hears about Northwind before the buyer brings it up.",
-      body: "The deal owner gets a direct message: what changed, the screenshot, and one line to use. Your PMM approves the line once, and every rep facing Rival gets it.",
-    },
-    {
-      id: "result",
-      title: "You see which replies win.",
-      body: "When deals close, we log the outcome next to the reply that went out. Over a quarter you learn what actually beats each rival.",
-    },
+export const problem = {
+  title: "Right now, your buyer tells your rep.",
+  lead: "Alert tools ping a channel nobody reads. Enterprise CI costs $20k a year and a full-time owner. So the news usually arrives from the one person you didn't want it from.",
+  week: [
+    { when: "Mon 09:12", what: "Rival changes its pricing page." },
+    { when: "Wed 14:30", what: "Your buyer: “Rival is $30 cheaper per seat now.”" },
+    { when: "Wed 14:31", what: "Your rep improvises." },
+    { when: "Fri", what: "The deal slips a quarter." },
   ],
+  fix: {
+    when: "Mon 09:40",
+    what: "With CompetePulse, Sam has the change, the screenshot and a line to use. Two days early.",
+  },
+  footnote:
+    "Illustrative week. The timings show how this usually plays out, not data from a customer.",
 } as const;
 
-export const howItWorks = {
-  kicker: "Setup",
-  title: "Running in one afternoon.",
+export const product = {
+  title: "One change, four steps, no new dashboard.",
+  lead: "Everything happens in the tools your team already has open: HubSpot for deals, Slack for the message.",
   steps: [
     {
-      number: "1",
-      title: "Connect HubSpot and Slack",
-      body: "Read-only access to open deals and their owners. We never change a deal unless you turn on write-back.",
-      command: null,
+      id: "watch",
+      tab: "Watch",
+      title: "The pages that move deals.",
+      body: "Pricing, packaging, changelog and docs. Cosmetic edits are dropped; real changes keep a before-and-after screenshot.",
     },
     {
-      number: "2",
-      title: "Name your rivals",
-      body: "Type a domain. We find their pricing, changelog and docs pages and show you a dossier of their last 90 days.",
-      command: "/compete add rival.ai",
+      id: "match",
+      tab: "Match",
+      title: "The deals it touches.",
+      body: "Read-only HubSpot access. Only open deals that name the rival. Closed deals stay quiet.",
     },
     {
-      number: "3",
-      title: "Tell us where the competitor lives",
-      body: "Point us at your competitor field on deals. No field? We add one and ask reps in Slack, one tap per deal.",
-      command: null,
+      id: "message",
+      tab: "Message",
+      title: "The rep, not the channel.",
+      body: "One DM to the deal owner, with proof and a line your PMM approved once for every rep facing that rival.",
+    },
+    {
+      id: "learn",
+      tab: "Learn",
+      title: "What actually wins.",
+      body: "Outcomes are logged next to the reply that went out. Win rates appear after 20 closed deals; before that, counts only.",
     },
   ],
+  caption: "Example data. Rival, the deals and the people are placeholders.",
 } as const;
 
-export const alternatives = {
-  kicker: "Compared",
-  title: "Alerts tell you something changed. We tell you which deal it hits.",
-  columns: ["Option", "What it costs", "What it tells you", "What it leaves you doing"],
+export const compare = {
+  title: "Every tool sees the change. Only one tells the right person.",
+  columns: ["Option", "Cost", "Who hears about it"],
   rows: [
     {
-      name: "Page-change alerts (Visualping, Unkover)",
+      name: "Page-change alerts",
+      examples: "Visualping, Unkover",
       price: "$25–100 / mo",
-      tells: "A page you watch changed.",
-      leaves: "Guessing which deals it affects, and who should hear.",
+      who: "#competitors, muted by Thursday",
     },
     {
-      name: "Enterprise CI (Klue, Crayon)",
+      name: "Enterprise CI",
+      examples: "Klue, Crayon",
       price: "$20k–40k / yr",
-      tells: "Deal-level intel, once someone runs it.",
-      leaves: "Hiring the competitive-intel owner you didn't budget for.",
+      who: "Your CI manager, if you have one",
     },
     {
       name: "Pasting URLs into ChatGPT",
+      examples: "Whoever remembers",
       price: "Tokens, plus your Friday",
-      tells: "Whatever you remembered to ask this week.",
-      leaves: "Being the schedule, the memory and the audit trail.",
+      who: "Whoever asked, this week",
     },
   ],
   ours: {
     name: "CompetePulse",
+    examples: "HubSpot + Slack",
     price: "$99–299 / mo",
-    tells: "Which open deal a rival's move hits, with proof and a line to use.",
-    leaves: "Approving the reply, then seeing whether it won.",
+    who: "Sam, the rep on Northwind",
   },
 } as const;
 
-export const concierge = {
-  kicker: "Design partners",
-  badge: "2 weeks free, run by hand",
-  title: "Five design-partner seats.",
-  body: "For two weeks we run it by hand: we watch your three closest rivals and match their moves to a CSV of your open deals. If it earns its keep, it's $49 a month, locked for a year, in return for honest weekly feedback.",
-  asksLabel: "A good fit if",
-  asks: [
-    "You sell B2B software and track deals in HubSpot",
-    "Your sellers live in Slack",
-    "Your rivals change pricing or packaging every few months",
+export const pricing = {
+  title: "Priced per team, not per seat.",
+  lead: "More people in Slack should spread the product, not raise the bill.",
+  partner: {
+    title: "Today: 5 design-partner seats.",
+    body: "2 weeks free, run by hand with your real rivals and deals. Then $49 a month, locked for 12 months. The plans below open after the program.",
+  },
+  plans: [
+    {
+      name: "Free",
+      price: "$0",
+      unit: "",
+      featured: false,
+      features: ["2 rivals", "Weekly Slack summary", "Rival dossier"],
+    },
+    {
+      name: "Starter",
+      price: "$99",
+      unit: "/ mo",
+      featured: false,
+      features: ["5 rivals", "Daily alerts with screenshots", "Launch and news signals"],
+    },
+    {
+      name: "Team",
+      price: "$299",
+      unit: "/ mo",
+      featured: true,
+      features: [
+        "15 rivals",
+        "HubSpot deal matching",
+        "DMs to deal owners",
+        "Approved replies",
+        "Win / loss tracking",
+      ],
+    },
+    {
+      name: "Business",
+      price: "$699+",
+      unit: "/ mo",
+      featured: false,
+      features: ["Unlimited rivals", "Regional pricing", "API access"],
+    },
   ],
-  ctaLabel: "Book a discovery call",
-  couponLabel: "Pick a time",
-  couponNote: "25 minutes. Three rivals. One honest answer.",
-  bookingFallbackNote: "Prefer email? Send us your three closest competitors.",
+} as const;
+
+export const founder = {
+  quote:
+    "CompetePulse is early, and that’s the offer. For two weeks I run it by hand for your team, with your real rivals and your real deals. If it doesn’t earn a place in your week, you’ve spent 25 minutes.",
+  name: "Bharath",
+  role: "Founder, CompetePulse",
 } as const;
 
 export const faq = [
@@ -157,16 +203,34 @@ export const faq = [
       "Price, packaging, plan limits, positioning and feature availability. Footer edits, cookie banners and CSS churn are dropped and never reach a rep.",
   },
   {
+    question: "Where does the competitor data come from?",
+    answer:
+      "Public pages only: pricing, changelog, docs and news. No logins to rival products, no paywalls. Every message links to the stored snapshot it came from.",
+  },
+  {
     question: "Do you support Salesforce?",
     answer:
-      "Not yet. HubSpot comes first. If you're on Salesforce, tell us on the call: it decides what we build next.",
+      "Not yet. HubSpot comes first. If you're on Salesforce, say so on the call: it decides what we build next.",
+  },
+  {
+    question: "What happens after the two weeks?",
+    answer:
+      "You decide. Keep it at $49 a month, locked for 12 months, in return for honest weekly feedback, or walk away. Nothing renews by itself.",
   },
 ] as const;
 
+export const close = {
+  title: "Find out which of your deals your rivals touched this month.",
+  bookingLabel: "Pick a time",
+  bookingNote: "25 minutes. Bring your three closest rivals.",
+  directNote: "The calendar opens in a new tab.",
+  pendingNote: "Scheduling link is being set up. Email works right now.",
+  emailNote: "Prefer email?",
+} as const;
+
 export const footer = {
-  kicker: "Colophon",
-  note: "We watch public web pages and read the HubSpot deals you allow. No logins to rival products, no paywalls, no claims about non-public data.",
+  note: "We watch public web pages and read only the HubSpot deals you allow.",
   colophon:
-    "Set in Bricolage Grotesque, Source Sans 3 and JetBrains Mono. 3D with three.js, motion with GSAP. Built on Cloudflare. No cookies, no trackers.",
+    "Set in Bricolage Grotesque, Source Sans 3 and JetBrains Mono. Motion by GSAP. Built on Cloudflare. No cookies, no trackers.",
   copyright: `© ${new Date().getUTCFullYear()} ${brand.name}`,
 } as const;

@@ -1,0 +1,375 @@
+---
+import { hero, product } from "../copy";
+
+const s = hero.scene;
+const deals = [
+  ...s.deals,
+  { name: "Orchid", amount: "$6,000", stage: "Discovery", rival: false },
+  { name: "Halyard", amount: "$14,000", stage: "Proposal", rival: false },
+];
+const score = [
+  { label: "Deals touched", n: 6 },
+  { label: "Won", n: 4 },
+  { label: "Lost", n: 1 },
+  { label: "Open", n: 1 },
+];
+---
+
+<section class="section section--soft" id="how" aria-labelledby="how-heading">
+  <div class="container">
+    <h2 class="h-display" id="how-heading">{product.title}</h2>
+    <p class="lead">{product.lead}</p>
+
+    <div class="steps" data-steps>
+      {/* Native radios: arrow keys, screen-reader grouping and no-JS switching for free. */}
+      <fieldset class="steps__tabs">
+        <legend class="visually-hidden">Product step</legend>
+        {
+          product.steps.map((step, i) => (
+            <>
+              <input
+                class="visually-hidden"
+                type="radio"
+                name="step"
+                id={`step-${step.id}`}
+                value={step.id}
+                checked={i === 0}
+              />
+              <label for={`step-${step.id}`}>
+                <span class="steps__n">{i + 1}</span>
+                {step.tab}
+                <i class="steps__bar" aria-hidden="true" />
+              </label>
+            </>
+          ))
+        }
+      </fieldset>
+
+      <div class="steps__panels">
+        {
+          product.steps.map((step) => (
+            <article class={`panel panel--${step.id}`} data-panel={step.id}>
+              <div class="panel__text">
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </div>
+              <div class="panel__visual" aria-hidden="true">
+                {step.id === "watch" && (
+                  <div class="mock">
+                    <p class="mock__chrome">
+                      <span class="mock__dots" />
+                      {s.url}
+                    </p>
+                    <div class="mock__body">
+                      <p class="mock__label">{s.plan}</p>
+                      <p class="price">
+                        <span class="price__before">
+                          {s.before}
+                          <i />
+                        </span>
+                        <span class="price__after">{s.after}</span>
+                      </p>
+                      <ul class="diff">
+                        <li class="diff--del">− Pro · $49 per seat</li>
+                        <li class="diff--add">+ Pro · $79 per seat</li>
+                        <li class="diff--add">+ SSO moved to Enterprise</li>
+                      </ul>
+                      <p class="mock__meta">Snapshot 3 Oct, 09:12 UTC · kept: price change</p>
+                    </div>
+                  </div>
+                )}
+                {step.id === "match" && (
+                  <div class="mock">
+                    <p class="mock__head">
+                      Open deals <span>HubSpot, read-only</span>
+                    </p>
+                    <ul class="deals">
+                      {deals.map((d) => (
+                        <li class:list={["deals__row", d.rival && "is-hit"]}>
+                          <span>{d.name}</span>
+                          <span class="deals__amt">{d.amount}</span>
+                          <span class="chip">{d.rival ? "Rival" : "Other"}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {step.id === "message" && (
+                  <div class="mock mock--dm">
+                    <p class="dm__head">
+                      <span class="dm__avatar">CP</span>
+                      <b>CompetePulse</b>
+                      <span class="dm__time">09:40</span>
+                    </p>
+                    <p class="dm__text">
+                      <span class="dm__at">{s.dm.to}</span> {s.dm.text}
+                    </p>
+                    <p class="dm__shot">rival.ai/pricing · before / after</p>
+                    <p class="dm__line">{s.dm.line}</p>
+                    <p class="dm__btns">
+                      <span>Use this line</span>
+                      <span>Edit</span>
+                      <span>Not relevant</span>
+                    </p>
+                  </div>
+                )}
+                {step.id === "learn" && (
+                  <div class="mock">
+                    <p class="mock__head">
+                      Against Rival <span>this quarter</span>
+                    </p>
+                    <dl class="score">
+                      {score.map((c) => (
+                        <div>
+                          <dt>{c.label}</dt>
+                          <dd>{c.n}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <p class="score__bar">
+                      <i style="--w:4" />
+                      <i style="--w:1" />
+                      <i style="--w:1" />
+                    </p>
+                    <p class="mock__meta score__note">Win rates appear after 20 closed deals.</p>
+                  </div>
+                )}
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+    <p class="fine steps__caption">{product.caption}</p>
+  </div>
+</section>
+
+<style>
+  .steps {
+    margin-block-start: var(--s-5);
+  }
+
+  .steps__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1);
+    padding: 0;
+    border: 0;
+  }
+
+  .steps__tabs label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: var(--canvas);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 180ms,
+      color 180ms;
+  }
+
+  .steps__n {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-mute);
+  }
+
+  .steps__bar {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: var(--violet);
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+  }
+
+  .steps__tabs input:checked + label {
+    border-color: var(--indigo);
+    background: var(--indigo);
+    color: var(--on-dark);
+  }
+
+  .steps__tabs input:checked + label .steps__n {
+    color: var(--violet);
+  }
+
+  .steps__tabs input:focus-visible + label {
+    outline: 2px solid var(--violet-ink);
+    outline-offset: 3px;
+  }
+
+  .steps__panels {
+    display: grid;
+    gap: var(--s-5);
+    margin-block-start: var(--s-5);
+  }
+
+  .panel {
+    display: grid;
+    gap: var(--s-5);
+    align-items: center;
+  }
+
+  /* Without :has() every step stays visible, stacked. */
+  @supports selector(:has(*)) {
+    .panel {
+      display: none;
+    }
+
+    .steps:has(#step-watch:checked) .panel--watch,
+    .steps:has(#step-match:checked) .panel--match,
+    .steps:has(#step-message:checked) .panel--message,
+    .steps:has(#step-learn:checked) .panel--learn {
+      display: grid;
+    }
+  }
+
+  .panel__text {
+    display: grid;
+    gap: var(--s-2);
+    max-width: 30rem;
+  }
+
+  .panel__text h3 {
+    font-size: var(--t-title);
+  }
+
+  .panel__text p {
+    color: var(--ink-mute);
+    font-size: var(--t-lead);
+  }
+
+  .panel__visual {
+    max-width: 30rem;
+  }
+
+  @media (width >= 56rem) {
+    .panel {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+      min-height: 22rem;
+    }
+
+    .panel__visual {
+      justify-self: end;
+      width: 100%;
+    }
+  }
+
+  .diff {
+    display: grid;
+    gap: 0.25rem;
+    margin-block-start: 0.5rem;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+  }
+
+  .diff li {
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .diff--del {
+    background: var(--canvas-soft);
+    color: var(--ink-mute);
+    text-decoration: line-through;
+  }
+
+  .diff--add {
+    background: #f1ecfe;
+    color: var(--violet-ink);
+  }
+
+  .mock__meta {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--ink-mute);
+  }
+
+  .dm__shot {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--hairline-dark);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--on-dark-mute);
+  }
+
+  .dm__btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .dm__btns span {
+    padding: 0.3rem 0.65rem;
+    border: 1px solid var(--hairline-dark);
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .dm__btns span:first-child {
+    border-color: var(--violet);
+    background: var(--violet);
+    color: var(--indigo);
+  }
+
+  .score {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-2);
+    padding: 0 1rem;
+  }
+
+  .score dt {
+    font-size: 0.75rem;
+    color: var(--ink-mute);
+  }
+
+  .score dd {
+    font-family: var(--display);
+    font-size: 2.2rem;
+    font-weight: 540;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .score__bar {
+    display: flex;
+    gap: 3px;
+    height: 0.55rem;
+    margin: 0.75rem 1rem 0.5rem;
+  }
+
+  .score__bar i {
+    flex: var(--w);
+    border-radius: 2px;
+    background: var(--teal-mid);
+  }
+
+  .score__bar i:nth-child(2) {
+    background: var(--ink);
+  }
+
+  .score__bar i:nth-child(3) {
+    background: var(--hairline);
+  }
+
+  .score__note {
+    padding: 0 1rem 1rem;
+  }
+
+  .steps__caption {
+    margin-block-start: var(--s-4);
+  }
+</style>

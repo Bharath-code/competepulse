@@ -1,5 +1,5 @@
 /**
- * Renders `public/og.png` (1200×630) — brand + JTBD headline on the cool-LED ground.
+ * Renders `public/og.png` (1200×630): mark, wordmark and headline on the indigo dusk ground (DESIGN.md).
  *
  * Link previews are the first thing a cold prospect sees when the page is pasted
  * into LinkedIn, email or Slack, so the card has to be set in the same faces as
@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import opentype from "opentype.js";
 import sharp from "sharp";
 import { decompress } from "wawoff2";
+import { MARK_24, MARK_COLORS } from "../src/lib/mark.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fontsDir = resolve(here, "../public/fonts");
@@ -28,11 +29,13 @@ const HEIGHT = 630;
 const MARGIN = 72;
 const RIGHT = WIDTH - MARGIN;
 
-const GROUND = "#f0f6f9";
-const INK = "#121c26";
-const INK_3 = "#636a71";
-const SIGNAL = "#cb2d26";
-const RULE = "#cbd2d6";
+const INDIGO = MARK_COLORS.indigo;
+const INDIGO_DEEP = "#0e0c1f";
+const VIOLET = MARK_COLORS.violet;
+const WHITE = MARK_COLORS.white;
+const MUTE = "#bcbac9";
+const RULE = "#3f3a52";
+const INK = WHITE;
 
 /**
  * Decompression must stay sequential: wawoff2 shares one wasm heap, and running
@@ -115,51 +118,40 @@ function rule(y, { x = MARGIN, width = RIGHT - MARGIN, height = 1, fill = RULE }
   return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${fill}"/>`;
 }
 
+/** The mark at any size; `x`,`y` is its top-left. */
+function mark(x, y, size, ring = WHITE, dot = VIOLET) {
+  const k = size / 24;
+  return `<g transform="translate(${x} ${y}) scale(${k})"><path d="${MARK_24.ring}" fill="${ring}"/><circle cx="${MARK_24.dot.cx}" cy="${MARK_24.dot.cy}" r="${MARK_24.dot.r}" fill="${dot}"/></g>`;
+}
+
 const body = [
-  `<rect width="${WIDTH}" height="${HEIGHT}" fill="${GROUND}"/>`,
-  `<rect width="${WIDTH}" height="10" fill="${SIGNAL}"/>`,
+  `<defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INDIGO}"/><stop offset="1" stop-color="${INDIGO_DEEP}"/></linearGradient>
+    <radialGradient id="sky" cx="0.82" cy="0.32" r="0.55"><stop offset="0" stop-color="${VIOLET}" stop-opacity="0.34"/><stop offset="1" stop-color="${VIOLET}" stop-opacity="0"/></radialGradient>
+  </defs>`,
+  `<rect width="${WIDTH}" height="${HEIGHT}" fill="url(#g)"/>`,
+  `<rect width="${WIDTH}" height="${HEIGHT}" fill="url(#sky)"/>`,
 
-  text(mono, "NOW TAKING 3 DESIGN PARTNERS", { y: 78, size: 18, tracking: 2.2, fill: INK_3 }),
-  text(mono, "WEEKDAY MORNINGS", {
-    x: RIGHT,
-    y: 78,
-    size: 18,
-    tracking: 2.2,
-    fill: INK_3,
-    anchor: "end",
+  // The mark as the card's image: large, cropped by the right edge.
+  `<g opacity="0.95">${mark(760, 120, 420, "#2c2858", VIOLET)}</g>`,
+
+  mark(MARGIN, 64, 44),
+  text(display, "CompetePulse", { x: MARGIN + 56, y: 99, size: 34 }),
+
+  text(display, "When a rival moves,", { y: 268, size: 64 }),
+  text(display, "the rep on the deal", { y: 344, size: 64 }),
+  text(display, "hears first.", { y: 420, size: 64 }),
+
+  rule(472, { width: 560 }),
+  text(sans, "Rival changes, matched to your open HubSpot deals,", {
+    y: 516,
+    size: 26,
+    fill: MUTE,
   }),
-  rule(98),
+  text(sans, "sent to the deal owner in Slack with proof.", { y: 550, size: 26, fill: MUTE }),
 
-  text(display, "CompetePulse", { y: 168, size: 58 }),
-  rule(196, { height: 2, fill: INK }),
-
-  text(display, "Every morning in Slack:", { y: 300, size: 52 }),
-  text(display, "what materially changed", { y: 372, size: 52, fill: SIGNAL }),
-  text(display, "on your competitors — with links.", { y: 444, size: 52 }),
-
-  rule(486),
-  text(sans, "Pricing and changelog watches, scored for materiality, cited in every line.", {
-    y: 530,
-    size: 24,
-    fill: INK_3,
-  }),
-
-  `<rect x="${MARGIN}" y="562" width="220" height="40" rx="4" fill="${SIGNAL}"/>`,
-  text(mono, "BOOK A 15-MIN CALL", {
-    x: MARGIN + 18,
-    y: 588,
-    size: 18,
-    tracking: 1.4,
-    fill: GROUND,
-  }),
-  text(mono, "NO KLUE BILL. NO VISUALPING NOISE.", {
-    x: RIGHT,
-    y: 588,
-    size: 17,
-    tracking: 1.2,
-    fill: INK_3,
-    anchor: "end",
-  }),
+  `<rect x="${RIGHT - 300}" y="548" width="300" height="46" rx="23" fill="${VIOLET}"/>`,
+  text(sans, "Book a 25-min call", { x: RIGHT - 150 - 92, y: 579, size: 22, fill: INDIGO }),
 ].join("\n  ");
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
