@@ -20,6 +20,8 @@ import {
   type WatchLabel,
 } from "@competepulse/core";
 import { Hono } from "hono";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { createOAuthState, verifyOAuthState } from "./oauth-state.js";
 import {
   authorizeRequest,
   generateWorkspaceToken,
@@ -184,9 +186,18 @@ export function createApp() {
   app.get("/", (c) => c.redirect("/dashboard"));
 
   // --- Slack OAuth install (B3) ---
-  app.get("/slack/install", (c) => {
+  app.get("/slack/install", async (c) => {
     const clientId = c.env.SLACK_CLIENT_ID;
-    if (!clientId) return c.json({ error: "SLACK_CLIENT_ID not configured" }, 503);
+    const clientSecret = c.env.SLACK_CLIENT_SECRET;
+    if (!clientId || !clientSecret) return c.json({ error: "SLACK_CLIENT_ID not configured" }, 503);
+    const { nonce, state } = await createOAuthState(clientSecret);
+    setCookie(c, "cp_oauth", nonce, {
+      httpOnly: true,
+      secure: !isLocal(c.env),
+      sameSite: "Lax",
+      path: "/slack/oauth",
+      maxAge: 600,
+    });
     const origin = c.env.PUBLIC_WORKER_URL || new URL(c.req.url).origin;
     const redirect = `${origin}/slack/oauth/callback`;
     const url = new URL("https://slack.com/oauth/v2/authorize");
@@ -196,6 +207,7 @@ export function createApp() {
       "commands,chat:write,channels:history,groups:history,im:history,app_mentions:read",
     );
     url.searchParams.set("redirect_uri", redirect);
+    url.searchParams.set("state", state);
     return c.redirect(url.toString());
   });
 
@@ -207,6 +219,13 @@ export function createApp() {
     if (!clientId || !clientSecret) {
       return c.json({ error: "Slack OAuth env not configured" }, 503);
     }
+    const stateOk = await verifyOAuthState(
+      clientSecret,
+      c.req.query("state"),
+      getCookie(c, "cp_oauth") ?? null,
+    );
+    deleteCookie(c, "cp_oauth", { path: "/slack/oauth" });
+    if (!stateOk) return c.json({ error: "invalid_state" }, 400);
     const origin = c.env.PUBLIC_WORKER_URL || new URL(c.req.url).origin;
     const exchanged = await exchangeSlackOAuthCode({
       code,
