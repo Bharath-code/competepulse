@@ -6,6 +6,10 @@
  * cookie `cp_access`.
  */
 
+export function isLocal(env: { ENVIRONMENT?: string }): boolean {
+  return env.ENVIRONMENT === "local";
+}
+
 export function accessTokenFromEnv(env: { DASHBOARD_ACCESS_TOKEN?: string }): string | undefined {
   const t = env.DASHBOARD_ACCESS_TOKEN?.trim();
   return t || undefined;

@@ -20,7 +20,7 @@ import {
   type WatchLabel,
 } from "@competepulse/core";
 import { Hono } from "hono";
-import { authorizeRequest, planAllowsMutations } from "./access.js";
+import { authorizeRequest, isLocal, planAllowsMutations } from "./access.js";
 import {
   applyDodoWebhookEvent,
   buildMockSubscriptionWebhook,
@@ -53,6 +53,8 @@ import { CapError, store, type Store, type WorkspacePatch } from "./store.js";
 import type { WorkspaceStore } from "./workspace-store.js";
 
 export interface Env {
+  /** "local" enables mock billing and open auth; anything else fails closed. */
+  ENVIRONMENT?: string;
   DB?: D1Database;
   FIRECRAWL_API_KEY?: string;
   SLACK_SIGNING_SECRET?: string;
@@ -683,6 +685,9 @@ export function createApp() {
 
     const plan = body.plan as PaidPlanId;
     const config = dodoConfigFromEnv(c.env);
+    if (!config.apiKey && !isLocal(c.env)) {
+      return c.json({ error: "billing not configured" }, 503);
+    }
     const origin = new URL(c.req.url).origin;
 
     try {
@@ -706,6 +711,7 @@ export function createApp() {
   });
 
   app.get("/billing/mock-complete", async (c) => {
+    if (!isLocal(c.env)) return c.json({ error: "not found" }, 404);
     const data = getStore(c.env);
     const workspaceId = c.req.query("workspace_id");
     const planRaw = c.req.query("plan");
