@@ -57,6 +57,7 @@ import {
   slackTextResponse,
   verifySlackSignature,
 } from "./slack.js";
+import { encryptSecret, publicWorkspace, workspaceBotToken } from "./secrets.js";
 import { CapError, store, type Store, type WorkspacePatch } from "./store.js";
 import type { WorkspaceStore } from "./workspace-store.js";
 
@@ -67,6 +68,8 @@ export interface Env {
   FIRECRAWL_API_KEY?: string;
   SLACK_SIGNING_SECRET?: string;
   SLACK_BOT_TOKEN?: string;
+  /** Base64 32-byte AES-GCM key for Slack bot tokens at rest. */
+  TOKEN_ENCRYPTION_KEY?: string;
   SLACK_CLIENT_ID?: string;
   SLACK_CLIENT_SECRET?: string;
   SNAPSHOTS?: R2Binding;
@@ -134,6 +137,11 @@ function outOfScope(c: GateCtx, workspaceId: string | undefined) {
     return c.json({ error: "not found" }, 404);
   }
   return null;
+}
+
+/** Encrypts when a key is configured; plaintext only reaches here in ENVIRONMENT=local. */
+function sealBotToken(token: string, env: Env): Promise<string> | string {
+  return env.TOKEN_ENCRYPTION_KEY ? encryptSecret(token, env.TOKEN_ENCRYPTION_KEY) : token;
 }
 
 async function assertPlanAllows(data: Store, workspaceId: string) {
@@ -211,7 +219,12 @@ export function createApp() {
     }
     const data = getStore(c.env);
     const workspace = await data.ensureWorkspace(exchanged.teamId, "trial");
-    await data.updateWorkspace(workspace.id, { slackBotToken: exchanged.botToken });
+    if (secretMissing(c.env.TOKEN_ENCRYPTION_KEY, c.env, "TOKEN_ENCRYPTION_KEY")) {
+      return c.json({ error: "secret_missing" }, 503);
+    }
+    await data.updateWorkspace(workspace.id, {
+      slackBotToken: await sealBotToken(exchanged.botToken, c.env),
+    });
     const accessToken = generateWorkspaceToken();
     await data.setAccessTokenHash(workspace.id, await hashToken(accessToken));
     return c.html(
@@ -241,13 +254,15 @@ export function createApp() {
       patch.quietMode = body.quietMode;
     if (PLAN_IDS.includes(body.plan)) patch.plan = body.plan;
     if (Object.keys(patch).length) await data.updateWorkspace(workspace.id, patch);
-    return c.json({ workspace: await data.getWorkspace(workspace.id) }, 201);
+    return c.json({ workspace: publicWorkspace(await data.getWorkspace(workspace.id)) }, 201);
   });
 
   app.get("/workspaces", async (c) => {
     const denied = await requireAccess(c, "admin");
     if (denied) return denied;
-    return c.json({ workspaces: await getStore(c.env).listWorkspaces() });
+    return c.json({
+      workspaces: (await getStore(c.env).listWorkspaces()).map(publicWorkspace),
+    });
   });
 
   app.post("/workspaces/:id/token", async (c) => {
@@ -273,11 +288,14 @@ export function createApp() {
       patch.quietMode = body.quietMode;
     if (isAdmin(c) && PLAN_IDS.includes(body.plan)) patch.plan = body.plan;
     if (isAdmin(c) && typeof body.slackBotToken === "string") {
-      patch.slackBotToken = body.slackBotToken;
+      if (secretMissing(c.env.TOKEN_ENCRYPTION_KEY, c.env, "TOKEN_ENCRYPTION_KEY")) {
+        return c.json({ error: "secret_missing" }, 503);
+      }
+      patch.slackBotToken = await sealBotToken(body.slackBotToken, c.env);
     }
     const updated = await data.updateWorkspace(c.req.param("id"), patch);
     if (!updated) return c.json({ error: "workspace not found" }, 404);
-    return c.json({ workspace: updated });
+    return c.json({ workspace: publicWorkspace(updated) });
   });
 
   app.get("/workspaces/:id/usage", async (c) => {
@@ -564,6 +582,12 @@ export function createApp() {
     }
     const scoped = outOfScope(c, body.workspaceId);
     if (scoped) return scoped;
+    if (!isAdmin(c)) {
+      const change = await data.getChange(body.changeId);
+      const owner = change ? await data.getWatch(change.watchId) : undefined;
+      const foreign = outOfScope(c, owner?.workspaceId);
+      if (foreign) return foreign;
+    }
     const draft: AgentBattlecard =
       typeof body.body === "string" && typeof body.id === "string"
         ? {
@@ -632,7 +656,7 @@ export function createApp() {
       const published = publishBattlecard(draft);
       const saved = await data.updateBattlecard(published);
       const workspace = await data.getWorkspace(saved.workspaceId);
-      const token = workspace?.slackBotToken || c.env.SLACK_BOT_TOKEN;
+      const token = (await workspaceBotToken(workspace, c.env)) || c.env.SLACK_BOT_TOKEN;
       const channel = workspace?.digestChannelId;
       let slackPosted = false;
       let slackError: string | undefined;
@@ -834,7 +858,11 @@ export function createApp() {
         </body></html>`,
       );
     }
-    return c.json({ ok: true, workspace: await data.getWorkspace(workspaceId), event: applied });
+    return c.json({
+      ok: true,
+      workspace: publicWorkspace(await data.getWorkspace(workspaceId)),
+      event: applied,
+    });
   });
 
   app.post("/billing/webhooks/dodo", async (c) => {

@@ -1,10 +1,12 @@
 import type { DigestRunResult } from "./digest.js";
 import { runAllWorkspaceDigests, runWorkspaceDigest } from "./digest.js";
 import { slackPostMessage } from "./slack-api.js";
+import { workspaceBotToken } from "./secrets.js";
 import type { Store, Workspace } from "./store.js";
 
 export interface DigestDeliverEnv {
   SLACK_BOT_TOKEN?: string;
+  TOKEN_ENCRYPTION_KEY?: string;
   FOUNDER_ALERT_WEBHOOK?: string;
 }
 
@@ -55,7 +57,7 @@ async function postDigestToSlack(
   env: DigestDeliverEnv,
 ): Promise<DigestRunResult> {
   const channel = workspace?.digestChannelId;
-  const token = workspace?.slackBotToken || env.SLACK_BOT_TOKEN;
+  const token = (await workspaceBotToken(workspace, env)) || env.SLACK_BOT_TOKEN;
   if (!channel) {
     return { ...result, slackPosted: false, slackError: "no_digest_channel" };
   }

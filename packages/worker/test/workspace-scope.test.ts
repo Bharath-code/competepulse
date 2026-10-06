@@ -90,4 +90,16 @@ describe("per-workspace tokens", () => {
     expect((await call("/watches", token)).status).toBe(200);
     expect((await call("/watches", "nope")).status).toBe(401);
   });
+
+  it("a workspace token can't create battlecards for another workspace or an unknown change", async () => {
+    const a = await provision("A");
+    const b = await provision("B");
+    const make = (workspaceId: string, changeId: string) =>
+      call("/battlecards", a.token, {
+        method: "POST",
+        body: JSON.stringify({ workspaceId, changeId }),
+      });
+    expect((await make(b.id, "chg_x")).status).toBe(404);
+    expect((await make(a.id, "chg_does_not_exist")).status).toBe(404);
+  });
 });
