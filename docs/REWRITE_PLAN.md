@@ -80,7 +80,7 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 - [x] Check Slack interactions against `payload.team.id`; delete the global token fallback (`app.ts:628,542`, `digest-deliver.ts:60`) — 0.5d
 - [x] Fixtures never reach prod storage: `thin` → error and retry, never Acme (`scrape.ts:149-155`, `browser.ts:37`) — 0.25d
 - [ ] CI green (ESLint `app.ts:90`, Prettier); branch protection on `main` — 0.25d
-- [ ] Split `app.ts` into `routes/*` (no behavior change, tests stay green) — 0.25d (mechanical)
+- [x] Split `app.ts` into `routes/*` (no behavior change, tests stay green) — 0.25d (mechanical)
 
 **AC**
 - Given `SLACK_SIGNING_SECRET` is unset and `ENVIRONMENT≠local`, when `/slack/commands` is called, then it returns 503 and logs `secret_missing`.
