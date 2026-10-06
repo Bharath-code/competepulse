@@ -10,7 +10,7 @@ import {
 } from "../src/billing/dodo.js";
 import { store } from "../src/store.js";
 
-const env: Env = {};
+const env: Env = { ENVIRONMENT: "local" };
 const app = createApp();
 
 function post(path: string, body: unknown, headers: Record<string, string> = {}) {
@@ -43,6 +43,28 @@ describe("E4-1 Dodo Payments", () => {
     expect(body.plan).toBe("pro");
     expect(body.checkoutUrl).toContain("/billing/mock-complete");
     expect(body.checkoutUrl).toContain(ws.id);
+  });
+
+  it("mock-complete is 404 and checkout 503 outside local", async () => {
+    const ws = store.ensureWorkspace("T_PROD", "trial");
+    const prod: Env = { ENVIRONMENT: "production" };
+    const done = await app.request(
+      `/billing/mock-complete?workspace_id=${ws.id}&plan=pro`,
+      {},
+      prod,
+    );
+    expect(done.status).toBe(404);
+    expect(store.getWorkspace(ws.id)?.plan).toBe("trial");
+    const co = await app.request(
+      "/billing/checkout",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId: ws.id, plan: "pro" }),
+      },
+      prod,
+    );
+    expect(co.status).toBe(503);
   });
 
   it("mock-complete activates Pro and raises caps", async () => {

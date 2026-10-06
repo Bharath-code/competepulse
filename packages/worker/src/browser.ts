@@ -3,7 +3,7 @@ import { FIXTURES, type ScrapeResult } from "./scrape.js";
 
 /**
  * Cloudflare Browser Run fallback (E2-5).
- * - Tests / local: deterministic fixtures when `allowFixtures` is true (default).
+ * - Tests / local: deterministic fixtures when `allowFixtures` is true.
  * - Production: requires `fetchPage` inject or throws (no silent fixture).
  */
 export interface BrowserRunOptions {

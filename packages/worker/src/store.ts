@@ -143,6 +143,8 @@ export interface Store {
   updateWorkspace(id: string, patch: WorkspacePatch): Promise<Workspace | undefined>;
   getWorkspaceBySubscriptionId(subscriptionId: string): Promise<Workspace | undefined>;
   claimWebhook(webhookId: string): Promise<boolean>;
+  setAccessTokenHash(workspaceId: string, hash: string): Promise<boolean>;
+  getWorkspaceByAccessTokenHash(hash: string): Promise<Workspace | undefined>;
   setDigestChannel(workspaceId: string, channelId: string): Promise<Workspace | undefined>;
 
   addWatch(input: {
@@ -219,6 +221,7 @@ export class MemoryStore {
   private crawlRuns = new Map<string, CrawlRun>();
   private usage: UsageEntry[] = [];
   private processedWebhooks = new Set<string>();
+  private accessTokenHashes = new Map<string, string>();
 
   reset(): void {
     this.workspaces.clear();
@@ -277,6 +280,20 @@ export class MemoryStore {
 
   getWorkspaceBySubscriptionId(subscriptionId: string): Workspace | undefined {
     return [...this.workspaces.values()].find((w) => w.dodoSubscriptionId === subscriptionId);
+  }
+
+  setAccessTokenHash(workspaceId: string, hash: string): boolean {
+    if (!this.workspaces.has(workspaceId)) return false;
+    for (const [id, h] of this.accessTokenHashes) if (h === hash) this.accessTokenHashes.delete(id);
+    this.accessTokenHashes.set(workspaceId, hash);
+    return true;
+  }
+
+  getWorkspaceByAccessTokenHash(hash: string): Workspace | undefined {
+    for (const [id, h] of this.accessTokenHashes) {
+      if (h === hash) return this.workspaces.get(id);
+    }
+    return undefined;
   }
 
   /** Returns true if this webhook-id was already processed (idempotency). */
@@ -539,6 +556,12 @@ export class AsyncMemoryStore implements Store {
   }
   claimWebhook(webhookId: string) {
     return Promise.resolve(this.inner.claimWebhook(webhookId));
+  }
+  setAccessTokenHash(workspaceId: string, hash: string) {
+    return Promise.resolve(this.inner.setAccessTokenHash(workspaceId, hash));
+  }
+  getWorkspaceByAccessTokenHash(hash: string) {
+    return Promise.resolve(this.inner.getWorkspaceByAccessTokenHash(hash));
   }
   setDigestChannel(workspaceId: string, channelId: string) {
     return Promise.resolve(this.inner.setDigestChannel(workspaceId, channelId));

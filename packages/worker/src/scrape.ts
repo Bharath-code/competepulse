@@ -112,8 +112,8 @@ export interface ScrapeOptions {
   label?: WatchLabel;
   /** Force Browser Run even when markdown is thick (tests). */
   forceBrowser?: boolean;
-  /** When false, thin pages error instead of silent fixture (prod). Default true. */
-  allowBrowserFixtures?: boolean;
+  /** Fixtures stand in for Firecrawl/Browser only when true (ENVIRONMENT=local). Otherwise a thin or keyless scrape throws. */
+  allowFixtures?: boolean;
 }
 
 /**
@@ -123,6 +123,10 @@ export interface ScrapeOptions {
  */
 export async function scrape(url: string, opts: ScrapeOptions = {}): Promise<ScrapeResult> {
   const label = opts.label ?? "pricing";
+
+  if (!opts.apiKey && !opts.allowFixtures) {
+    throw new Error(`scrape_unavailable: FIRECRAWL_API_KEY not set for ${url}`);
+  }
 
   let result: ScrapeResult;
   if (opts.apiKey) {
@@ -152,7 +156,7 @@ export async function scrape(url: string, opts: ScrapeOptions = {}): Promise<Scr
       url,
       label,
       fixture: opts.fixture === "thin_page" ? "acme_v1" : opts.fixture,
-      allowFixtures: opts.allowBrowserFixtures !== false,
+      allowFixtures: opts.allowFixtures === true,
     });
   }
   return result;

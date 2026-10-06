@@ -116,7 +116,7 @@ back to a `mailto:` link instead of a dead button.
 1. Create a Slack app from [`packages/agent/slack-app-manifest.json`](packages/agent/slack-app-manifest.json).
 2. Replace `YOUR_WORKER_HOST` with your Worker URL (or a tunnel to `localhost:8787`).
 3. Install the app to a test workspace and invite the bot to `#competitive`.
-4. Set `SLACK_SIGNING_SECRET` / `SLACK_BOT_TOKEN` in `.dev.vars` (or CF secrets).
+4. Set `SLACK_SIGNING_SECRET` (bot tokens are per workspace, set by the OAuth install) in `.dev.vars` (or CF secrets).
 
 Slash commands:
 

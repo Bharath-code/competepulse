@@ -22,8 +22,8 @@ export interface CrawlDeps {
   data?: Store;
   bucket?: SnapshotBucket;
   apiKey?: string;
-  /** When true and bucket is memory-only, allow fixture scrapes without R2. */
-  allowMemorySnapshots?: boolean;
+  /** Fixture scrapes (ENVIRONMENT=local only); never reaches prod storage. */
+  allowFixtures?: boolean;
 }
 
 export interface CrawlOutcome {
@@ -65,6 +65,7 @@ export async function processCrawlJob(job: CrawlJob, deps: CrawlDeps = {}): Prom
   try {
     const result = await scrape(watch.url, {
       apiKey: deps.apiKey,
+      allowFixtures: deps.allowFixtures,
       fixture: job.fixture,
       label: watch.label,
     });

@@ -72,15 +72,15 @@ Format for each epic: goal, user story, tasks (`[ ]` with an estimate in days), 
 **Goal:** nothing a design partner touches can leak, fake data or grant free access.
 **Story:** As a partner, I trust that my Slack and HubSpot tokens can't be read by anyone else.
 
-- [ ] Delete `GET /billing/mock-complete` outside `ENVIRONMENT=local` (`app.ts:701-727`) — 0.25d
-- [ ] Fail closed on missing secrets: `slack.ts:15`, `billing/dodo.ts:333`, `access.ts:33` — 0.5d
-- [ ] Remove `?access_token=`; constant-time compare; per-workspace tokens instead of the global admin token (`access.ts:21,34`) — 0.75d
-- [ ] `GET /workspaces` never returns bot tokens; encrypt tokens at rest (AES-GCM, key in a secret) (`workspace-store.ts:43`) — 0.5d
-- [ ] OAuth `state` (signed, 10-minute TTL) on Slack install (`app.ts:136-177`) — 0.25d
-- [ ] Check Slack interactions against `payload.team.id`; delete the global token fallback (`app.ts:628,542`, `digest-deliver.ts:60`) — 0.5d
-- [ ] Fixtures never reach prod storage: `thin` → error and retry, never Acme (`scrape.ts:149-155`, `browser.ts:37`) — 0.25d
+- [x] Delete `GET /billing/mock-complete` outside `ENVIRONMENT=local` (`app.ts:701-727`) — 0.25d
+- [x] Fail closed on missing secrets: `slack.ts:15`, `billing/dodo.ts:333`, `access.ts:33` — 0.5d
+- [x] Remove `?access_token=`; constant-time compare; per-workspace tokens instead of the global admin token (`access.ts:21,34`) — 0.75d
+- [x] `GET /workspaces` never returns bot tokens; encrypt tokens at rest (AES-GCM, key in a secret) (`workspace-store.ts:43`) — 0.5d
+- [x] OAuth `state` (signed, 10-minute TTL) on Slack install (`app.ts:136-177`) — 0.25d
+- [x] Check Slack interactions against `payload.team.id`; delete the global token fallback (`app.ts:628,542`, `digest-deliver.ts:60`) — 0.5d
+- [x] Fixtures never reach prod storage: `thin` → error and retry, never Acme (`scrape.ts:149-155`, `browser.ts:37`) — 0.25d
 - [ ] CI green (ESLint `app.ts:90`, Prettier); branch protection on `main` — 0.25d
-- [ ] Split `app.ts` into `routes/*` (no behavior change, tests stay green) — 0.25d (mechanical)
+- [x] Split `app.ts` into `routes/*` (no behavior change, tests stay green) — 0.25d (mechanical)
 
 **AC**
 - Given `SLACK_SIGNING_SECRET` is unset and `ENVIRONMENT≠local`, when `/slack/commands` is called, then it returns 503 and logs `secret_missing`.

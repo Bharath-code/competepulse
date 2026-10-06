@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { createApp, type Env } from "../src/app.js";
 import { store } from "../src/store.js";
 
-const env: Env = {};
+const env: Env = { ENVIRONMENT: "local" };
 const app = createApp();
 
 function post(path: string, body: unknown) {
@@ -227,5 +227,30 @@ describe("HITL battlecard approve/reject (E1-5)", () => {
       }),
     });
     expect(store.getBattlecard(battlecard.id)?.status).toBe("rejected");
+  });
+});
+
+describe("Slack interaction tenant check", () => {
+  beforeEach(() => store.reset());
+
+  it.each([["T_OTHER"], [undefined]])("403s when team.id is %s", async (teamId) => {
+    const ws = store.ensureWorkspace("T_OWNER");
+    const created = await post("/battlecards", {
+      workspaceId: ws.id,
+      changeId: "chg3",
+      summary: "Plan renamed.",
+      citations: ["https://acme.example/pricing"],
+    });
+    const { battlecard } = (await created.json()) as { battlecard: { id: string } };
+    const res = await postForm("/slack/interactions", {
+      payload: JSON.stringify({
+        type: "block_actions",
+        user: { id: "U_X" },
+        team: teamId ? { id: teamId } : undefined,
+        actions: [{ action_id: "battlecard_approve", value: battlecard.id }],
+      }),
+    });
+    expect(res.status).toBe(403);
+    expect(store.getBattlecard(battlecard.id)?.status).toBe("draft");
   });
 });
