@@ -51,9 +51,17 @@ import Wordmark from "./Wordmark.astro";
     color: var(--on-dark);
   }
 
+  .nav__inner > :global(.wordmark) {
+    min-height: 2.75rem;
+  }
+
   @media (width < 48rem) {
     .nav__links {
       display: none;
+    }
+
+    .nav__inner > :global(.btn) {
+      min-height: 2.75rem;
     }
 
     .nav__inner > :global(.btn) {

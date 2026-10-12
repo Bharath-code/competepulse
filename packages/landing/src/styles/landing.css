@@ -84,7 +84,6 @@
   --r-card: 12px;
   --r-panel: 16px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-toast: cubic-bezier(0.18, 1.25, 0.4, 1);
   --container: 70rem;
 }
 
@@ -473,8 +472,9 @@ a {
 }
 
 .dm__line {
-  padding-inline-start: 0.7rem;
-  border-inline-start: 3px solid var(--violet);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(201, 180, 250, 0.12);
   font-style: italic;
 }
 
