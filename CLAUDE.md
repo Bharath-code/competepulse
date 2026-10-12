@@ -36,16 +36,16 @@ Full plan: [docs/STRATEGY.md](docs/STRATEGY.md) — [artifact](https://claude.ai
 - Motion lives in one lazy chunk, `src/scripts/motion.ts`. The entry `landing.ts` loads it at idle on ≥64rem, or when the product steps near the viewport; never under reduced motion or Save-Data. Server HTML always shows each scene's finished frame.
 - Styles: `src/styles/landing.css` (tokens + mock-ups) and scoped component styles. `global.css` is only for `/interview`. `BaseLayout` imports no CSS.
 - Fonts: Bricolage Grotesque and Source Sans 3 **variable** (weights 460/540); only the display face is preloaded. Run `pnpm --filter @competepulse/landing fonts` after changing faces.
-- Budgets (enforced in `test/build.test.ts`): entry JS < 4KB, HTML < 18KB gz, lazy JS < 60KB gz. Lighthouse mobile is 100/100/100/100 as of v2; keep it there.
+- Budgets (enforced in `test/build.test.ts`): entry JS < 4KB, HTML < 18KB gz, lazy JS < 60KB gz. Lighthouse is 100/100/100/100 on mobile and desktop (live URL, 12 Oct); keep it there. A single cold-start run can dip, so rerun before treating a miss as real.
 - CSP is `script-src 'self'`: no CDNs, no inline scripts.
 - Last self-score against Awwwards criteria: 8.3/10 (`.claudedocs/landing-awwwards-score-2026-10-06-v2.md`).
 
-## Build status (as of 6 Oct 2026)
+## Build status (as of 12 Oct 2026)
 
 - **E0 security: done** (G0 closed, PR #10, branch protection on). All 9 audit blockers fixed: mock-complete gated to `ENVIRONMENT=local`, fail-closed secrets, per-workspace encrypted tokens, signed OAuth `state`, Slack `team.id` checks, fixtures local-only, CI green. `app.ts` split into `routes/*`.
 - **E1 Firecrawl v2 monitors: done and deployed** (PR #12, #13; migrations 0004–0007 applied remotely). Worker: https://competepulse-worker.kumarbharath63.workers.dev
 - **E2 concierge kit** (PR #14) and **E12 PostHog funnel events + landing beacon** (PR #15): merged.
-- **Landing deployed:** https://competepulse-landing.kumarbharath63.workers.dev
+- **Landing deployed (12 Oct, PR #17 polish):** https://competepulse-landing.kumarbharath63.workers.dev. Fixed FAQ mobile overflow, 44px tap targets, replaced overshoot easing with `expo.out`. `/interview` still has a side-stripe border and a width transition (not polished).
 - **Still blocked on secrets before a partner can use prod:** `FIRECRAWL_API_KEY`, `PUBLIC_WORKER_URL`, `DASHBOARD_ACCESS_TOKEN`, `TOKEN_ENCRYPTION_KEY`, Slack app creds, `POSTHOG_API_KEY`, `PUBLIC_POSTHOG_KEY`. Worker redeploy pending after E12.
 - **Next:** 🔒 epics wait for G1 (day 21). Until then the work is discovery calls, not code.
 
