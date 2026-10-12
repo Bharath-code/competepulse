@@ -65,7 +65,7 @@ const categoryFilters = [
           <p class="iv-progress__label" data-progress-label>0 / {checkTopics.length} ready</p>
         </div>
         <div class="iv-progress__track" aria-hidden="true">
-          <div class="iv-progress__meter" data-progress-meter style="width: 0%"></div>
+          <div class="iv-progress__meter" data-progress-meter style="transform: scaleX(0)"></div>
         </div>
         <ul class="iv-progress__list">
           {
@@ -436,7 +436,7 @@ const categoryFilters = [
     padding: 0.45rem 0.75rem;
     border: 1px solid transparent;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-decoration: none;
@@ -495,7 +495,8 @@ const categoryFilters = [
   .iv-progress__meter {
     height: 100%;
     background: var(--signal);
-    transition: width 180ms ease-out;
+    transform-origin: left;
+    transition: transform 180ms var(--ease-out);
   }
 
   .iv-progress__list {
@@ -521,8 +522,34 @@ const categoryFilters = [
   }
 
   .iv-progress__list input {
+    flex: none;
     margin-block-start: 0.2rem;
     accent-color: var(--signal);
+  }
+
+  /* Touch: 44px targets on phones and coarse pointers; desktop keeps the compact mono controls. */
+  @media (pointer: coarse), (width <= 40rem) {
+    .iv-nav a,
+    .iv-ghost,
+    .iv-filter,
+    .iv-top__back,
+    .iv-top__inner > :global(.wordmark),
+    .iv-drill :global(.btn--sm) {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+    }
+
+    .iv-progress__list label {
+      align-items: center;
+      min-height: 2.75rem;
+    }
+
+    .iv-progress__list input {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-block-start: 0;
+    }
   }
 
   .iv-ghost {
@@ -533,7 +560,7 @@ const categoryFilters = [
     background: transparent;
     color: var(--ink-2);
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
@@ -780,7 +807,7 @@ const categoryFilters = [
   .iv-quote {
     margin: 0;
     padding: var(--space-sm) var(--space-md);
-    border-inline-start: 3px solid var(--signal);
+    border: 1px solid var(--rule-strong);
     background: var(--paper-tint);
     color: var(--ink);
   }
@@ -798,7 +825,7 @@ const categoryFilters = [
     border-radius: 0;
     background: transparent;
     font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
