@@ -3,23 +3,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/** Kinetics "Toast Overshoot": cubic-bezier(0.18, 1.25, 0.4, 1). */
-function bezier(x1: number, y1: number, x2: number, y2: number) {
-  const at = (a: number, b: number, t: number) =>
-    3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
-  return (x: number) => {
-    let lo = 0;
-    let hi = 1;
-    for (let i = 0; i < 20; i++) {
-      const mid = (lo + hi) / 2;
-      if (at(x1, x2, mid) < x) lo = mid;
-      else hi = mid;
-    }
-    return at(y1, y2, (lo + hi) / 2);
-  };
-}
-const toast = bezier(0.18, 1.25, 0.4, 1);
-
 /** Kinetics "Scramble Reveal": random glyphs settle left to right. */
 function scramble(el: HTMLElement, final: string, duration: number) {
   const glyphs = "0123456789";
@@ -79,7 +62,7 @@ function hero() {
     .fromTo(
       badge,
       { autoAlpha: 0, scale: 0.6 },
-      { autoAlpha: 1, scale: 1, duration: 0.45, ease: "back.out(3)" },
+      { autoAlpha: 1, scale: 1, duration: 0.45, ease: "expo.out" },
     )
     .to(wires, { strokeDashoffset: 0, duration: 0.7, ease: "power1.inOut" })
     .call(() => rows[0]?.classList.add("is-hit"))
@@ -87,7 +70,7 @@ function hero() {
     .fromTo(
       dm,
       { autoAlpha: 0, y: -26, scale: 0.96 },
-      { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: toast },
+      { autoAlpha: 1, y: 0, scale: 1, duration: 0.7, ease: "expo.out" },
       "+=0.45",
     )
     .to(tick, { strokeDashoffset: 0, duration: 0.4 }, "+=0.35")
@@ -124,7 +107,7 @@ function problem() {
         { scaleX: 0 },
         { scaleX: 1, ease: "none", duration: 4 },
       )
-      .fromTo(dots, { scale: 0 }, { scale: 1, stagger: 1, duration: 0.4, ease: "back.out(3)" }, 0)
+      .fromTo(dots, { scale: 0 }, { scale: 1, stagger: 1, duration: 0.4, ease: "expo.out" }, 0)
       .fromTo(fix, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1 }, 3.4);
   });
 }
