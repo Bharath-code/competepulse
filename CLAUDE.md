@@ -45,7 +45,7 @@ Full plan: [docs/STRATEGY.md](docs/STRATEGY.md) — [artifact](https://claude.ai
 - **E0 security: done** (G0 closed, PR #10, branch protection on). All 9 audit blockers fixed: mock-complete gated to `ENVIRONMENT=local`, fail-closed secrets, per-workspace encrypted tokens, signed OAuth `state`, Slack `team.id` checks, fixtures local-only, CI green. `app.ts` split into `routes/*`.
 - **E1 Firecrawl v2 monitors: done and deployed** (PR #12, #13; migrations 0004–0007 applied remotely). Worker: https://competepulse-worker.kumarbharath63.workers.dev
 - **E2 concierge kit** (PR #14) and **E12 PostHog funnel events + landing beacon** (PR #15): merged.
-- **Landing deployed (12 Oct, PR #17 polish):** https://competepulse-landing.kumarbharath63.workers.dev. Fixed FAQ mobile overflow, 44px tap targets, replaced overshoot easing with `expo.out`. `/interview` still has a side-stripe border and a width transition (not polished).
+- **Landing deployed (12 Oct, PR #17 polish):** https://competepulse-landing.kumarbharath63.workers.dev. Fixed FAQ mobile overflow, 44px tap targets, replaced overshoot easing with `expo.out`. `/interview` polished and deployed 12 Oct (PR #19: transform progress meter, 44px touch targets, quote border); its section kickers/numbers were left as-is.
 - **Still blocked on secrets before a partner can use prod:** `FIRECRAWL_API_KEY`, `PUBLIC_WORKER_URL`, `DASHBOARD_ACCESS_TOKEN`, `TOKEN_ENCRYPTION_KEY`, Slack app creds, `POSTHOG_API_KEY`, `PUBLIC_POSTHOG_KEY`. Worker redeploy pending after E12.
 - **Next:** 🔒 epics wait for G1 (day 21). Until then the work is discovery calls, not code.
 
