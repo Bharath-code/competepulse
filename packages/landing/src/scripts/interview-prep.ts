@@ -40,7 +40,7 @@ function initProgress(): void {
       if (box.checked) n += 1;
     }
     const pct = total === 0 ? 0 : Math.round((n / total) * 100);
-    if (meter) meter.style.width = `${pct}%`;
+    if (meter) meter.style.transform = `scaleX(${pct / 100})`;
     if (label) label.textContent = `${n} / ${total} ready`;
   }
 

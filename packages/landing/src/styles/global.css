@@ -118,7 +118,7 @@
   --font-text: "Source Sans 3", "Sans Fallback", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --t-kicker: 0.72rem;
+  --t-kicker: 0.75rem;
   --t-small: 0.9rem;
   --t-body: clamp(1.05rem, 1rem + 0.2vw, 1.125rem);
   --t-lead: clamp(1.15rem, 1.05rem + 0.45vw, 1.35rem);
