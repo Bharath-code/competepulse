@@ -3,6 +3,9 @@
 # Leave FIRECRAWL_API_KEY empty (or omit it) to use mock crawl fixtures.
 # Slack signing is skipped when SLACK_SIGNING_SECRET is unset (local tests).
 
+# Fixtures, mock checkout and missing secrets are allowed only in local mode. Remove in prod.
+ENVIRONMENT=local
+
 FIRECRAWL_API_KEY=
 FIRECRAWL_WEBHOOK_SECRET=
 PUBLIC_WORKER_URL=
@@ -13,6 +16,9 @@ SLACK_CLIENT_SECRET=
 
 # Protect /dashboard + mutating APIs when set (Bearer or ?access_token=)
 DASHBOARD_ACCESS_TOKEN=
+
+# Encrypts per-workspace Slack tokens (required outside ENVIRONMENT=local)
+TOKEN_ENCRYPTION_KEY=
 
 # Slack incoming webhook or similar for founder digest-fail alerts
 FOUNDER_ALERT_WEBHOOK=
